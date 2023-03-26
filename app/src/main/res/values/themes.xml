@@ -2,6 +2,18 @@
 <resources>
 
     <style name="Theme.New_App" parent="android:Theme.Material.Light.NoActionBar">
-        <item name="android:statusBarColor">@color/purple_700</item>
+
+        <item name="android:colorPrimary">@color/light_orange</item>
+
+
+
+        <item name="android:statusBarColor" >?android:colorPrimary</item>
+        <item name="android:navigationBarColor">?android:colorPrimary</item>
     </style>
+
+    <style name="Theme.New_App.NoActionBar">
+        <item name="android:windowActionBar">false</item>
+        <item name="android:windowNoTitle">true</item>
+    </style>
+
 </resources>
