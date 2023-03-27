@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="Theme.New_App" parent="android:Theme.Material.Light.NoActionBar">
+    <style name="Theme.New_App" parent="Theme.MaterialComponents.Light.NoActionBar">
 
         <item name="android:colorPrimary">@color/light_orange</item>
 
