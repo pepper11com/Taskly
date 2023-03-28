@@ -61,5 +61,11 @@ fun LoginScreen(openAndPopUp: (String, String) -> Unit) {
         TextButton(onClick = { openAndPopUp(SIGN_UP_SCREEN, LOGIN_SCREEN) }) {
             Text("Don't have an account? Sign up")
         }
+
+        TextButton(onClick = {
+            viewModel.onForgetPasswordClick()
+        }) {
+            Text("Forgot password? Click to reset password")
+        }
     }
 }

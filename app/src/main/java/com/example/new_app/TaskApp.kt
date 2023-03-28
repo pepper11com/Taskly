@@ -20,6 +20,7 @@ import androidx.navigation.navArgument
 import com.example.new_app.common.snackbar.SnackbarManager
 import com.example.new_app.screens.createtask.CreateTaskScreen
 import com.example.new_app.screens.login.LoginScreen
+import com.example.new_app.screens.settings.SettingsScreen
 import com.example.new_app.screens.signup.SignupScreen
 import com.example.new_app.screens.splashscreen.SplashScreen
 import com.example.new_app.screens.tasklist.TaskListScreen
@@ -30,7 +31,6 @@ import kotlinx.coroutines.CoroutineScope
 @Composable
 @ExperimentalMaterialApi
 fun TaskApp(
-    restoreImageUriPermissions: () -> Unit,
     saveImageUriPermission: (Uri) -> Unit
 ) {
     New_AppTheme {
@@ -96,16 +96,28 @@ fun NavGraphBuilder.taskAppGraph(
         )
     }
 
+    composable(SETTINGS_SCREEN){
+        SettingsScreen(
+            openAndPopUp = { route, popUp -> appState.navigateAndPopUp(route, popUp) },
+        )
+    }
+
     composable(LOGIN_SCREEN) {
-        LoginScreen(openAndPopUp = { route, popUp -> appState.navigateAndPopUp(route, popUp) })
+        LoginScreen(
+            openAndPopUp = { route, popUp -> appState.navigateAndPopUp(route, popUp) }
+        )
     }
 
     composable(SIGN_UP_SCREEN) {
-        SignupScreen(openAndPopUp = { route, popUp -> appState.navigateAndPopUp(route, popUp) })
+        SignupScreen(
+            openAndPopUp = { route, popUp -> appState.navigateAndPopUp(route, popUp) }
+        )
     }
 
     composable(TASK_LIST_SCREEN) {
-        TaskListScreen(openScreen = { route -> appState.navigate(route) })
+        TaskListScreen(
+            openScreen = { route -> appState.navigate(route) }
+        )
     }
 
     composable(

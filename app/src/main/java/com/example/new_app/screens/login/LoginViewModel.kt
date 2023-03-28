@@ -57,6 +57,26 @@ class LoginViewModel : ViewModel() {
             }
         }
     }
+
+    fun onForgetPasswordClick() {
+        viewModelScope.launch {
+            if (!email.isValidEmail()) {
+                SnackbarManager.showSnackbarMessage(SnackbarMessage.Text("Invalid email"))
+                return@launch
+            }
+
+            uiState.value = uiState.value.copy(isLoading = true)
+
+            try {
+                accountService.sendRecoveryEmail(email)
+                SnackbarManager.showSnackbarMessage(SnackbarMessage.Text("Password reset email sent"))
+            } catch (e: Exception) {
+                SnackbarManager.showSnackbarMessage(SnackbarMessage.Text(e.message ?: "Unknown error"))
+            } finally {
+                uiState.value = uiState.value.copy(isLoading = false)
+            }
+        }
+    }
 }
 
 

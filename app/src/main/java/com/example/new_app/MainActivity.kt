@@ -50,6 +50,7 @@ class MainActivity : AppCompatActivity() {
         //todo - make sure the image is deleted when the task is deleted
 
         //todo - check if you can do something about the image not showing up after deleting the app and reinstalling it
+        //todo - image orientation is not always correct
 
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
             checkStoragePermission()
@@ -57,7 +58,6 @@ class MainActivity : AppCompatActivity() {
 
         setContent {
             TaskApp(
-                restoreImageUriPermissions = { restoreImageUriPermissions(this) },
                 saveImageUriPermission = { uri -> saveImageUriPermission(this, uri) }
             )
         }

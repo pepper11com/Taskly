@@ -33,6 +33,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.toBitmap
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.new_app.R
+import com.example.new_app.SETTINGS_SCREEN
 import com.example.new_app.common.composables.LoadingIndicator
 import com.example.new_app.model.Task
 import com.example.new_app.model.service.AccountService
@@ -79,11 +80,9 @@ fun TaskListScreen(
         topBar = {
             ActionToolbar(
                 title = "Task List",
-//                modifier = Modifier.wrapContentSize(Alignment.TopEnd),
                 endActionIcon = Icons.Filled.Settings,
                 endAction = {
-                    //todo: open settings screen
-//                    viewModel.onSettingsClick(openScreen)
+                    openScreen(SETTINGS_SCREEN)
                 }
             )
         },
@@ -111,8 +110,6 @@ fun TaskListScreen(
                                     }
                                 }
                             )
-
-
                             Divider()
                         }
                     }
@@ -136,7 +133,7 @@ fun TaskListScreen(
 fun TaskListItem(
     context: Context,
     task: Task,
-    taskBitmap: MutableState<Bitmap?>, // Add this line
+    taskBitmap: MutableState<Bitmap?>,
     onClick: () -> Unit,
     onLongPress: () -> Unit
 ) {
@@ -198,10 +195,6 @@ fun TaskListItem(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(8.dp)
-//                .combinedClickable(
-//                    onClick = onClick,
-//                    onLongClick = { onLongPress() },
-//                )
         ) {
             taskBitmap.value?.let { btm ->
                 val squareBitmap = btm.centerCropToSquare()
@@ -247,8 +240,6 @@ fun ShowDialogWithTaskDetailsAndDelete(
     viewModel: TaskListViewModel,
     onDismiss: () -> Unit
 ) {
-
-    //todo delete only works when you click the outer box of the task item
 
     AlertDialog(
         onDismissRequest = onDismiss,

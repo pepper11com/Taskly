@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.new_app.SETTINGS_SCREEN
 import com.example.new_app.SIGN_UP_SCREEN
+import com.example.new_app.TASK_LIST_SCREEN
 import com.example.new_app.common.ext.isValidEmail
 import com.example.new_app.common.ext.isValidPassword
 import com.example.new_app.common.snackbar.SnackbarManager
@@ -60,7 +61,7 @@ class SignupViewModel : ViewModel() {
             try {
                 accountService.createAccount(email, password)
                 uiState.value = uiState.value.copy(isLoading = false, error = null)
-                openAndPopUp(SETTINGS_SCREEN, SIGN_UP_SCREEN)
+                openAndPopUp(TASK_LIST_SCREEN, SIGN_UP_SCREEN)
             } catch (e: Exception) {
                 uiState.value = uiState.value.copy(isLoading = false, error = e.message)
                 SnackbarManager.showSnackbarMessage(SnackbarMessage.Text(e.message ?: "Error signing up"))
