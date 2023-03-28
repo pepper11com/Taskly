@@ -1,27 +1,24 @@
 package com.example.new_app.screens.tasklist
 
+
 import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.graphics.ImageDecoder
-import android.graphics.drawable.BitmapDrawable
-import android.net.Uri
 import android.os.Build
 import android.os.VibrationEffect
 import android.os.Vibrator
-import android.provider.MediaStore
-import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.Orientation
-import androidx.compose.foundation.gestures.detectDragGestures
-import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -29,12 +26,10 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.input.pointer.consumeAllChanges
-import androidx.compose.ui.input.pointer.consumePositionChange
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntOffset
@@ -48,10 +43,10 @@ import com.example.new_app.SETTINGS_SCREEN
 import com.example.new_app.common.composables.LoadingIndicator
 import com.example.new_app.model.Task
 import com.example.new_app.model.service.AccountService
-import com.example.new_app.screens.createtask.CreateTaskViewModel
 import com.example.new_app.screens.createtask.centerCropToSquare
 import com.example.new_app.screens.createtask.toCircularBitmap
 import com.example.new_app.screens.createtask.toSoftwareBitmap
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.io.File
 import java.io.FileInputStream
@@ -129,7 +124,7 @@ fun TaskListScreen(
                 } else {
 
                     LazyColumn(modifier = Modifier.fillMaxSize()) {
-                        items(filteredTasks) { task ->
+                        itemsIndexed(filteredTasks) { index, task ->
                             val taskBitmap = remember { mutableStateOf<Bitmap?>(null) }
 
                             SwipeableTaskListItem(
@@ -176,14 +171,17 @@ fun SwipeableTaskListItem(
     status: TaskStatus
 ) {
     val width = 96.dp
-    val swipeableState = rememberSwipeableState(0)
+    val swipeableState = remember(task.id) { SwipeableState(0) } //
     val maxOffset = with(LocalDensity.current) { width.toPx() }
     val anchors = when (status) {
         TaskStatus.DELETED -> mapOf(0f to 0, maxOffset to 1)
         TaskStatus.COMPLETED -> mapOf(-maxOffset to -1, 0f to 0)
         TaskStatus.ACTIVE -> mapOf(-maxOffset to -1, 0f to 0, maxOffset to 1)
     }
-
+    val offset by animateOffsetAsState(
+        targetValue = Offset(swipeableState.offset.value, 0f),
+        animationSpec = spring(stiffness = Spring.StiffnessLow)
+    )
 
     LaunchedEffect(swipeableState.currentValue) {
         when (swipeableState.targetValue) {
@@ -196,6 +194,7 @@ fun SwipeableTaskListItem(
                 swipeableState.snapTo(0)
             }
             1 -> {
+
                 if (status != TaskStatus.DELETED) {
                     viewModel.onTaskSwipeCompleted(task)
                 } else {
@@ -213,16 +212,10 @@ fun SwipeableTaskListItem(
             .swipeable(
                 state = swipeableState,
                 anchors = anchors,
-                thresholds = { _, _ -> FractionalThreshold(0.3f) },
+                thresholds = { _, _ -> FractionalThreshold(0.6f) },
                 orientation = Orientation.Horizontal
             )
-            .background(
-                color = when {
-                    swipeableState.offset.value >= maxOffset * 0.5f -> MaterialTheme.colors.secondary
-                    swipeableState.offset.value <= -maxOffset * 0.5f -> MaterialTheme.colors.error
-                    else -> MaterialTheme.colors.surface
-                }
-            )
+
     ) {
         TaskListItem(
             context = context,
@@ -230,7 +223,7 @@ fun SwipeableTaskListItem(
             taskBitmap = taskBitmap,
             onClick = onClick,
             onLongPress = onLongPress,
-            modifier = Modifier.offset { IntOffset(swipeableState.offset.value.roundToInt(), 0) }
+            offset = offset,
         )
     }
 }
@@ -243,7 +236,7 @@ fun TaskListItem(
     taskBitmap: MutableState<Bitmap?>,
     onClick: () -> Unit,
     onLongPress: () -> Unit,
-    modifier: Modifier = Modifier
+    offset: Offset = Offset.Zero
 ) {
 
     val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
@@ -278,7 +271,8 @@ fun TaskListItem(
 
     Card(
         backgroundColor = MaterialTheme.colors.background,
-        modifier = modifier
+        modifier = Modifier
+            .offset { IntOffset(offset.x.roundToInt(), offset.y.roundToInt()) }
             .padding(8.dp, 8.dp, 8.dp, 8.dp)
             .combinedClickable(
                 onClick = onClick,
@@ -304,17 +298,25 @@ fun TaskListItem(
                 .fillMaxWidth()
                 .padding(8.dp)
         ) {
-            taskBitmap.value?.let { btm ->
-                val squareBitmap = btm.centerCropToSquare()
-                val softwareBitmap = squareBitmap.toSoftwareBitmap()
-                val circularBitmap = softwareBitmap.toCircularBitmap()
-                Image(
-                    bitmap = circularBitmap.asImageBitmap(),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .size(40.dp)
-                        .padding(end = 8.dp)
-                )
+            Crossfade(targetState = taskBitmap.value) { currentBitmap ->
+                if (currentBitmap == null) {
+                    CircularProgressIndicator(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .padding(end = 8.dp)
+                    )
+                } else {
+                    val squareBitmap = currentBitmap.centerCropToSquare()
+                    val softwareBitmap = squareBitmap.toSoftwareBitmap()
+                    val circularBitmap = softwareBitmap.toCircularBitmap()
+                    Image(
+                        bitmap = circularBitmap.asImageBitmap(),
+                        contentDescription = null,
+                        modifier = Modifier
+                            .size(40.dp)
+                            .padding(end = 8.dp)
+                    )
+                }
             }
 
             Checkbox(
@@ -341,7 +343,8 @@ fun TaskListItem(
 }
 
 fun getFilteredTasks(tasks: List<Task>, status: TaskStatus): List<Task> {
-    return tasks.filter { task ->
+    val sortedTasks = tasks.sortedByDescending { task -> task.taskDate }
+    return sortedTasks.filter { task ->
         when (status) {
             TaskStatus.DELETED -> task.status == TaskStatus.DELETED
             TaskStatus.ACTIVE -> task.status == TaskStatus.ACTIVE

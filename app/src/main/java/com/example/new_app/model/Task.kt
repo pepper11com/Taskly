@@ -6,6 +6,8 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import com.example.new_app.screens.tasklist.TaskStatus
 import com.google.firebase.firestore.DocumentId
+import java.time.LocalDate
+import java.util.Date
 
 data class Task(
     @DocumentId val id: String = "",
@@ -17,6 +19,7 @@ data class Task(
     val assignedTo: List<String> = emptyList(),
     val isCompleted: Boolean = false,
     val status: TaskStatus = TaskStatus.ACTIVE,
+    val taskDate: Date = Date(),
 
     var imageUri: String? = null,
 )

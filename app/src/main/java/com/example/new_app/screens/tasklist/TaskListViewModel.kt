@@ -53,21 +53,18 @@ class TaskListViewModel() : ViewModel() {
     fun onTaskSwipeDeleted(task: Task) {
         viewModelScope.launch {
             firebaseService.updateTask(task.copy(status = TaskStatus.DELETED))
-            loadTasks()
         }
     }
 
     fun onTaskSwipeCompleted(task: Task) {
         viewModelScope.launch {
             firebaseService.updateTask(task.copy(status = TaskStatus.COMPLETED))
-            loadTasks()
         }
     }
 
     fun onTaskSwipeActive(task: Task) {
         viewModelScope.launch {
             firebaseService.updateTask(task.copy(status = TaskStatus.ACTIVE))
-            loadTasks()
         }
     }
 
