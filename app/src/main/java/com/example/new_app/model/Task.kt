@@ -22,4 +22,5 @@ data class Task(
     val taskDate: Date = Date(),
 
     var imageUri: String? = null,
+    var imageBitmap: Bitmap? = null
 )

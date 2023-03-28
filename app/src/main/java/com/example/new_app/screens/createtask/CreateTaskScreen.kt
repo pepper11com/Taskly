@@ -17,9 +17,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.DateRange
-import androidx.compose.material.icons.filled.Timer
+import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -67,6 +65,19 @@ fun CreateTaskScreen(
                     IconButton(onClick = popUpScreen) {
                         Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
                     }
+                },
+                actions = {
+                    IconButton(
+                        enabled = task.title.isNotBlank() && task.description.isNotBlank(),
+                        onClick = {
+                            viewModel.onDoneClick(popUpScreen)
+                        }
+                    ) {
+                        Icon(
+                            Icons.Filled.Done,
+                            contentDescription = "Done"
+                        )
+                    }
                 }
             )
         }
@@ -103,16 +114,6 @@ fun CreateTaskScreen(
             )
 
             CardEditors(task, viewModel::onDateChange, viewModel::onTimeChange)
-
-
-            CustomButton(
-                onClick = {
-                    viewModel.onDoneClick(popUpScreen)
-                },
-                text = "Create Task",
-                modifier = Modifier.fillMaxWidth(),
-                enabled = task.title.isNotBlank() && task.description.isNotBlank()
-            )
 
         }
     }
@@ -261,8 +262,11 @@ fun PickImageFromGallery(
             Button(
                 enabled = task.imageUri != null && task.imageUri!!.isNotEmpty(),
                 onClick = {
-                    viewModel.onImageChange("", context, task.id, userId)
-                    task.imageUri = null
+                    task.imageUri = ""
+                    viewModel.bitmap = BitmapFactory.decodeResource(
+                        context.resources,
+                        R.drawable.baseline_account_box_24
+                    )
                 },
                 colors = ButtonDefaults.buttonColors(
                     contentColor = MaterialTheme.colors.onPrimary,
