@@ -68,6 +68,11 @@ class FirebaseService {
     private fun currentCollection(uid: String): CollectionReference =
         firestore.collection(USER_COLLECTION).document(uid).collection(TASK_COLLECTION)
 
+    suspend fun updateTask(task: Task) {
+        auth.currentUser?.uid?.let { uid ->
+            currentCollection(uid).document(task.id).set(task).await()
+        }
+    }
 
 
     companion object {

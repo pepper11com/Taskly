@@ -11,9 +11,14 @@ import android.os.Build
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.provider.MediaStore
+import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -24,9 +29,15 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.pointer.consumeAllChanges
+import androidx.compose.ui.input.pointer.consumePositionChange
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
@@ -46,6 +57,7 @@ import java.io.File
 import java.io.FileInputStream
 import java.io.FileNotFoundException
 import java.lang.StringBuilder
+import kotlin.math.roundToInt
 
 
 @SuppressLint("UnusedMaterialScaffoldPaddingParameter")
@@ -66,6 +78,13 @@ fun TaskListScreen(
     val currentTask = remember { mutableStateOf<Task?>(null) }
     val currentTaskBitmap = remember { mutableStateOf<Bitmap?>(null) }
 
+    val tabTitles = listOf("Deleted Tasks", "Tasks", "Completed Tasks")
+    val selectedIndex = remember { mutableStateOf(1) }
+
+    val filteredTasks = remember(uiState.tasks, selectedIndex.value) {
+        getFilteredTasks(uiState.tasks, TaskStatus.values()[selectedIndex.value])
+    }
+
     Scaffold(
         floatingActionButton = {
             FloatingActionButton(
@@ -78,13 +97,28 @@ fun TaskListScreen(
             }
         },
         topBar = {
-            ActionToolbar(
-                title = "Task List",
-                endActionIcon = Icons.Filled.Settings,
-                endAction = {
-                    openScreen(SETTINGS_SCREEN)
+            Column {
+                ActionToolbar(
+                    title = "Task List",
+                    endActionIcon = Icons.Filled.Settings,
+                    endAction = {
+                        openScreen(SETTINGS_SCREEN)
+                    }
+                )
+                TabRow(
+                    selectedTabIndex = selectedIndex.value,
+                    backgroundColor = MaterialTheme.colors.primarySurface,
+                    contentColor = Color.White,
+                ) {
+                    tabTitles.forEachIndexed { index, title ->
+                        Tab(
+                            text = { Text(title) },
+                            selected = index == selectedIndex.value,
+                            onClick = { selectedIndex.value = index }
+                        )
+                    }
                 }
-            )
+            }
         },
         content = {
             Box(modifier = Modifier.fillMaxSize()) {
@@ -93,22 +127,25 @@ fun TaskListScreen(
                         LoadingIndicator()
                     }
                 } else {
+
                     LazyColumn(modifier = Modifier.fillMaxSize()) {
-                        items(uiState.tasks) { task ->
+                        items(filteredTasks) { task ->
                             val taskBitmap = remember { mutableStateOf<Bitmap?>(null) }
 
-                            TaskListItem(
+                            SwipeableTaskListItem(
                                 context = context,
                                 task = task,
                                 onClick = { openScreen("detail") },
                                 taskBitmap = taskBitmap,
+                                viewModel = viewModel,
                                 onLongPress = {
                                     scope.launch {
                                         currentTask.value = task
                                         currentTaskBitmap.value = taskBitmap.value
                                         showDialog.value = true
                                     }
-                                }
+                                },
+                                status = task.status
                             )
                             Divider()
                         }
@@ -127,6 +164,76 @@ fun TaskListScreen(
         }
     )
 }
+@OptIn(ExperimentalMaterialApi::class)
+@Composable
+fun SwipeableTaskListItem(
+    context: Context,
+    task: Task,
+    taskBitmap: MutableState<Bitmap?>,
+    onClick: () -> Unit,
+    onLongPress: () -> Unit,
+    viewModel: TaskListViewModel,
+    status: TaskStatus
+) {
+    val width = 96.dp
+    val swipeableState = rememberSwipeableState(0)
+    val maxOffset = with(LocalDensity.current) { width.toPx() }
+    val anchors = when (status) {
+        TaskStatus.DELETED -> mapOf(0f to 0, maxOffset to 1)
+        TaskStatus.COMPLETED -> mapOf(-maxOffset to -1, 0f to 0)
+        TaskStatus.ACTIVE -> mapOf(-maxOffset to -1, 0f to 0, maxOffset to 1)
+    }
+
+
+    LaunchedEffect(swipeableState.currentValue) {
+        when (swipeableState.targetValue) {
+            -1 -> {
+                if (status != TaskStatus.COMPLETED) {
+                    viewModel.onTaskSwipeDeleted(task)
+                } else {
+                    viewModel.onTaskSwipeActive(task)
+                }
+                swipeableState.snapTo(0)
+            }
+            1 -> {
+                if (status != TaskStatus.DELETED) {
+                    viewModel.onTaskSwipeCompleted(task)
+                } else {
+                    viewModel.onTaskSwipeActive(task)
+                }
+                swipeableState.snapTo(0)
+            }
+        }
+    }
+
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .swipeable(
+                state = swipeableState,
+                anchors = anchors,
+                thresholds = { _, _ -> FractionalThreshold(0.3f) },
+                orientation = Orientation.Horizontal
+            )
+            .background(
+                color = when {
+                    swipeableState.offset.value >= maxOffset * 0.5f -> MaterialTheme.colors.secondary
+                    swipeableState.offset.value <= -maxOffset * 0.5f -> MaterialTheme.colors.error
+                    else -> MaterialTheme.colors.surface
+                }
+            )
+    ) {
+        TaskListItem(
+            context = context,
+            task = task,
+            taskBitmap = taskBitmap,
+            onClick = onClick,
+            onLongPress = onLongPress,
+            modifier = Modifier.offset { IntOffset(swipeableState.offset.value.roundToInt(), 0) }
+        )
+    }
+}
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -135,7 +242,8 @@ fun TaskListItem(
     task: Task,
     taskBitmap: MutableState<Bitmap?>,
     onClick: () -> Unit,
-    onLongPress: () -> Unit
+    onLongPress: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
 
     val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
@@ -170,7 +278,7 @@ fun TaskListItem(
 
     Card(
         backgroundColor = MaterialTheme.colors.background,
-        modifier = Modifier
+        modifier = modifier
             .padding(8.dp, 8.dp, 8.dp, 8.dp)
             .combinedClickable(
                 onClick = onClick,
@@ -231,6 +339,18 @@ fun TaskListItem(
         }
     }
 }
+
+fun getFilteredTasks(tasks: List<Task>, status: TaskStatus): List<Task> {
+    return tasks.filter { task ->
+        when (status) {
+            TaskStatus.DELETED -> task.status == TaskStatus.DELETED
+            TaskStatus.ACTIVE -> task.status == TaskStatus.ACTIVE
+            TaskStatus.COMPLETED -> task.status == TaskStatus.COMPLETED
+            else -> false
+        }
+    }
+}
+
 
 @Composable
 fun ShowDialogWithTaskDetailsAndDelete(

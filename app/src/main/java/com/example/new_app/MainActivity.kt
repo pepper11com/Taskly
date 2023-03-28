@@ -52,6 +52,8 @@ class MainActivity : AppCompatActivity() {
         //todo - check if you can do something about the image not showing up after deleting the app and reinstalling it
         //todo - image orientation is not always correct
 
+        //todo - if image is still loading show a loading icon
+
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
             checkStoragePermission()
         }
