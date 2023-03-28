@@ -1,6 +1,9 @@
 package com.example.new_app
 
 import android.content.res.Resources
+import android.net.Uri
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.*
 import androidx.compose.runtime.*
@@ -23,9 +26,13 @@ import com.example.new_app.screens.tasklist.TaskListScreen
 import com.example.new_app.theme.New_AppTheme
 import kotlinx.coroutines.CoroutineScope
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 @ExperimentalMaterialApi
-fun TaskApp() {
+fun TaskApp(
+    restoreImageUriPermissions: () -> Unit,
+    saveImageUriPermission: (Uri) -> Unit
+) {
     New_AppTheme {
         Surface(color = MaterialTheme.colors.background) {
             val appState = rememberAppState()
@@ -47,7 +54,10 @@ fun TaskApp() {
                     startDestination = SPLASH_SCREEN,
                     modifier = Modifier.padding(innerPaddingModifier)
                 ) {
-                    taskAppGraph(appState)
+                    taskAppGraph(
+                        appState,
+                        saveImageUriPermission,
+                    )
                 }
             }
         }
@@ -73,11 +83,17 @@ fun resources(): Resources {
     return LocalContext.current.resources
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @ExperimentalMaterialApi
-fun NavGraphBuilder.taskAppGraph(appState: TaskAppState) {
+fun NavGraphBuilder.taskAppGraph(
+    appState: TaskAppState,
+    saveImageUriPermission: (Uri) -> Unit,
+) {
 
     composable(SPLASH_SCREEN) {
-        SplashScreen(openAndPopUp = { route, popUp -> appState.navigateAndPopUp(route, popUp) })
+        SplashScreen(
+            openAndPopUp = { route, popUp -> appState.navigateAndPopUp(route, popUp) },
+        )
     }
 
     composable(LOGIN_SCREEN) {
@@ -98,7 +114,9 @@ fun NavGraphBuilder.taskAppGraph(appState: TaskAppState) {
     ) {
         CreateTaskScreen(
             popUpScreen = { appState.popUp() },
-            taskId = it.arguments?.getString(TASK_ID) ?: TASK_DEFAULT_ID
+            taskId = it.arguments?.getString(TASK_ID) ?: TASK_DEFAULT_ID,
+            saveImageUriPermission = saveImageUriPermission,
+            userId = it.arguments?.getString("userId") ?: ""
         )
     }
 }

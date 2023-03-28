@@ -42,5 +42,8 @@ fun SplashScreen(
         delay(SPLASH_TIMEOUT)
         val user = viewModel.checkUserState()
         viewModel.onAppStart(openAndPopUp, user)
+
+
+
     }
 }

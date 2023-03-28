@@ -1,12 +1,13 @@
 package com.example.new_app.screens.createtask
 
+import android.content.Context
+import android.graphics.Bitmap
+import android.net.Uri
 import android.os.Build
-import android.provider.Settings.System.DATE_FORMAT
 import androidx.annotation.RequiresApi
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewModelScope
 import com.example.new_app.TASK_DEFAULT_ID
 import com.example.new_app.common.ext.idFromParameter
@@ -14,14 +15,9 @@ import com.example.new_app.model.Task
 import com.example.new_app.model.service.AccountService
 import com.example.new_app.model.service.FirebaseService
 import com.example.new_app.screens.TaskAppViewModel
-import com.example.new_app.screens.tasklist.TaskListUiState
-import com.example.new_app.util.Resource
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.time.ZoneId
-import java.time.ZoneOffset.UTC
 import java.util.*
 
 class CreateTaskViewModel() : TaskAppViewModel() {
@@ -33,6 +29,8 @@ class CreateTaskViewModel() : TaskAppViewModel() {
 
     val task = mutableStateOf(Task())
 
+    var bitmap by mutableStateOf<Bitmap?>(null)
+
     fun onTitleChange(newValue: String) {
         task.value = task.value.copy(title = newValue)
     }
@@ -42,6 +40,10 @@ class CreateTaskViewModel() : TaskAppViewModel() {
 
     fun onIsCompletedChange(newValue: Boolean) {
         task.value = task.value.copy(isCompleted = newValue)
+    }
+
+    fun onImageChange(newValue: String) {
+        task.value = task.value.copy(imageUri = newValue)
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -64,6 +66,20 @@ class CreateTaskViewModel() : TaskAppViewModel() {
             }
         }
     }
+
+    fun onImageChange(newValue: String, context: Context, taskId: String, userId: String) {
+        viewModelScope.launch {
+            val localImagePath = accountService.saveImageToInternalStorage(
+                context,
+                Uri.parse(newValue),
+                userId,
+                taskId
+            )
+            task.value = task.value.copy(imageUri = localImagePath)
+        }
+    }
+
+
 
     fun onDoneClick(popUpScreen: () -> Unit) {
         viewModelScope.launch {

@@ -68,6 +68,8 @@ class FirebaseService {
     private fun currentCollection(uid: String): CollectionReference =
         firestore.collection(USER_COLLECTION).document(uid).collection(TASK_COLLECTION)
 
+
+
     companion object {
         private const val USER_COLLECTION = "users"
         private const val TASK_COLLECTION = "tasks"

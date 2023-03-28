@@ -5,6 +5,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.new_app.CREATE_TASK_SCREEN
+import com.example.new_app.TASK_ID_KEY
 import com.example.new_app.model.Task
 import com.example.new_app.model.service.FirebaseService
 import com.example.new_app.util.Resource
@@ -24,11 +25,28 @@ class TaskListViewModel() : ViewModel() {
 
     init {
         viewModelScope.launch {
-            firebaseService.tasks
-                .catch { e -> _taskListUiState.value = TaskListUiState(error = e.message) }
-                .collect { tasks -> _taskListUiState.value = TaskListUiState(tasks = tasks, isLoading = false) }
+            loadTasks()
         }
     }
 
-    fun onAddClick(openScreen: (String) -> Unit) = openScreen(CREATE_TASK_SCREEN)
+    private suspend fun loadTasks() {
+        firebaseService.tasks
+            .catch { e -> _taskListUiState.value = TaskListUiState(error = e.message) }
+            .collect { tasks -> _taskListUiState.value = TaskListUiState(tasks = tasks, isLoading = false) }
+    }
+
+    fun onAddClick(openScreen: (String) -> Unit, userId: String) {
+        openScreen("$CREATE_TASK_SCREEN$TASK_ID_KEY?userId=$userId")
+    }
+
+    fun onTaskClick(task: Task, openScreen: (String) -> Unit) {
+        openScreen("${CREATE_TASK_SCREEN}/${task.id}")
+    }
+
+    fun onTaskDelete(task: Task) {
+        viewModelScope.launch {
+            firebaseService.delete(task.id)
+            loadTasks()
+        }
+    }
 }
