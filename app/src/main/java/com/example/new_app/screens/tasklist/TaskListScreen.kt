@@ -21,6 +21,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Deselect
+import androidx.compose.material.icons.filled.SelectAll
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.runtime.*
 import androidx.compose.runtime.snapshots.SnapshotStateList
@@ -110,21 +112,42 @@ fun TaskListScreen(
                     modifier = Modifier.fillMaxWidth(),
                     backgroundColor = MaterialTheme.colors.primary,
                     actions = {
+                        if (selectedIndex.value != 1) {
+                            if (selectedTasks.isEmpty()) {
+                                IconButton(onClick = {
+                                    onSelectAllTasks(
+                                        selectedIndex.value,
+                                        selectedTasks,
+                                        uiState.tasks
+                                    )
+                                }) {
+                                    Icon(Icons.Default.SelectAll, contentDescription = "Select All")
+                                }
+                            } else {
+                                if (!selectedTasks.isEmpty()) {
+                                    IconButton(onClick = { selectedTasks.clear() }) {
+                                        Icon(
+                                            Icons.Default.Deselect,
+                                            contentDescription = "Select All"
+                                        )
+                                    }
+                                }
+                            }
+                        }
                         if (selectedTasks.isEmpty()) {
                             IconButton(onClick = { openScreen(SETTINGS_SCREEN) }) {
-                                Icon(Icons.Filled.Settings, "Settings")
+                                Icon(Icons.Filled.Settings, contentDescription = "Settings")
                             }
                         } else {
                             DropdownContextMenu(
-                                options = listOf("Delete All Selected", "Deselect All"),
+                                options = listOf("Delete All Selected"),
                                 modifier = Modifier.padding(end = 8.dp),
                                 onActionClick = { action ->
                                     when (action) {
                                         "Delete All Selected" -> {
-//                                            viewModel.deleteSelectedTasks(selectedTasks)
+                                            viewModel.onDeleteSelectedTasks(selectedTasks)
                                             selectedTasks.clear()
                                         }
-                                        "Deselect All" -> selectedTasks.clear()
                                     }
                                 }
                             )
@@ -381,8 +404,8 @@ fun TaskListItem(
 
             CompositionLocalProvider(LocalContentAlpha provides ContentAlpha.medium) {
                 Text(
-                    text = if (task.isCompleted) "Completed" else "Pending",
-                    color = if (task.isCompleted) MaterialTheme.colors.primary else MaterialTheme.colors.error
+                    text = if (TaskStatus.ACTIVE == task.status) "Pending" else if (TaskStatus.DELETED == task.status) "Deleted" else "Completed",
+                    color = if (TaskStatus.ACTIVE == task.status) Color(0xFFE53935) else if (TaskStatus.DELETED == task.status) Color(0xFFE53935) else Color(0xFF43A047),
                 )
             }
         }
@@ -504,6 +527,28 @@ fun ActionToolbar(
         modifier = modifier
     )
 }
+
+fun onSelectAllTasks(selectedIndex: Int, selectedTasks: SnapshotStateList<Task>, taskList: List<Task>) {
+    // Compute the TaskStatus based on selectedIndex
+    val status = when (selectedIndex) {
+        0 -> TaskStatus.DELETED
+        2 -> TaskStatus.COMPLETED
+        else -> TaskStatus.ACTIVE
+    }
+
+    // Get all tasks with the matching status
+    val tasksToSelect = taskList.filter { it.status == status }
+
+    // Add all tasks to the selectedTasks list if they're not already in it
+    tasksToSelect.forEach { task ->
+        if (task !in selectedTasks) {
+            selectedTasks.add(task)
+        }
+    }
+}
+
+
+
 
 private fun getDueDateAndTime(task: Task): String {
     val stringBuilder = StringBuilder("")

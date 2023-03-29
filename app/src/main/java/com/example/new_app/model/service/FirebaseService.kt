@@ -75,6 +75,13 @@ class FirebaseService {
     }
 
 
+    suspend fun deleteTasks (tasks: List<Task>) {
+        auth.currentUser?.uid?.let { uid ->
+            tasks.map { currentCollection(uid).document(it.id).delete().asDeferred() }.awaitAll()
+        }
+    }
+
+
     companion object {
         private const val USER_COLLECTION = "users"
         private const val TASK_COLLECTION = "tasks"

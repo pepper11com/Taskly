@@ -68,4 +68,10 @@ class TaskListViewModel() : ViewModel() {
         }
     }
 
+    fun onDeleteSelectedTasks(tasks: List<Task>) {
+        viewModelScope.launch {
+            firebaseService.deleteTasks(tasks)
+        }
+    }
+
 }
