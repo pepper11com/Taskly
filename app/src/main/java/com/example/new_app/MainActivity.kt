@@ -36,7 +36,6 @@ class MainActivity : AppCompatActivity() {
         //https://console.firebase.google.com/u/0/project/example-f27a3/settings/general/android:com.example.new_app
 
         //todo - swipe down to refresh task list
-        //todo - add a delete all button
         //todo - settings screen
         //todo - account screen with optional username - first name - last name
         //todo - edit task screen

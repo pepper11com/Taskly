@@ -10,6 +10,7 @@ const val SIGN_UP_SCREEN = "SignUpScreen"
 
 const val SPLASH_SCREEN = "SplashScreen"
 
+const val EDIT_TASK_SCREEN = "EditTaskScreen"
 
 const val TASK_ID = "taskId"
 const val TASK_DEFAULT_ID = "-1"

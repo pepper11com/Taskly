@@ -23,6 +23,7 @@ import com.example.new_app.screens.login.LoginScreen
 import com.example.new_app.screens.settings.SettingsScreen
 import com.example.new_app.screens.signup.SignupScreen
 import com.example.new_app.screens.splashscreen.SplashScreen
+import com.example.new_app.screens.tasklist.EditTaskScreen
 import com.example.new_app.screens.tasklist.TaskListScreen
 import com.example.new_app.theme.New_AppTheme
 import kotlinx.coroutines.CoroutineScope
@@ -119,6 +120,19 @@ fun NavGraphBuilder.taskAppGraph(
             openScreen = { route -> appState.navigate(route) }
         )
     }
+
+    composable(
+        route = "$EDIT_TASK_SCREEN$TASK_ID_KEY",
+        arguments = listOf(navArgument(TASK_ID) { defaultValue = TASK_DEFAULT_ID })
+    ) {
+        EditTaskScreen(
+            popUpScreen = { appState.popUp() },
+            taskId = it.arguments?.getString(TASK_ID) ?: TASK_DEFAULT_ID,
+            saveImageUriPermission = saveImageUriPermission,
+            userId = it.arguments?.getString("userId") ?: ""
+        )
+    }
+
 
     composable(
         route = "$CREATE_TASK_SCREEN$TASK_ID_KEY",
