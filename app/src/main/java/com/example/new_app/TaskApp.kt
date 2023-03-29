@@ -33,7 +33,7 @@ import kotlinx.coroutines.CoroutineScope
 fun TaskApp(
     saveImageUriPermission: (Uri) -> Unit
 ) {
-    New_AppTheme {
+    New_AppTheme() {
         Surface(color = MaterialTheme.colors.background) {
             val appState = rememberAppState()
 

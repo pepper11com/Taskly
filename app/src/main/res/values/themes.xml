@@ -3,7 +3,7 @@
 
     <style name="Theme.New_App" parent="Theme.MaterialComponents.Light.NoActionBar">
 
-        <item name="android:colorPrimary">@color/light_orange</item>
+        <item name="android:colorPrimary">@color/dark_orange</item>
 
 
 
@@ -15,5 +15,14 @@
         <item name="android:windowActionBar">false</item>
         <item name="android:windowNoTitle">true</item>
     </style>
+
+    <style name="CustomDatePickerTheme" parent="ThemeOverlay.MaterialComponents.MaterialCalendar">
+        <item name="colorPrimary">@color/bright_orange</item>
+    </style>
+
+    <style name="CustomTimePickerTheme" parent="ThemeOverlay.MaterialComponents.TimePicker">
+        <item name="colorPrimary">@color/bright_orange</item>
+    </style>
+
 
 </resources>

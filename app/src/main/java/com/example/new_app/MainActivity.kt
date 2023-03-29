@@ -35,28 +35,22 @@ class MainActivity : AppCompatActivity() {
         //https://console.firebase.google.com/u/0/project/example-f27a3/authentication/emails
         //https://console.firebase.google.com/u/0/project/example-f27a3/settings/general/android:com.example.new_app
 
-        //todo - swipe to delete task
         //todo - swipe down to refresh task list
         //todo - add a delete all button
-        //todo - add a second screen that shows deleted tasks and a restore button
-        //todo - add a second screen that shows completed tasks and a restore button
         //todo - settings screen
         //todo - account screen with optional username - first name - last name
         //todo - edit task screen
         //todo - add a search bar to search for tasks
-        //todo - swipe to right to complete task - swipe to left to delete task
         //todo - notification when task is due
         //todo - snack-bar not always showing
         //todo - make sure the image is deleted when the task is deleted
-
-        //todo - check if you can do something about the image not showing up after deleting the app and reinstalling it
-        //todo - image orientation is not always correct
-
-        //todo - if image is still loading show a loading icon
+        //todo - google maps to show location of task
+        //todo - when swiping to delete or to complete a task, show a icon with color under the task
 
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
             checkStoragePermission()
         }
+
 
         setContent {
             TaskApp(

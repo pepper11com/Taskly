@@ -43,7 +43,8 @@ fun CustomTextField(
             singleLine = singleLine,
             keyboardOptions = keyboardOptions,
             colors = TextFieldDefaults.outlinedTextFieldColors(
-                focusedBorderColor = MaterialTheme.colors.primary,
+                focusedBorderColor = MaterialTheme.colors.secondary,
+                focusedLabelColor = MaterialTheme.colors.secondary,
                 unfocusedBorderColor = MaterialTheme.colors.onSurface.copy(alpha = ContentAlpha.disabled)
             )
         )
@@ -102,7 +103,7 @@ fun CustomPasswordTextField(
                 }
             },
             colors = TextFieldDefaults.outlinedTextFieldColors(
-                focusedBorderColor = MaterialTheme.colors.primary,
+                focusedBorderColor = MaterialTheme.colors.secondary,
                 unfocusedBorderColor = MaterialTheme.colors.onSurface.copy(alpha = ContentAlpha.disabled)
             )
         )

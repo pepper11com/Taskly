@@ -12,7 +12,7 @@ fun CustomButton(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     colors: ButtonColors = ButtonDefaults.buttonColors(
-        backgroundColor = MaterialTheme.colors.primary,
+        backgroundColor = MaterialTheme.colors.secondary,
         contentColor = MaterialTheme.colors.onPrimary
     )
 ) {

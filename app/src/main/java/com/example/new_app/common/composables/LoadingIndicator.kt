@@ -9,6 +9,6 @@ import androidx.compose.ui.Modifier
 fun LoadingIndicator(modifier: Modifier = Modifier) {
     CircularProgressIndicator(
         modifier = modifier,
-        color = MaterialTheme.colors.primary
+        color = MaterialTheme.colors.secondary
     )
 }

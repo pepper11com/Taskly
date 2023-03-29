@@ -23,6 +23,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.runtime.*
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -60,6 +61,7 @@ import coil.compose.rememberAsyncImagePainter
 import coil.compose.rememberImagePainter
 import coil.request.CachePolicy
 import coil.request.ImageRequest
+import com.example.new_app.common.composables.DropdownContextMenu
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileNotFoundException
@@ -81,7 +83,8 @@ fun TaskListScreen(
 
     val showDialog = remember { mutableStateOf(false) }
     val currentTask = remember { mutableStateOf<Task?>(null) }
-    val currentTaskBitmap = remember { mutableStateOf<Bitmap?>(null) }
+
+    val selectedTasks = remember { mutableStateListOf<Task>() }
 
     val tabTitles = listOf("Deleted Tasks", "Tasks", "Completed Tasks")
     val selectedIndex = remember { mutableStateOf(1) }
@@ -103,11 +106,36 @@ fun TaskListScreen(
         },
         topBar = {
             Column {
-                ActionToolbar(
-                    title = "Task List",
-                    endActionIcon = Icons.Filled.Settings,
-                    endAction = {
-                        openScreen(SETTINGS_SCREEN)
+                TopAppBar(
+                    modifier = Modifier.fillMaxWidth(),
+                    backgroundColor = MaterialTheme.colors.primary,
+                    actions = {
+                        if (selectedTasks.isEmpty()) {
+                            IconButton(onClick = { openScreen(SETTINGS_SCREEN) }) {
+                                Icon(Icons.Filled.Settings, "Settings")
+                            }
+                        } else {
+                            DropdownContextMenu(
+                                options = listOf("Delete All Selected", "Deselect All"),
+                                modifier = Modifier.padding(end = 8.dp),
+                                onActionClick = { action ->
+                                    when (action) {
+                                        "Delete All Selected" -> {
+//                                            viewModel.deleteSelectedTasks(selectedTasks)
+                                            selectedTasks.clear()
+                                        }
+                                        "Deselect All" -> selectedTasks.clear()
+                                    }
+                                }
+                            )
+                        }
+
+                    },
+                    title = {
+                        Text(
+                            text = "Tasks",
+                            color = MaterialTheme.colors.onPrimary,
+                        )
                     }
                 )
                 TabRow(
@@ -124,6 +152,7 @@ fun TaskListScreen(
                     }
                 }
             }
+
         },
         content = {
             Box(modifier = Modifier.fillMaxSize()) {
@@ -150,6 +179,15 @@ fun TaskListScreen(
                                 },
                                 status = task.status,
                                 taskBitmap = taskBitmap,
+                                isSelected = task in selectedTasks,
+                                selectedTasks = selectedTasks,
+                                onSelectedTasksChange = { selectedTask, isChecked -> // Pass onSelectedTasksChange
+                                    if (isChecked) {
+                                        selectedTasks.add(selectedTask)
+                                    } else {
+                                        selectedTasks.remove(selectedTask)
+                                    }
+                                }
                             )
                             Divider()
                         }
@@ -178,7 +216,10 @@ fun SwipeableTaskListItem(
     onClick: () -> Unit,
     viewModel: TaskListViewModel,
     onLongPress: () -> Unit,
-    status: TaskStatus
+    status: TaskStatus,
+    isSelected: Boolean,
+    selectedTasks: SnapshotStateList<Task>,
+    onSelectedTasksChange: (Task, Boolean) -> Unit
 ) {
     //width of the swipeable item
     val screenWidth = LocalConfiguration.current.screenWidthDp.dp
@@ -231,6 +272,9 @@ fun SwipeableTaskListItem(
             onClick = onClick,
             onLongPress = onLongPress,
             offset = offset,
+            isSelected = isSelected,
+            selectedTasks = selectedTasks,
+            onSelectedTasksChange = onSelectedTasksChange
         )
     }
 }
@@ -243,7 +287,10 @@ fun TaskListItem(
     taskBitmap: MutableState<Bitmap?>,
     onClick: () -> Unit,
     onLongPress: () -> Unit,
-    offset: Offset = Offset.Zero
+    offset: Offset = Offset.Zero,
+    isSelected: Boolean,
+    selectedTasks: SnapshotStateList<Task>,
+    onSelectedTasksChange: (Task, Boolean) -> Unit
 ) {
     val context = LocalContext.current
     val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
@@ -310,11 +357,20 @@ fun TaskListItem(
                 }
             }
 
-            Checkbox(
-                checked = task.isCompleted,
-                onCheckedChange = null,
-                modifier = Modifier.padding(8.dp, 0.dp)
-            )
+            if (TaskStatus.ACTIVE != task.status) {
+                Checkbox(
+                    checked = isSelected,
+                    onCheckedChange = { isChecked ->
+                        if (isChecked) {
+                            selectedTasks.add(task)
+                        } else {
+                            selectedTasks.remove(task)
+                        }
+                    },
+                    modifier = Modifier.padding(8.dp, 0.dp))
+            } else {
+                Spacer(modifier = Modifier.padding(8.dp, 0.dp))
+            }
 
             Column(modifier = Modifier.weight(1f)) {
                 Text(text = task.title, style = MaterialTheme.typography.subtitle2)
@@ -421,6 +477,7 @@ fun ShowDialogWithTaskDetailsAndDelete(
         },
         dismissButton = {
             Button(
+                colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.secondary),
                 onClick = onDismiss,
             ) {
                 Text("Cancel")

@@ -7,7 +7,6 @@ import android.content.Intent
 import android.graphics.*
 import android.net.Uri
 import android.os.Build
-import android.provider.MediaStore
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
@@ -22,16 +21,15 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.new_app.R
-import com.example.new_app.common.composables.CustomButton
 import com.example.new_app.common.composables.CustomTextField
 import com.example.new_app.common.composables.RegularCardEditor
-import com.example.new_app.common.usable.saveImageUriPermission
 import com.example.new_app.model.Task
 import com.google.android.material.datepicker.MaterialDatePicker
 import com.google.android.material.timepicker.MaterialTimePicker
@@ -52,7 +50,6 @@ fun CreateTaskScreen(
     val viewModel: CreateTaskViewModel = viewModel()
     val task by viewModel.task
 
-
     LaunchedEffect(Unit) {
         viewModel.initialize(taskId)
     }
@@ -60,6 +57,7 @@ fun CreateTaskScreen(
     Scaffold(
         topBar = {
             TopAppBar(
+                backgroundColor = MaterialTheme.colors.primary,
                 title = { Text("Create Task") },
                 navigationIcon = {
                     IconButton(onClick = popUpScreen) {
@@ -69,13 +67,16 @@ fun CreateTaskScreen(
                 actions = {
                     IconButton(
                         enabled = task.title.isNotBlank() && task.description.isNotBlank(),
+
                         onClick = {
                             viewModel.onDoneClick(popUpScreen)
                         }
                     ) {
                         Icon(
                             Icons.Filled.Done,
-                            contentDescription = "Done"
+                            contentDescription = "Done",
+                            tint = if (task.title.isNotBlank() && task.description.isNotBlank())
+                                Color.Black else MaterialTheme.colors.onSurface.copy(alpha = 0.5f)
                         )
                     }
                 }
@@ -250,7 +251,7 @@ fun PickImageFromGallery(
                 },
                 colors = ButtonDefaults.buttonColors(
                     contentColor = MaterialTheme.colors.onPrimary,
-                    backgroundColor = MaterialTheme.colors.primary
+                    backgroundColor = MaterialTheme.colors.secondary
                 ),
                 modifier = Modifier.fillMaxWidth()
             ) {
@@ -270,7 +271,7 @@ fun PickImageFromGallery(
                 },
                 colors = ButtonDefaults.buttonColors(
                     contentColor = MaterialTheme.colors.onPrimary,
-                    backgroundColor = MaterialTheme.colors.primary
+                    backgroundColor = MaterialTheme.colors.secondary
                 ),
                 modifier = Modifier.fillMaxWidth()
             ) {
@@ -315,7 +316,9 @@ fun Bitmap.toSoftwareBitmap(): Bitmap {
 
 
 private fun showDatePicker(activity: AppCompatActivity, onDateChange: (Long) -> Unit) {
-    val picker = MaterialDatePicker.Builder.datePicker().build()
+    val picker = MaterialDatePicker.Builder.datePicker()
+        .setTheme(R.style.CustomDatePickerTheme) // set the custom theme here
+        .build()
 
     activity.let {
         picker.show(it.supportFragmentManager, picker.toString())
@@ -324,13 +327,17 @@ private fun showDatePicker(activity: AppCompatActivity, onDateChange: (Long) -> 
 }
 
 private fun showTimePicker(activity: AppCompatActivity, onTimeChange: (Int, Int) -> Unit) {
-    val picker = MaterialTimePicker.Builder().setTimeFormat(TimeFormat.CLOCK_24H).build()
+    val picker = MaterialTimePicker.Builder()
+        .setTimeFormat(TimeFormat.CLOCK_24H)
+        .setTheme(R.style.CustomTimePickerTheme) // set the custom theme here
+        .build()
 
     activity.let {
         picker.show(it.supportFragmentManager, picker.toString())
         picker.addOnPositiveButtonClickListener { onTimeChange(picker.hour, picker.minute) }
     }
 }
+
 
 
 
