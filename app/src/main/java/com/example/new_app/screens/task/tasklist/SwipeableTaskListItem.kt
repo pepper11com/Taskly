@@ -1,4 +1,4 @@
-package com.example.new_app.screens.tasklist
+package com.example.new_app.screens.task.tasklist
 
 import android.content.Context
 import android.graphics.Bitmap

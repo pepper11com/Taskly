@@ -1,7 +1,8 @@
-package com.example.new_app.screens.createtask
+package com.example.new_app.screens.task.create_edit_tasks
 
 import android.content.Context
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Build
 import androidx.annotation.RequiresApi
@@ -9,18 +10,20 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewModelScope
+import com.example.new_app.R
 import com.example.new_app.TASK_DEFAULT_ID
 import com.example.new_app.common.ext.idFromParameter
 import com.example.new_app.model.Task
 import com.example.new_app.model.service.AccountService
 import com.example.new_app.model.service.FirebaseService
 import com.example.new_app.screens.TaskAppViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.time.ZoneId
 import java.util.*
 
-class CreateTaskViewModel() : TaskAppViewModel() {
+class TaskEditCreateViewModel : TaskAppViewModel() {
 
     private val dateFormat = "EEE, d MMM yyyy"
 
@@ -28,22 +31,26 @@ class CreateTaskViewModel() : TaskAppViewModel() {
     private val accountService: AccountService = AccountService()
 
     val task = mutableStateOf(Task())
-
+    val imageUri = mutableStateOf<String?>(null)
     var bitmap by mutableStateOf<Bitmap?>(null)
+
+
+    fun initialize(taskId: String?) {
+        viewModelScope.launch {
+            taskId?.let {
+                if (taskId.isNotEmpty()) {
+                    task.value = firebaseService.getTask(taskId) ?: Task()
+                }
+            }
+        }
+    }
 
     fun onTitleChange(newValue: String) {
         task.value = task.value.copy(title = newValue)
     }
+
     fun onDescriptionChange(newValue: String) {
         task.value = task.value.copy(description = newValue)
-    }
-
-    fun onIsCompletedChange(newValue: Boolean) {
-        task.value = task.value.copy(isCompleted = newValue)
-    }
-
-    fun onImageChange(newValue: String) {
-        task.value = task.value.copy(imageUri = newValue)
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -59,14 +66,6 @@ class CreateTaskViewModel() : TaskAppViewModel() {
         task.value = task.value.copy(dueTime = newDueTime)
     }
 
-    fun initialize(taskId: String) {
-        launchCatching {
-            if (taskId != TASK_DEFAULT_ID) {
-                task.value = firebaseService.getTask(taskId.idFromParameter()) ?: Task()
-            }
-        }
-    }
-
     fun onImageChange(newValue: String, context: Context, taskId: String, userId: String) {
         viewModelScope.launch {
             val localImagePath = accountService.saveImageToInternalStorage(
@@ -76,24 +75,32 @@ class CreateTaskViewModel() : TaskAppViewModel() {
                 taskId
             )
             task.value = task.value.copy(imageUri = localImagePath)
+            imageUri.value = localImagePath
+
+            bitmap = if (localImagePath.isNotEmpty()) {
+                BitmapFactory.decodeFile(localImagePath)
+            } else {
+                BitmapFactory.decodeResource(
+                    context.resources,
+                    R.drawable.baseline_account_box_24
+                )
+            }
         }
     }
 
-
-
-    fun onDoneClick(popUpScreen: () -> Unit) {
+    fun onDoneClick(taskId: String?, popUpScreen: () -> Unit) {
         viewModelScope.launch {
-            try {
+            if (taskId == null) {
                 val newTask = task.value.copy(
                     createdBy = accountService.currentUserId,
                     assignedTo = listOf(accountService.currentUserId),
                     isCompleted = false
                 )
                 firebaseService.save(newTask)
-                popUpScreen()
-            } catch (e: Exception) {
-                // Handle the error
+            } else {
+                firebaseService.updateTask(task.value)
             }
+            popUpScreen()
         }
     }
 

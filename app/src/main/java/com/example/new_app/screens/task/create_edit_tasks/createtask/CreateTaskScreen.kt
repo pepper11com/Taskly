@@ -1,4 +1,4 @@
-package com.example.new_app.screens.tasklist
+package com.example.new_app.screens.task.create_edit_tasks.createtask
 
 import android.annotation.SuppressLint
 import android.app.Activity
@@ -16,14 +16,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.DateRange
-import androidx.compose.material.icons.filled.Done
-import androidx.compose.material.icons.filled.Timer
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.material.icons.filled.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -37,34 +31,34 @@ import com.example.new_app.R
 import com.example.new_app.common.composables.CustomTextField
 import com.example.new_app.common.composables.RegularCardEditor
 import com.example.new_app.model.Task
-import com.example.new_app.screens.createtask.CreateTaskViewModel
+import com.example.new_app.screens.task.create_edit_tasks.TaskEditCreateViewModel
 import com.google.android.material.datepicker.MaterialDatePicker
 import com.google.android.material.timepicker.MaterialTimePicker
 import com.google.android.material.timepicker.TimeFormat
+import java.lang.Integer.min
 
 
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterialApi::class)
 @SuppressLint("UnusedMaterialScaffoldPaddingParameter")
 @Composable
-fun EditTaskScreen(
+fun CreateTaskScreen(
     popUpScreen: () -> Unit,
     taskId: String,
-    saveImageUriPermission: (Uri) -> Unit,
     userId: String
 ) {
-    val viewModel: EditTaskViewModel  = viewModel()
-    val task by viewModel.task.collectAsState()
+    val viewModel: TaskEditCreateViewModel = viewModel()
+    val task by viewModel.task
 
     LaunchedEffect(Unit) {
-        viewModel.initialize(taskId)
+        viewModel.initialize(null)
     }
 
     Scaffold(
         topBar = {
             TopAppBar(
                 backgroundColor = MaterialTheme.colors.primary,
-                title = { Text("Edit Task") },
+                title = { Text("Create Task") },
                 navigationIcon = {
                     IconButton(onClick = popUpScreen) {
                         Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
@@ -75,7 +69,7 @@ fun EditTaskScreen(
                         enabled = task.title.isNotBlank() && task.description.isNotBlank(),
 
                         onClick = {
-                            viewModel.onDoneClick(popUpScreen)
+                            viewModel.onDoneClick(null, popUpScreen)
                         }
                     ) {
                         Icon(
@@ -101,7 +95,6 @@ fun EditTaskScreen(
                 LocalContext.current,
                 viewModel,
                 task,
-                saveImageUriPermission,
                 userId
             )
 
@@ -154,40 +147,21 @@ private fun CardEditors(
     }
 }
 
-
 @Composable
 fun PickImageFromGallery(
     context: Context,
-    viewModel: EditTaskViewModel,
+    viewModel: TaskEditCreateViewModel,
     task: Task,
-    saveImageUriPermission: (Uri) -> Unit,
     userId: String
 ) {
+    val updatedTask by rememberUpdatedState(task)
+
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
     ) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
             result.data?.data?.let { uri ->
                 viewModel.onImageChange(uri.toString(), context, task.id, userId)
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                    context.contentResolver.takePersistableUriPermission(
-                        uri,
-                        Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
-                    )
-                } else {
-                    val clipData = result.data?.clipData
-                    if (clipData != null) {
-                        for (i in 0 until clipData.itemCount) {
-                            val item = clipData.getItemAt(i)
-                            val uri = item.uri
-                            context.contentResolver.takePersistableUriPermission(
-                                uri,
-                                Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
-                            )
-                        }
-                    }
-                }
-                saveImageUriPermission(uri)
             }
         }
     }
@@ -208,32 +182,18 @@ fun PickImageFromGallery(
         modifier = Modifier.padding(vertical = 16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        if (task.imageUri != null && task.imageUri!!.isNotEmpty()) {
-            LaunchedEffect(task.imageUri) {
-                viewModel.bitmap = if (task.imageUri != null && task.imageUri!!.isNotEmpty()) {
-                    BitmapFactory.decodeFile(task.imageUri)
-                } else {
-                    BitmapFactory.decodeResource(
-                        context.resources,
-                        R.drawable.baseline_account_box_24
-                    )
-                }
-            }
-
-
-            viewModel.bitmap?.let { btm ->
-                val squareBitmap = btm.centerCropToSquare()
-                val softwareBitmap = squareBitmap.toSoftwareBitmap()
-                val circularBitmap = softwareBitmap.toCircularBitmap()
-                Image(
-                    bitmap = circularBitmap.asImageBitmap(),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .size(100.dp)
-                        .weight(1f, fill = false)
-                )
-            }
-        } else {
+        viewModel.bitmap?.let { btm ->
+            val squareBitmap = btm.centerCropToSquare()
+            val softwareBitmap = squareBitmap.toSoftwareBitmap()
+            val circularBitmap = softwareBitmap.toCircularBitmap()
+            Image(
+                bitmap = circularBitmap.asImageBitmap(),
+                contentDescription = null,
+                modifier = Modifier
+                    .size(100.dp)
+                    .weight(1f, fill = false)
+            )
+        } ?: run {
             Image(
                 painter = painterResource(id = R.drawable.baseline_account_box_24),
                 contentDescription = "Logo",
@@ -267,9 +227,9 @@ fun PickImageFromGallery(
             Spacer(modifier = Modifier.height(16.dp))
 
             Button(
-                enabled = task.imageUri != null && task.imageUri!!.isNotEmpty(),
+                enabled = updatedTask.imageUri != null && updatedTask.imageUri!!.isNotEmpty(),
                 onClick = {
-                    task.imageUri = ""
+                    updatedTask.imageUri = ""
                     viewModel.bitmap = BitmapFactory.decodeResource(
                         context.resources,
                         R.drawable.baseline_account_box_24
@@ -288,9 +248,10 @@ fun PickImageFromGallery(
 }
 
 
+
 // Extension function to crop a Bitmap into a square
 fun Bitmap.centerCropToSquare(): Bitmap {
-    val dimension = Integer.min(width, height)
+    val dimension = min(width, height)
     val xOffset = (width - dimension) / 2
     val yOffset = (height - dimension) / 2
     return Bitmap.createBitmap(this, xOffset, yOffset, dimension, dimension)
@@ -343,4 +304,7 @@ private fun showTimePicker(activity: AppCompatActivity, onTimeChange: (Int, Int)
         picker.addOnPositiveButtonClickListener { onTimeChange(picker.hour, picker.minute) }
     }
 }
+
+
+
 

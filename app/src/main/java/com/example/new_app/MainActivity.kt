@@ -46,47 +46,11 @@ class MainActivity : AppCompatActivity() {
         //todo - google maps to show location of task
         //todo - when swiping to delete or to complete a task, show a icon with color under the task
 
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
-            checkStoragePermission()
-        }
-
 
         setContent {
-            TaskApp(
-                saveImageUriPermission = { uri -> saveImageUriPermission(this, uri) }
-            )
+            TaskApp()
         }
 
-        restoreImageUriPermissions(this)
-    }
-
-
-    private fun checkStoragePermission() {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE), storagePermissionCode)
-        }
-    }
-
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == storagePermissionCode) {
-            if (grantResults.isNotEmpty() && grantResults[0] != PackageManager.PERMISSION_GRANTED) {
-                Toast.makeText(this, "Storage permission is required to access images.", Toast.LENGTH_SHORT).show()
-            }
-        }
-    }
-
-    private fun restoreImageUriPermissions(context: Context) {
-        val sharedPreferences = context.getSharedPreferences("uri_permissions", Context.MODE_PRIVATE)
-        sharedPreferences.all.forEach { (key, value) ->
-            if (value is String) {
-                val uri = Uri.parse(value)
-                context.contentResolver.takePersistableUriPermission(
-                    uri,
-                    Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
-                )
-            }
-        }
     }
 }
 

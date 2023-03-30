@@ -18,22 +18,20 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.new_app.common.snackbar.SnackbarManager
-import com.example.new_app.screens.createtask.CreateTaskScreen
+import com.example.new_app.screens.task.create_edit_tasks.createtask.CreateTaskScreen
 import com.example.new_app.screens.login.LoginScreen
 import com.example.new_app.screens.settings.SettingsScreen
 import com.example.new_app.screens.signup.SignupScreen
 import com.example.new_app.screens.splashscreen.SplashScreen
-import com.example.new_app.screens.tasklist.EditTaskScreen
-import com.example.new_app.screens.tasklist.TaskListScreen
+import com.example.new_app.screens.task.create_edit_tasks.edit_task.EditTaskScreen
+import com.example.new_app.screens.task.tasklist.TaskListScreen
 import com.example.new_app.theme.New_AppTheme
 import kotlinx.coroutines.CoroutineScope
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 @ExperimentalMaterialApi
-fun TaskApp(
-    saveImageUriPermission: (Uri) -> Unit
-) {
+fun TaskApp() {
     New_AppTheme() {
         Surface(color = MaterialTheme.colors.background) {
             val appState = rememberAppState()
@@ -57,7 +55,6 @@ fun TaskApp(
                 ) {
                     taskAppGraph(
                         appState,
-                        saveImageUriPermission,
                     )
                 }
             }
@@ -88,7 +85,6 @@ fun resources(): Resources {
 @ExperimentalMaterialApi
 fun NavGraphBuilder.taskAppGraph(
     appState: TaskAppState,
-    saveImageUriPermission: (Uri) -> Unit,
 ) {
 
     composable(SPLASH_SCREEN) {
@@ -128,7 +124,6 @@ fun NavGraphBuilder.taskAppGraph(
         EditTaskScreen(
             popUpScreen = { appState.popUp() },
             taskId = it.arguments?.getString(TASK_ID) ?: TASK_DEFAULT_ID,
-            saveImageUriPermission = saveImageUriPermission,
             userId = it.arguments?.getString("userId") ?: ""
         )
     }
@@ -141,7 +136,6 @@ fun NavGraphBuilder.taskAppGraph(
         CreateTaskScreen(
             popUpScreen = { appState.popUp() },
             taskId = it.arguments?.getString(TASK_ID) ?: TASK_DEFAULT_ID,
-            saveImageUriPermission = saveImageUriPermission,
             userId = it.arguments?.getString("userId") ?: ""
         )
     }

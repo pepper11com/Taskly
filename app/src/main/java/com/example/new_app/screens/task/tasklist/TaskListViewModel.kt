@@ -1,4 +1,4 @@
-package com.example.new_app.screens.tasklist
+package com.example.new_app.screens.task.tasklist
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData

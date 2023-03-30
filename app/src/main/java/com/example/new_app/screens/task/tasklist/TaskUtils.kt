@@ -1,4 +1,4 @@
-package com.example.new_app.screens.tasklist
+package com.example.new_app.screens.task.tasklist
 
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import com.example.new_app.model.Task
