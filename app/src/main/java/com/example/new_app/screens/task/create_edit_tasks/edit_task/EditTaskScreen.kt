@@ -279,7 +279,7 @@ fun PickImageFromGallery(
             }
 
             Spacer(modifier = Modifier.height(16.dp))
-            
+
             Button(
                 enabled = task.imageUri != null && task.imageUri!!.isNotEmpty(),
                 onClick = {

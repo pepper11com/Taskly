@@ -13,10 +13,13 @@ import androidx.lifecycle.viewModelScope
 import com.example.new_app.R
 import com.example.new_app.TASK_DEFAULT_ID
 import com.example.new_app.common.ext.idFromParameter
+import com.example.new_app.model.CustomLatLng
 import com.example.new_app.model.Task
 import com.example.new_app.model.service.AccountService
 import com.example.new_app.model.service.FirebaseService
 import com.example.new_app.screens.TaskAppViewModel
+import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.Marker
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -33,7 +36,7 @@ class TaskEditCreateViewModel : TaskAppViewModel() {
     val task = mutableStateOf(Task())
     val imageUri = mutableStateOf<String?>(null)
     var bitmap by mutableStateOf<Bitmap?>(null)
-
+    var marker: Marker? = null
 
     fun initialize(taskId: String?) {
         viewModelScope.launch {
@@ -51,6 +54,10 @@ class TaskEditCreateViewModel : TaskAppViewModel() {
 
     fun onDescriptionChange(newValue: String) {
         task.value = task.value.copy(description = newValue)
+    }
+
+    fun onLocationChange(latLng: LatLng) {
+        task.value = task.value.copy(location = CustomLatLng(latLng.latitude, latLng.longitude))
     }
 
     @RequiresApi(Build.VERSION_CODES.O)

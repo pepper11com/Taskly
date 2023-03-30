@@ -31,6 +31,7 @@ import com.example.new_app.R
 import com.example.new_app.common.composables.CustomTextField
 import com.example.new_app.common.composables.RegularCardEditor
 import com.example.new_app.model.Task
+import com.example.new_app.screens.map.LocationPicker
 import com.example.new_app.screens.task.create_edit_tasks.TaskEditCreateViewModel
 import com.google.android.material.datepicker.MaterialDatePicker
 import com.google.android.material.timepicker.MaterialTimePicker
@@ -90,6 +91,13 @@ fun CreateTaskScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+
+            LocationPicker(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(200.dp),
+                onLocationSelected = viewModel::onLocationChange,
+            )
 
             PickImageFromGallery(
                 LocalContext.current,

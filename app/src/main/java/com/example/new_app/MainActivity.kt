@@ -22,8 +22,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import com.example.new_app.BuildConfig.MAPS_API_KEY
 import com.example.new_app.common.usable.saveImageUriPermission
 import com.example.new_app.theme.New_AppTheme
+import com.google.android.libraries.places.api.Places
 
 class MainActivity : AppCompatActivity() {
     private val storagePermissionCode = 101
@@ -46,6 +48,7 @@ class MainActivity : AppCompatActivity() {
         //todo - google maps to show location of task
         //todo - when swiping to delete or to complete a task, show a icon with color under the task
 
+        Places.initialize(applicationContext, MAPS_API_KEY)
 
         setContent {
             TaskApp()

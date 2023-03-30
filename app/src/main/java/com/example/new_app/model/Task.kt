@@ -5,6 +5,7 @@ import android.net.Uri
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import com.example.new_app.screens.task.tasklist.TaskStatus
+import com.google.android.gms.maps.model.LatLng
 import com.google.firebase.firestore.DocumentId
 import java.time.LocalDate
 import java.util.Date
@@ -22,5 +23,11 @@ data class Task(
     val taskDate: Date = Date(),
 
     var imageUri: String? = null,
-//    var imageBitmap: Bitmap? = null
+    var location: CustomLatLng? = null
+)
+
+
+data class CustomLatLng(
+    val latitude: Double = 0.0,
+    val longitude: Double = 0.0
 )

@@ -12,6 +12,8 @@ const val SPLASH_SCREEN = "SplashScreen"
 
 const val EDIT_TASK_SCREEN = "EditTaskScreen"
 
+const val MAP_SCREEN = "MapScreen"
+
 const val TASK_ID = "taskId"
 const val TASK_DEFAULT_ID = "-1"
 const val TASK_ID_KEY = "?$TASK_ID={$TASK_ID}"
