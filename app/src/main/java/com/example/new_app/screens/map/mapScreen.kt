@@ -6,16 +6,20 @@ import android.location.Geocoder
 import android.os.Bundle
 import android.util.Log
 import androidx.compose.foundation.ScrollState
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
@@ -40,7 +44,8 @@ import kotlinx.coroutines.launch
 @Composable
 fun LocationPicker(
     modifier: Modifier = Modifier,
-    onLocationSelected: (LatLng) -> Unit
+    onLocationSelected: (LatLng) -> Unit,
+    showMapAndSearch: MutableState<Boolean>
 ) {
     val marker = remember { mutableStateOf<MarkerOptions?>(null) }
     val cameraPositionState = rememberCameraPositionState {
@@ -50,6 +55,13 @@ fun LocationPicker(
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     val cameraUpdate = remember { mutableStateOf<CameraUpdate?>(null) }
+    val showAutocompleteResults = remember { mutableStateOf(true) }
+
+    LaunchedEffect(searchQuery.value) {
+        if (searchQuery.value.isNotEmpty()) {
+            showAutocompleteResults.value = true
+        }
+    }
 
     val onItemClick: (Place) -> Unit = { place ->
         place.latLng?.let { latLng ->
@@ -62,55 +74,85 @@ fun LocationPicker(
     }
 
     Column {
-        TextField(
-            value = searchQuery.value,
-            onValueChange = { newValue -> searchQuery.value = newValue },
-            label = { Text("Search location") },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 8.dp),
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-            keyboardActions = KeyboardActions(onSearch = {
-                searchLocation(
-                    searchQuery.value,
-                    cameraPositionState,
-                    context,
-                    onLocationNotFound = {
-                        // Handle location not found, e.g., show a message
-                    },
-                    coroutineScope = coroutineScope,
-                    cameraUpdate = cameraUpdate
-                )
-            }),
-            singleLine = true
-        )
-        if (searchQuery.value.isNotEmpty()) {
-            PlaceAutocomplete(
-                query = searchQuery.value,
-                context = context,
-                onItemClick = onItemClick,
-                cameraUpdate = cameraUpdate,
-                coroutineScope = coroutineScope,
+        Box(modifier = Modifier.fillMaxSize()) {
+            GoogleMapView(
+                modifier = modifier,
+                cameraPositionState = cameraPositionState,
+                onMapLongClick = { latLng ->
+                    val newMarker = MarkerOptions()
+                        .position(latLng)
+                        .icon(BitmapDescriptorFactory.defaultMarker())
+
+                    marker.value = newMarker
+                    onLocationSelected(latLng)
+                },
+                marker = marker.value,
+                cameraUpdate = cameraUpdate.value
             )
 
+            Box(modifier = Modifier.align(Alignment.TopStart)) {
+                TextField(
+                    value = searchQuery.value,
+                    onValueChange = { newValue -> searchQuery.value = newValue },
+                    label = { Text("Search location") },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                        .background(
+                            color = Color(0x5EF2F2F2),
+                            shape = RoundedCornerShape(4.dp)
+                        ),
+                    colors = TextFieldDefaults.outlinedTextFieldColors(
+                        focusedBorderColor = MaterialTheme.colors.secondary,
+                        focusedLabelColor = MaterialTheme.colors.secondary,
+                        unfocusedBorderColor = MaterialTheme.colors.onSurface.copy(alpha = ContentAlpha.disabled),
+                        textColor = Color.Black
+                    ),
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                    keyboardActions = KeyboardActions(onSearch = {
+                        searchLocation(
+                            searchQuery.value,
+                            cameraPositionState,
+                            context,
+                            onLocationNotFound = {
+                                // Handle location not found, e.g., show a message
+                            },
+                            coroutineScope = coroutineScope,
+                            cameraUpdate = cameraUpdate
+                        )
+                        showAutocompleteResults.value = false
+                    }),
+                    singleLine = true
+                )
+
+                if (searchQuery.value.isNotEmpty() && showAutocompleteResults.value) {
+                    Surface(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp)
+                            .padding(top = 72.dp),
+                        shape = RoundedCornerShape(4.dp),
+                        color = Color.Black.copy(alpha = 0.8f),
+                        elevation = 4.dp
+                    ) {
+                        PlaceAutocomplete(
+                            query = searchQuery.value,
+                            context = context,
+                            onItemClick = { place ->
+                                onItemClick(place)
+                                searchQuery.value = place.name ?: ""
+                                showAutocompleteResults.value = false
+                            },
+                            cameraUpdate = cameraUpdate,
+                            coroutineScope = coroutineScope,
+                        )
+                    }
+                }
+            }
         }
-
-        GoogleMapView(
-            modifier = modifier,
-            cameraPositionState = cameraPositionState,
-            onMapLongClick = { latLng ->
-                val newMarker = MarkerOptions()
-                    .position(latLng)
-                    .icon(BitmapDescriptorFactory.defaultMarker())
-
-                marker.value = newMarker
-                onLocationSelected(latLng)
-            },
-            marker = marker.value,
-            cameraUpdate = cameraUpdate.value
-        )
     }
 }
+
 
 fun searchLocation(
     query: String,
@@ -183,34 +225,54 @@ fun PlaceAutocomplete(
         }
     }
 
-    LazyColumn {
-        items(predictions.value) { prediction ->
-            Text(
-                text = prediction.getFullText(null).toString(),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable {
-                        placesClient.fetchPlace(
-                            FetchPlaceRequest.newInstance(prediction.placeId, listOf(Place.Field.LAT_LNG))
-                        ).addOnSuccessListener { placeResponse ->
-                            placeResponse.place.latLng?.let { latLng ->
-                                Log.d("PlaceAutocomplete", "Fetched place details: $latLng")
-                                onItemClick(placeResponse.place)
-                                coroutineScope.launch {
-                                    cameraUpdate.value = CameraUpdateFactory.newLatLngZoom(latLng, 15f)
-                                }
-                            }
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .wrapContentHeight()
+    ) {
+        LazyColumn(
+            modifier = Modifier
+                .background(Color.White),
+        ) {
+            items(predictions.value) { prediction ->
+                Text(
+                    text = prediction.getFullText(null).toString(),
+                    color = Color.Black,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable {
+                            placesClient
+                                .fetchPlace(
+                                    FetchPlaceRequest.newInstance(
+                                        prediction.placeId,
+                                        listOf(Place.Field.LAT_LNG)
+                                    )
+                                )
+                                .addOnSuccessListener { placeResponse ->
+                                    placeResponse.place.latLng?.let { latLng ->
+                                        Log.d("PlaceAutocomplete", "Fetched place details: $latLng")
+                                        onItemClick(placeResponse.place)
+                                        coroutineScope.launch {
+                                            cameraUpdate.value =
+                                                CameraUpdateFactory.newLatLngZoom(latLng, 15f)
+                                        }
+                                    }
 
-                        }.addOnFailureListener { exception ->
-                            Log.e("PlaceAutocomplete", "Failed to fetch place details", exception)
+                                }
+                                .addOnFailureListener { exception ->
+                                    Log.e(
+                                        "PlaceAutocomplete",
+                                        "Failed to fetch place details",
+                                        exception
+                                    )
+                                }
                         }
-                    }
-                    .padding(16.dp)
-            )
+                        .padding(16.dp)
+                )
+            }
         }
     }
 }
-
 
 
 @Composable
@@ -266,17 +328,6 @@ fun GoogleMapView(
         }
     )
 }
-
-
-
-
-
-
-
-
-
-
-
 
 
 private const val TAG = "BasicMapActivity"

@@ -13,6 +13,7 @@ import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
@@ -26,6 +27,8 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.new_app.R
 import com.example.new_app.common.composables.CustomTextField
@@ -50,6 +53,8 @@ fun CreateTaskScreen(
 ) {
     val viewModel: TaskEditCreateViewModel = viewModel()
     val task by viewModel.task
+
+    val showMapAndSearch = remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         viewModel.initialize(null)
@@ -84,45 +89,77 @@ fun CreateTaskScreen(
             )
         }
     ) {
-
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-
-            LocationPicker(
+        Box {
+            LazyColumn(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .height(200.dp),
-                onLocationSelected = viewModel::onLocationChange,
-            )
+                    .fillMaxSize()
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                item {
+                    Button(onClick = { showMapAndSearch.value = !showMapAndSearch.value }) {
+                        Text("Toggle Map and Search Bar")
+                    }
+                }
 
-            PickImageFromGallery(
-                LocalContext.current,
-                viewModel,
-                task,
-                userId
-            )
+                item {
+                    PickImageFromGallery(
+                        LocalContext.current,
+                        viewModel,
+                        task,
+                        userId
+                    )
+                }
 
-            CustomTextField(
-                value = task.title,
-                onValueChange = viewModel::onTitleChange,
-                label = "Title",
-                modifier = Modifier.fillMaxWidth()
-            )
+                item {
+                    CustomTextField(
+                        value = task.title,
+                        onValueChange = viewModel::onTitleChange,
+                        label = "Title",
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
 
-            CustomTextField(
-                value = task.description,
-                onValueChange = viewModel::onDescriptionChange,
-                label = "Description",
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = false
-            )
+                item {
+                    CustomTextField(
+                        value = task.description,
+                        onValueChange = viewModel::onDescriptionChange,
+                        label = "Description",
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = false
+                    )
+                }
 
-            CardEditors(task, viewModel::onDateChange, viewModel::onTimeChange)
+                item {
+                    CardEditors(task, viewModel::onDateChange, viewModel::onTimeChange)
+                }
+            }
 
+            if (showMapAndSearch.value) {
+                Dialog(
+                    onDismissRequest = { showMapAndSearch.value = false },
+                    properties = DialogProperties(usePlatformDefaultWidth = false)
+                ) {
+                    Scaffold(
+                        topBar = {
+                            TopAppBar(
+                                backgroundColor = MaterialTheme.colors.primary,
+                                title = { Text("Map and Search Bar") },
+                                navigationIcon = {
+                                    IconButton(onClick = { showMapAndSearch.value = false }) {
+                                        Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
+                                    }
+                                }
+                            )
+                        }
+                    ){
+                        LocationPicker(
+                            onLocationSelected = viewModel::onLocationChange,
+                            showMapAndSearch = showMapAndSearch
+                        )
+                    }
+                }
+            }
         }
     }
 }
