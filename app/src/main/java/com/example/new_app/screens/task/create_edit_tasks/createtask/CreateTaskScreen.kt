@@ -225,6 +225,7 @@ fun CreateTaskScreen(
                     ) {
                         LocationPicker(
                             onLocationSelected = viewModel::onLocationChange,
+                            onLocationNameSet = viewModel::onLocationNameChange,
                             showMapAndSearch = showMapAndSearch,
                             locationDisplay = locationDisplay
                         )

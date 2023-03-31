@@ -60,13 +60,14 @@ class TaskEditCreateViewModel : TaskAppViewModel() {
         task.value = task.value.copy(location = CustomLatLng(latLng.latitude, latLng.longitude))
     }
 
+    fun onLocationNameChange(newValue: String) {
+        task.value = task.value.copy(locationName = newValue)
+    }
+
     fun onLocationReset() {
-        // Remove the marker from the map
         marker?.remove()
-
-        // Remove the location from the task
         task.value = task.value.copy(location = null)
-
+        task.value = task.value.copy(locationName = null)
     }
 
 

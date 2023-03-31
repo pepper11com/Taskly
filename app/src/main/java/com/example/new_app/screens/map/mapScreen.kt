@@ -51,6 +51,7 @@ import kotlinx.coroutines.delay
 fun LocationPicker(
     modifier: Modifier = Modifier,
     onLocationSelected: (LatLng) -> Unit,
+    onLocationNameSet: (String) -> Unit,
     showMapAndSearch: MutableState<Boolean>,
     locationDisplay: MutableState<String>
 ) {
@@ -94,6 +95,7 @@ fun LocationPicker(
                     marker.value = newMarker
                     onLocationSelected(latLng)
                     locationDisplay.value = "${latLng.latitude}, ${latLng.longitude}"
+                    onLocationNameSet(locationDisplay.value)
                 },
                 marker = marker.value,
                 cameraUpdate = cameraUpdate.value
@@ -160,6 +162,7 @@ fun LocationPicker(
                                         cameraPositionState.animate(CameraUpdateFactory.newLatLngZoom(latLng, 15f))
                                     }
                                     locationDisplay.value = place.address ?: "${latLng.latitude}, ${latLng.longitude}"
+                                    onLocationNameSet(locationDisplay.value)
                                 }
                                 isUserInput.value = false
                                 searchQuery.value = place.address ?: ""

@@ -25,6 +25,7 @@ import androidx.core.content.ContextCompat
 import com.example.new_app.BuildConfig.MAPS_API_KEY
 import com.example.new_app.common.usable.saveImageUriPermission
 import com.example.new_app.theme.New_AppTheme
+import com.google.android.gms.maps.MapsInitializer
 import com.google.android.libraries.places.api.Places
 
 class MainActivity : AppCompatActivity() {
@@ -49,6 +50,7 @@ class MainActivity : AppCompatActivity() {
         //todo - when swiping to delete or to complete a task, show a icon with color under the task
 
         Places.initialize(applicationContext, MAPS_API_KEY)
+        MapsInitializer.initialize(applicationContext)
 
         setContent {
             TaskApp()

@@ -23,7 +23,8 @@ data class Task(
     val taskDate: Date = Date(),
 
     var imageUri: String? = null,
-    var location: CustomLatLng? = null
+    var location: CustomLatLng? = null,
+    var locationName: String? = null,
 )
 
 
