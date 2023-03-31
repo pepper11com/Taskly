@@ -60,6 +60,17 @@ class TaskEditCreateViewModel : TaskAppViewModel() {
         task.value = task.value.copy(location = CustomLatLng(latLng.latitude, latLng.longitude))
     }
 
+    fun onLocationReset() {
+        // Remove the marker from the map
+        marker?.remove()
+
+        // Remove the location from the task
+        task.value = task.value.copy(location = null)
+
+    }
+
+
+
     @RequiresApi(Build.VERSION_CODES.O)
     fun onDateChange(newValue: Long) {
         val calendar = Calendar.getInstance(TimeZone.getTimeZone(ZoneId.systemDefault()))

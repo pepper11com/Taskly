@@ -9,6 +9,7 @@ import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -18,10 +19,13 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
@@ -39,13 +43,16 @@ import com.google.android.libraries.places.api.net.FindAutocompletePredictionsRe
 import com.google.maps.android.compose.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
 
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun LocationPicker(
     modifier: Modifier = Modifier,
     onLocationSelected: (LatLng) -> Unit,
-    showMapAndSearch: MutableState<Boolean>
+    showMapAndSearch: MutableState<Boolean>,
+    locationDisplay: MutableState<String>
 ) {
     val marker = remember { mutableStateOf<MarkerOptions?>(null) }
     val cameraPositionState = rememberCameraPositionState {
@@ -56,19 +63,20 @@ fun LocationPicker(
     val coroutineScope = rememberCoroutineScope()
     val cameraUpdate = remember { mutableStateOf<CameraUpdate?>(null) }
     val showAutocompleteResults = remember { mutableStateOf(true) }
+    val focusManager = LocalFocusManager.current
+    val keyboardController = LocalSoftwareKeyboardController.current
+    val interactionSource = remember { MutableInteractionSource() }
+    val isUserInput = remember { mutableStateOf(true) }
 
     LaunchedEffect(searchQuery.value) {
-        if (searchQuery.value.isNotEmpty()) {
+        if (searchQuery.value.isNotEmpty() && isUserInput.value) {
             showAutocompleteResults.value = true
-        }
-    }
-
-    val onItemClick: (Place) -> Unit = { place ->
-        place.latLng?.let { latLng ->
-            onLocationSelected(latLng)
+        } else {
             coroutineScope.launch {
-                Log.d("LocationPicker", "Animating camera position to $latLng")
-                cameraPositionState.animate(CameraUpdateFactory.newLatLngZoom(latLng, 15f))
+                delay(300L) // Adjust this value to your preference
+                if (searchQuery.value.isEmpty()) {
+                    showAutocompleteResults.value = false
+                }
             }
         }
     }
@@ -85,6 +93,7 @@ fun LocationPicker(
 
                     marker.value = newMarker
                     onLocationSelected(latLng)
+                    locationDisplay.value = "${latLng.latitude}, ${latLng.longitude}"
                 },
                 marker = marker.value,
                 cameraUpdate = cameraUpdate.value
@@ -92,19 +101,24 @@ fun LocationPicker(
 
             Box(modifier = Modifier.align(Alignment.TopStart)) {
                 TextField(
+                    interactionSource = interactionSource,
                     value = searchQuery.value,
-                    onValueChange = { newValue -> searchQuery.value = newValue },
+                    onValueChange = { newValue ->
+                        isUserInput.value = true
+                        searchQuery.value = newValue
+                    },
                     label = { Text("Search location") },
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp, vertical = 8.dp)
                         .background(
-                            color = Color(0x5EF2F2F2),
+                            color = Color(0xA6F2F2F2),
                             shape = RoundedCornerShape(4.dp)
                         ),
                     colors = TextFieldDefaults.outlinedTextFieldColors(
                         focusedBorderColor = MaterialTheme.colors.secondary,
                         focusedLabelColor = MaterialTheme.colors.secondary,
+                        unfocusedLabelColor = MaterialTheme.colors.secondary,
                         unfocusedBorderColor = MaterialTheme.colors.onSurface.copy(alpha = ContentAlpha.disabled),
                         textColor = Color.Black
                     ),
@@ -139,8 +153,18 @@ fun LocationPicker(
                             query = searchQuery.value,
                             context = context,
                             onItemClick = { place ->
-                                onItemClick(place)
-                                searchQuery.value = place.name ?: ""
+                                place.latLng?.let { latLng ->
+                                    onLocationSelected(latLng)
+                                    coroutineScope.launch {
+                                        Log.d("LocationPicker", "Animating camera position to $latLng")
+                                        cameraPositionState.animate(CameraUpdateFactory.newLatLngZoom(latLng, 15f))
+                                    }
+                                    locationDisplay.value = place.address ?: "${latLng.latitude}, ${latLng.longitude}"
+                                }
+                                isUserInput.value = false
+                                searchQuery.value = place.address ?: ""
+                                keyboardController?.hide()
+                                focusManager.clearFocus()
                                 showAutocompleteResults.value = false
                             },
                             cameraUpdate = cameraUpdate,
@@ -152,6 +176,7 @@ fun LocationPicker(
         }
     }
 }
+
 
 
 fun searchLocation(
@@ -245,7 +270,7 @@ fun PlaceAutocomplete(
                                 .fetchPlace(
                                     FetchPlaceRequest.newInstance(
                                         prediction.placeId,
-                                        listOf(Place.Field.LAT_LNG)
+                                        listOf(Place.Field.LAT_LNG, Place.Field.ADDRESS)
                                     )
                                 )
                                 .addOnSuccessListener { placeResponse ->

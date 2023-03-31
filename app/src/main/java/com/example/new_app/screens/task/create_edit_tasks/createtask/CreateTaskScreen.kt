@@ -55,6 +55,7 @@ fun CreateTaskScreen(
     val task by viewModel.task
 
     val showMapAndSearch = remember { mutableStateOf(false) }
+    val locationDisplay = remember { mutableStateOf("") }
 
     LaunchedEffect(Unit) {
         viewModel.initialize(null)
@@ -97,12 +98,6 @@ fun CreateTaskScreen(
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 item {
-                    Button(onClick = { showMapAndSearch.value = !showMapAndSearch.value }) {
-                        Text("Toggle Map and Search Bar")
-                    }
-                }
-
-                item {
                     PickImageFromGallery(
                         LocalContext.current,
                         viewModel,
@@ -110,6 +105,65 @@ fun CreateTaskScreen(
                         userId
                     )
                 }
+
+                item {
+                    Button(
+                        onClick = { showMapAndSearch.value = !showMapAndSearch.value },
+                        modifier = Modifier
+                            .fillMaxWidth(),
+
+                        colors = ButtonDefaults.buttonColors(
+                            backgroundColor = MaterialTheme.colors.secondary,
+                            contentColor = MaterialTheme.colors.onPrimary
+                        ),
+                    ) {
+                        Text("Add Location")
+                    }
+                }
+
+                if (locationDisplay.value != "") {
+                    item {
+                        Button(
+                            onClick = {
+                                locationDisplay.value = ""
+                                viewModel.onLocationReset()
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth(),
+
+                            colors = ButtonDefaults.buttonColors(
+                                backgroundColor = MaterialTheme.colors.error,
+                                contentColor = MaterialTheme.colors.onPrimary
+                            ),
+                        ) {
+                            Text("Delete Location")
+                        }
+                    }
+                }
+
+
+                item {
+                    TextField(
+                        value = if (locationDisplay.value == "") "No Location Selected" else locationDisplay.value,
+                        onValueChange = { },
+                        modifier = Modifier
+                            .fillMaxWidth(),
+
+                        colors = TextFieldDefaults.textFieldColors(
+                            backgroundColor = MaterialTheme.colors.secondary,
+                            textColor = MaterialTheme.colors.onPrimary,
+                            focusedIndicatorColor = Color.Transparent,
+                            unfocusedIndicatorColor = Color.Transparent,
+                            disabledLabelColor = MaterialTheme.colors.onPrimary,
+                            unfocusedLabelColor = MaterialTheme.colors.onPrimary,
+                            focusedLabelColor = MaterialTheme.colors.onPrimary,
+                        ),
+                        shape = MaterialTheme.shapes.medium,
+                        readOnly = true
+                    )
+                }
+
+
 
                 item {
                     CustomTextField(
@@ -149,13 +203,30 @@ fun CreateTaskScreen(
                                     IconButton(onClick = { showMapAndSearch.value = false }) {
                                         Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
                                     }
+                                },
+                                actions = {
+                                    IconButton(
+                                        onClick = {
+                                            showMapAndSearch.value = false
+                                        }
+                                    ) {
+                                        Icon(
+                                            Icons.Filled.Done,
+                                            contentDescription = "Done",
+                                            tint = if (task.location != null)
+                                                Color.Black else MaterialTheme.colors.onSurface.copy(
+                                                alpha = 0.5f
+                                            )
+                                        )
+                                    }
                                 }
                             )
                         }
-                    ){
+                    ) {
                         LocationPicker(
                             onLocationSelected = viewModel::onLocationChange,
-                            showMapAndSearch = showMapAndSearch
+                            showMapAndSearch = showMapAndSearch,
+                            locationDisplay = locationDisplay
                         )
                     }
                 }
@@ -291,7 +362,6 @@ fun PickImageFromGallery(
         }
     }
 }
-
 
 
 // Extension function to crop a Bitmap into a square
