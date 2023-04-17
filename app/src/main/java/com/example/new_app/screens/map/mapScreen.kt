@@ -9,10 +9,13 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.ContentAlpha
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -58,7 +61,7 @@ fun LocationPicker(
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     val cameraUpdate = remember { mutableStateOf<CameraUpdate?>(null) }
-    val showAutocompleteResults = remember { mutableStateOf(true) }
+    val showAutocompleteResults = remember { mutableStateOf(false) }
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
     val interactionSource = remember { MutableInteractionSource() }
@@ -67,15 +70,17 @@ fun LocationPicker(
     LaunchedEffect(searchQuery.value) {
         if (searchQuery.value.isNotEmpty() && isUserInput.value) {
             showAutocompleteResults.value = true
-        } else {
-            coroutineScope.launch {
-                delay(300L)
-                if (searchQuery.value.isEmpty()) {
-                    showAutocompleteResults.value = false
-                }
-            }
         }
+//        else {
+//            coroutineScope.launch {
+//                delay(300L)
+//                if (searchQuery.value.isEmpty()) {
+//                    showAutocompleteResults.value = false
+//                }
+//            }
+//        }
     }
+
 
     Column(
         modifier = modifier
@@ -98,31 +103,13 @@ fun LocationPicker(
             )
 
             Box(modifier = Modifier.align(Alignment.TopStart)) {
-                TextField(
-                    interactionSource = interactionSource,
-                    value = searchQuery.value,
-                    onValueChange = { newValue ->
+                SearchBar(
+                    query = searchQuery.value,
+                    onQueryChange = { newValue ->
                         isUserInput.value = true
                         searchQuery.value = newValue
                     },
-                    label = { Text("Search location") },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp)
-                        .background(
-                            color = Color(0xA6F2F2F2),
-                            shape = RoundedCornerShape(4.dp)
-                        ),
-                    colors = TextFieldDefaults.colors(
-//                        focusedBorderColor = MaterialTheme.colorScheme.secondary,
-
-                        focusedLabelColor = MaterialTheme.colorScheme.secondary,
-                        unfocusedLabelColor = MaterialTheme.colorScheme.secondary,
-//                        unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = ContentAlpha.disabled),
-//                        textColor = Color.Black
-                    ),
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                    keyboardActions = KeyboardActions(onSearch = {
+                    onSearch = {
                         searchLocation(
                             searchQuery.value,
                             cameraPositionState,
@@ -138,20 +125,56 @@ fun LocationPicker(
                             onLocationSelected = onLocationSelected
                         )
                         showAutocompleteResults.value = false
-                    }),
-                    singleLine = true
-                )
+                    },
+                    active = showAutocompleteResults.value,
+                    onActiveChange = { isActive ->
+                        showAutocompleteResults.value = isActive
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth(),
 
-                if (searchQuery.value.isNotEmpty() && showAutocompleteResults.value) {
-                    Surface(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp)
-                            .padding(top = 72.dp),
-                        shape = RoundedCornerShape(4.dp),
-                        color = Color.Black.copy(alpha = 0.8f),
-//                        elevation = 4.dp
-                    ) {
+                    leadingIcon = {
+                        //when clicked on the searchbar change icon from search to back arrow and the back arrow closes the searchbar
+                        if (showAutocompleteResults.value) {
+                            Icon(
+                                imageVector = Icons.Default.ArrowBack,
+                                contentDescription = "Search location",
+                                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = ContentAlpha.medium),
+                                modifier = Modifier
+                                    .clickable(
+                                        interactionSource = interactionSource,
+                                        indication = null
+                                    ) {
+                                        showAutocompleteResults.value = false
+                                        focusManager.clearFocus()
+                                        keyboardController?.hide()
+                                    }
+                            )
+                        } else {
+                            Icon(
+                                imageVector = Icons.Default.Search,
+                                contentDescription = "Search location",
+                                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = ContentAlpha.medium))
+                        }
+                    },
+                    trailingIcon = {
+                        if (searchQuery.value.isNotEmpty()) {
+                            Icon(
+                                imageVector = Icons.Default.Clear,
+                                contentDescription = "Clear search",
+                                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = ContentAlpha.medium),
+                                modifier = Modifier
+                                    .clickable(
+                                        interactionSource = interactionSource,
+                                        indication = null
+                                    ) {
+                                        searchQuery.value = ""
+                                    }
+                            )
+                        }
+                    },
+                    placeholder = { Text("Search location") },
+                    content = {
                         PlaceAutocomplete(
                             query = searchQuery.value,
                             context = context,
@@ -159,10 +182,19 @@ fun LocationPicker(
                                 place.latLng?.let { latLng ->
                                     onLocationSelected(latLng)
                                     coroutineScope.launch {
-                                        Log.d("LocationPicker", "Animating camera position to $latLng")
-                                        cameraPositionState.animate(CameraUpdateFactory.newLatLngZoom(latLng, 15f))
+                                        Log.d(
+                                            "LocationPicker",
+                                            "Animating camera position to $latLng"
+                                        )
+                                        cameraPositionState.animate(
+                                            CameraUpdateFactory.newLatLngZoom(
+                                                latLng,
+                                                15f
+                                            )
+                                        )
                                     }
-                                    locationDisplay.value = place.address ?: "${latLng.latitude}, ${latLng.longitude}"
+                                    locationDisplay.value =
+                                        place.address ?: "${latLng.latitude}, ${latLng.longitude}"
                                     onLocationNameSet(locationDisplay.value)
 
                                 }
@@ -176,12 +208,11 @@ fun LocationPicker(
                             coroutineScope = coroutineScope,
                         )
                     }
-                }
+                )
             }
         }
     }
 }
-
 
 
 fun searchLocation(
@@ -207,7 +238,10 @@ fun searchLocation(
         if (response.autocompletePredictions.isNotEmpty()) {
             val placeId = response.autocompletePredictions[0].placeId
             placesClient.fetchPlace(
-                FetchPlaceRequest.newInstance(placeId, listOf(Place.Field.LAT_LNG, Place.Field.ADDRESS))
+                FetchPlaceRequest.newInstance(
+                    placeId,
+                    listOf(Place.Field.LAT_LNG, Place.Field.ADDRESS)
+                )
             ).addOnSuccessListener { placeResponse ->
                 placeResponse.place.latLng?.let { latLng ->
                     Log.d("searchLocation", "Fetched place details: $latLng")
@@ -215,7 +249,9 @@ fun searchLocation(
                         cameraUpdate.value = CameraUpdateFactory.newLatLngZoom(latLng, 15f)
                     }
                     onLocationSelected(latLng)
-                    onLocationNameSet(placeResponse.place.address ?: "${latLng.latitude}, ${latLng.longitude}")
+                    onLocationNameSet(
+                        placeResponse.place.address ?: "${latLng.latitude}, ${latLng.longitude}"
+                    )
                 }
             }.addOnFailureListener { exception ->
                 Log.e("searchLocation", "Failed to fetch place details", exception)
@@ -264,16 +300,12 @@ fun PlaceAutocomplete(
             .fillMaxWidth()
             .wrapContentHeight()
     ) {
-        LazyColumn(
-            modifier = Modifier
-                .background(Color.White),
-        ) {
+        LazyColumn {
             items(predictions.value) { prediction ->
-                Text(
-                    text = prediction.getFullText(null).toString(),
-                    color = Color.Black,
+                Row(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .padding(top = 16.dp, bottom = 16.dp, start = 10.dp, end = 10.dp)
                         .clickable {
                             placesClient
                                 .fetchPlace(
@@ -300,9 +332,34 @@ fun PlaceAutocomplete(
                                         exception
                                     )
                                 }
-                        }
-                        .padding(16.dp)
+                        },
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        Icons.Default.Place,
+                        contentDescription = null,
+                        modifier = Modifier
+                            .padding(end = 16.dp)
+                            .background(Color.Gray, shape = CircleShape)
+                            .padding(7.dp)
+                            .size(24.dp)
+                    )
+
+                    Text(
+                        text = prediction.getFullText(null).toString(),
+                        color = Color.White,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                    )
+                }
+
+                Divider(
+                    color = Color.Gray,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 18.dp)
                 )
+
             }
         }
     }
@@ -362,6 +419,7 @@ fun GoogleMapView(
         }
     )
 }
+
 val singapore = LatLng(1.35, 103.87)
 val defaultCameraPosition = CameraPosition.fromLatLngZoom(singapore, 11f)
 
