@@ -13,18 +13,23 @@ import androidx.lifecycle.viewModelScope
 import com.example.new_app.model.Task
 import com.example.new_app.model.service.AccountService
 import com.example.new_app.model.service.FirebaseService
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.time.ZoneId
 import java.util.*
-
-class EditTaskViewModel : ViewModel() {
+import javax.inject.Inject
+@HiltViewModel
+class EditTaskViewModel @Inject constructor(
+    private val firebaseService: FirebaseService,
+    private val accountService: AccountService
+) : ViewModel() {
 
     private val dateFormat = "EEE, d MMM yyyy"
 
-    private val firebaseService: FirebaseService = FirebaseService()
-    private val accountService: AccountService = AccountService()
+//    private val firebaseService: FirebaseService = FirebaseService()
+//    private val accountService: AccountService = AccountService()
 
     val task = MutableStateFlow(Task()) // Replace Task() with your Task data class constructor
 
@@ -59,17 +64,7 @@ class EditTaskViewModel : ViewModel() {
         task.value = task.value.copy(dueTime = newDueTime)
     }
 
-    fun onImageChange(newValue: String, context: Context, taskId: String, userId: String) {
-        viewModelScope.launch {
-            val localImagePath = accountService.saveImageToInternalStorage(
-                context,
-                Uri.parse(newValue),
-                userId,
-                taskId
-            )
-            task.value = task.value.copy(imageUri = localImagePath)
-        }
-    }
+
 
     fun onDoneClick(popUpScreen: () -> Unit) {
         viewModelScope.launch {

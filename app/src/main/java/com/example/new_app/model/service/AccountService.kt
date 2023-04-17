@@ -2,9 +2,11 @@ package com.example.new_app.model.service
 
 import android.content.Context
 import android.net.Uri
+import com.example.new_app.common.util.Resource
 import com.example.new_app.model.User
-import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseAuthException
+import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -12,16 +14,20 @@ import kotlinx.coroutines.tasks.await
 import java.io.File
 import java.io.FileOutputStream
 import java.util.*
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class AccountService {
-
-    private val auth: FirebaseAuth = FirebaseAuth.getInstance()
+@Singleton
+class AccountService @Inject constructor(
+    private val firebaseAuth: FirebaseAuth,
+    private val firebaseFirestore: FirebaseFirestore
+) {
 
     val currentUserId: String
-        get() = auth.currentUser?.uid.orEmpty()
+        get() = firebaseAuth.currentUser?.uid.orEmpty()
 
     val hasUser: Boolean
-        get() = auth.currentUser != null
+        get() = firebaseAuth.currentUser != null
 
     val currentUser: Flow<User>
         get() = callbackFlow {
@@ -29,56 +35,43 @@ class AccountService {
                 FirebaseAuth.AuthStateListener { auth ->
                     this.trySend(auth.currentUser?.let { User(it.uid) } ?: User())
                 }
-            auth.addAuthStateListener(listener)
-            awaitClose { auth.removeAuthStateListener(listener) }
+            firebaseAuth.addAuthStateListener(listener)
+            awaitClose { firebaseAuth.removeAuthStateListener(listener) }
         }
 
-    suspend fun authenticate(email: String, password: String) {
-        auth.signInWithEmailAndPassword(email, password).await()
+    suspend fun authenticate(email: String, password: String): Resource<Unit> {
+        return try {
+            firebaseAuth.signInWithEmailAndPassword(email, password).await()
+            Resource.Success(Unit)
+        } catch (e: Exception) {
+            Resource.Error(e.message)
+        }
     }
 
+
     suspend fun sendRecoveryEmail(email: String) {
-        auth.sendPasswordResetEmail(email).await()
+        firebaseAuth.sendPasswordResetEmail(email).await()
     }
 
     suspend fun createAccount(email: String, password: String) {
-        auth.createUserWithEmailAndPassword(email, password).await()
+        firebaseAuth.createUserWithEmailAndPassword(email, password).await()
     }
 
 
     suspend fun deleteAccount() {
-        auth.currentUser!!.delete().await()
+        firebaseAuth.currentUser!!.delete().await()
     }
 
-    suspend fun saveImageToInternalStorage(context: Context, uri: Uri, userId: String, taskId: String): String {
-        val inputStream = context.contentResolver.openInputStream(uri)
 
-        // Create a directory to store your downloaded images
-        val imagesDirectory = File(context.filesDir, "images")
-        if (!imagesDirectory.exists()) {
-            imagesDirectory.mkdir()
-        }
-
-        val imageFileName = "image_${UUID.randomUUID()}.jpg"
-        val file = File(imagesDirectory, imageFileName)
-
-        inputStream?.use { input ->
-            FileOutputStream(file).use { output ->
-                input.copyTo(output)
+    suspend fun signOut(): Resource<Unit> {
+        return try {
+            if (firebaseAuth.currentUser!!.isAnonymous) {
+                firebaseAuth.currentUser!!.delete()
             }
+            firebaseAuth.signOut()
+            Resource.Success(Unit)
+        } catch (e: Exception) {
+            Resource.Error(e.message)
         }
-
-        return file.absolutePath
-    }
-
-
-
-
-    suspend fun signOut() {
-        if (auth.currentUser!!.isAnonymous) {
-            auth.currentUser!!.delete()
-        }
-        auth.signOut()
-
     }
 }

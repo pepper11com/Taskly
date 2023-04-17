@@ -13,6 +13,9 @@ import androidx.lifecycle.viewModelScope
 import com.example.new_app.R
 import com.example.new_app.TASK_DEFAULT_ID
 import com.example.new_app.common.ext.idFromParameter
+import com.example.new_app.common.snackbar.SnackbarManager
+import com.example.new_app.common.snackbar.SnackbarMessage
+import com.example.new_app.common.util.Resource
 import com.example.new_app.model.CustomLatLng
 import com.example.new_app.model.Task
 import com.example.new_app.model.service.AccountService
@@ -20,23 +23,34 @@ import com.example.new_app.model.service.FirebaseService
 import com.example.new_app.screens.TaskAppViewModel
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
+import com.google.firebase.storage.FirebaseStorage
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.time.ZoneId
 import java.util.*
+import javax.inject.Inject
 
-class TaskEditCreateViewModel : TaskAppViewModel() {
+@HiltViewModel
+class TaskEditCreateViewModel @Inject constructor(
+    private val firebaseService: FirebaseService,
+    private val accountService: AccountService,
+    private val storage: FirebaseStorage,
+    private val snackbarManager: SnackbarManager
+) : TaskAppViewModel() {
 
     private val dateFormat = "EEE, d MMM yyyy"
-
-    private val firebaseService: FirebaseService = FirebaseService()
-    private val accountService: AccountService = AccountService()
 
     val task = mutableStateOf(Task())
     val imageUri = mutableStateOf<String?>(null)
     var bitmap by mutableStateOf<Bitmap?>(null)
     var marker: Marker? = null
+
+    private val _taskEditCreateState = MutableStateFlow<Resource<Unit>>(Resource.Empty())
+    val taskEditCreateState: StateFlow<Resource<Unit>> get() = _taskEditCreateState
+
 
     fun initialize(taskId: String?) {
         viewModelScope.launch {
@@ -71,7 +85,6 @@ class TaskEditCreateViewModel : TaskAppViewModel() {
     }
 
 
-
     @RequiresApi(Build.VERSION_CODES.O)
     fun onDateChange(newValue: Long) {
         val calendar = Calendar.getInstance(TimeZone.getTimeZone(ZoneId.systemDefault()))
@@ -85,43 +98,148 @@ class TaskEditCreateViewModel : TaskAppViewModel() {
         task.value = task.value.copy(dueTime = newDueTime)
     }
 
-    fun onImageChange(newValue: String, context: Context, taskId: String, userId: String) {
-        viewModelScope.launch {
-            val localImagePath = accountService.saveImageToInternalStorage(
-                context,
-                Uri.parse(newValue),
-                userId,
-                taskId
-            )
-            task.value = task.value.copy(imageUri = localImagePath)
-            imageUri.value = localImagePath
-
-            bitmap = if (localImagePath.isNotEmpty()) {
-                BitmapFactory.decodeFile(localImagePath)
-            } else {
-                BitmapFactory.decodeResource(
-                    context.resources,
-                    R.drawable.baseline_account_box_24
-                )
-            }
-        }
+    fun onImageChange(newValue: Uri) {
+        imageUri.value = newValue.toString()
     }
+
+    suspend fun uploadImageAndSaveTask(
+        newTask: Task,
+        taskId: String,
+        userId: String,
+        imageUri: Uri
+    ): Task {
+        val path = "task_images/$userId/$taskId"
+        println("path: $path")
+        val imageUrl = firebaseService.uploadImage(imageUri, path)
+        return newTask.copy(imageUri = imageUrl)
+    }
+
 
     fun onDoneClick(taskId: String?, popUpScreen: () -> Unit) {
         viewModelScope.launch {
-            if (taskId == null) {
-                val newTask = task.value.copy(
-                    createdBy = accountService.currentUserId,
-                    assignedTo = listOf(accountService.currentUserId),
-                    isCompleted = false
+            _taskEditCreateState.value = Resource.Loading()
+            try {
+                if (taskId == null) {
+                    val newTask = task.value.copy(
+                        createdBy = accountService.currentUserId,
+                        assignedTo = listOf(accountService.currentUserId),
+                        isCompleted = false
+                    )
+
+                    // Save the task first to get the task ID
+                    when (val saveResult = firebaseService.save(newTask)) {
+                        is Resource.Success -> {
+                            val savedTaskId = saveResult.data
+
+                            // Check if there is an image to upload
+                            if (imageUri.value != null) {
+                                val imageUri = Uri.parse(imageUri.value)
+                                val updatedTask = savedTaskId?.let {
+                                    uploadImageAndSaveTask(
+                                        newTask.copy(id = savedTaskId),
+                                        it,
+                                        accountService.currentUserId,
+                                        imageUri
+                                    )
+                                }
+
+                                // Update the task with the new imageUri
+                                if (updatedTask != null) {
+                                    firebaseService.updateTask(updatedTask)
+                                }
+                            }
+                        }
+                        is Resource.Error -> {
+                            _taskEditCreateState.value = Resource.Error(saveResult.message ?: "Unknown error")
+                            snackbarManager.showSnackbarMessage(
+                                SnackbarMessage.Text(saveResult.message ?: "Unknown error")
+                            )
+                            return@launch
+                        }
+                        else -> {
+                            _taskEditCreateState.value = Resource.Error("Unknown error")
+                            snackbarManager.showSnackbarMessage(
+                                SnackbarMessage.Text("Unknown error")
+                            )
+                            return@launch
+                        }
+                    }
+
+                } else {
+                    if (imageUri.value != null) {
+                        val imageUri = Uri.parse(imageUri.value)
+                        val updatedTask = uploadImageAndSaveTask(
+                            task.value,
+                            taskId,
+                            accountService.currentUserId,
+                            imageUri
+                        )
+                        when (val updateResult = firebaseService.updateTask(updatedTask)) {
+                            is Resource.Success -> { /* Task updated successfully */ }
+                            is Resource.Error -> {
+                                _taskEditCreateState.value = Resource.Error(updateResult.message ?: "Unknown error")
+                                snackbarManager.showSnackbarMessage(
+                                    SnackbarMessage.Text(updateResult.message ?: "Unknown error")
+                                )
+                                return@launch
+                            }
+                            else -> {
+                                _taskEditCreateState.value = Resource.Error("Unknown error")
+                                snackbarManager.showSnackbarMessage(
+                                    SnackbarMessage.Text("Unknown error")
+                                )
+                                return@launch
+                            }
+                        }
+                    } else {
+                        when (val updateResult = firebaseService.updateTask(task.value)) {
+                            is Resource.Success -> { /* Task updated successfully */ }
+                            is Resource.Error -> {
+                                _taskEditCreateState.value = Resource.Error(updateResult.message ?: "Unknown error")
+                                snackbarManager.showSnackbarMessage(
+                                    SnackbarMessage.Text(updateResult.message ?: "Unknown error")
+                                )
+                                return@launch
+                            }
+                            else -> {
+                                _taskEditCreateState.value = Resource.Error("Unknown error")
+                                snackbarManager.showSnackbarMessage(
+                                    SnackbarMessage.Text("Unknown error")
+                                )
+                                return@launch
+                            }
+                        }
+                    }
+                }
+                _taskEditCreateState.value = Resource.Success(Unit)
+                snackbarManager.showSnackbarMessage(
+                    SnackbarMessage.Text("Task successfully saved")
                 )
-                firebaseService.save(newTask)
-            } else {
-                firebaseService.updateTask(task.value)
+                popUpScreen()
+            } catch (e: Exception) {
+                _taskEditCreateState.value = Resource.Error(e.message ?: "Unknown error")
+                snackbarManager.showSnackbarMessage(
+                    SnackbarMessage.Text(e.message ?: "Unknown error")
+                )
+            } finally {
+                _taskEditCreateState.value = Resource.Empty()
             }
-            popUpScreen()
         }
     }
+
+
+
+    fun onDeleteImageClick() {
+        viewModelScope.launch {
+            task.value.imageUri?.let { imageUrl ->
+                val path = imageUrl.substringAfter("task_images/")
+                firebaseService.deleteImage(path)
+                task.value = task.value.copy(imageUri = null)
+                imageUri.value = null
+            }
+        }
+    }
+
 
     private fun Int.toClockPattern(): String {
         return if (this < 10) "0$this" else "$this"

@@ -13,6 +13,7 @@ import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.*
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.*
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
@@ -27,14 +28,10 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavHostController
 import coil.compose.AsyncImagePainter
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
-import com.example.new_app.EDIT_TASK_SCREEN
 import com.example.new_app.R
-import com.example.new_app.TASK_ID
-import com.example.new_app.TASK_ID_KEY
 import com.example.new_app.model.Task
 import kotlin.math.roundToInt
 
@@ -51,6 +48,7 @@ fun SwipeableTaskListItem(
     isSelected: Boolean,
     selectedTasks: SnapshotStateList<Task>,
     onSelectedTasksChange: (Task, Boolean) -> Unit,
+    onTaskSwipedBackToActive: (Task) -> Unit,
 ) {
     //width of the swipeable item
     val screenWidth = LocalConfiguration.current.screenWidthDp.dp
@@ -84,6 +82,9 @@ fun SwipeableTaskListItem(
                 }
                 swipeableState.snapTo(0)
             }
+        }
+        if (swipeableState.targetValue == 0 && (status == TaskStatus.DELETED || status == TaskStatus.COMPLETED)) {
+            onTaskSwipedBackToActive(task)
         }
     }
 
@@ -136,7 +137,7 @@ fun TaskListItem(
 
 
     Card(
-        backgroundColor = MaterialTheme.colors.background,
+        backgroundColor = Color(0xFF444444),
         modifier = Modifier
             .offset { IntOffset(offset.x.roundToInt(), offset.y.roundToInt()) }
             .padding(8.dp, 8.dp, 8.dp, 8.dp)
@@ -190,6 +191,7 @@ fun TaskListItem(
 
             if (TaskStatus.ACTIVE != task.status) {
                 Checkbox(
+                    modifier = Modifier.padding(8.dp, 0.dp),
                     checked = isSelected,
                     onCheckedChange = { isChecked ->
                         if (isChecked) {
@@ -198,15 +200,22 @@ fun TaskListItem(
                             selectedTasks.remove(task)
                         }
                     },
-                    modifier = Modifier.padding(8.dp, 0.dp))
+                    colors = CheckboxDefaults.colors(
+                        checkmarkColor = Color(0xFFFF8C00),
+                        disabledColor = MaterialTheme.colorScheme.background,
+                        disabledIndeterminateColor = MaterialTheme.colorScheme.background,
+                        uncheckedColor = MaterialTheme.colorScheme.background,
+                        checkedColor = MaterialTheme.colorScheme.background,
+                    )
+                )
             } else {
                 Spacer(modifier = Modifier.padding(8.dp, 0.dp))
             }
 
             Column(modifier = Modifier.weight(1f)) {
-                Text(text = task.title, style = MaterialTheme.typography.subtitle2)
+                Text(text = task.title, style = MaterialTheme.typography.titleSmall, color = Color.White)
                 CompositionLocalProvider(LocalContentAlpha provides ContentAlpha.medium) {
-                    Text(text = getDueDateAndTime(task), fontSize = 12.sp)
+                    Text(text = getDueDateAndTime(task), fontSize = 12.sp, color = Color.White)
                 }
             }
 

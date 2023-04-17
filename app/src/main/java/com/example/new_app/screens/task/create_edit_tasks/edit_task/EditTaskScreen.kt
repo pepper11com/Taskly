@@ -11,11 +11,10 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.*
+import androidx.compose.material3.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.DateRange
@@ -32,12 +31,13 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.new_app.R
 import com.example.new_app.common.composables.CustomTextField
 import com.example.new_app.common.composables.RegularCardEditor
 import com.example.new_app.model.Task
 import com.example.new_app.screens.task.create_edit_tasks.TaskEditCreateViewModel
+import com.example.new_app.screens.task.create_edit_tasks.createtask.AsyncImage
 import com.google.android.material.datepicker.MaterialDatePicker
 import com.google.android.material.timepicker.MaterialTimePicker
 import com.google.android.material.timepicker.TimeFormat
@@ -46,7 +46,7 @@ import java.io.FileInputStream
 
 
 @RequiresApi(Build.VERSION_CODES.O)
-@OptIn(ExperimentalMaterialApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("UnusedMaterialScaffoldPaddingParameter")
 @Composable
 fun EditTaskScreen(
@@ -54,7 +54,7 @@ fun EditTaskScreen(
     taskId: String,
     userId: String
 ) {
-    val viewModel: TaskEditCreateViewModel = viewModel()
+    val viewModel: TaskEditCreateViewModel = hiltViewModel()
     val task by viewModel.task
 
     LaunchedEffect(Unit) {
@@ -64,11 +64,13 @@ fun EditTaskScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                backgroundColor = MaterialTheme.colors.primary,
-                title = { Text("Edit Task") },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                ),
+                title = { Text("Edit Task", color = MaterialTheme.colorScheme.background) },
                 navigationIcon = {
                     IconButton(onClick = popUpScreen) {
-                        Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.Filled.ArrowBack, contentDescription = "Back", tint = MaterialTheme.colorScheme.background)
                     }
                 },
                 actions = {
@@ -83,17 +85,18 @@ fun EditTaskScreen(
                             Icons.Filled.Done,
                             contentDescription = "Done",
                             tint = if (task.title.isNotBlank() && task.description.isNotBlank())
-                                Color.Black else MaterialTheme.colors.onSurface.copy(alpha = 0.5f)
+                                Color.Black else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
                         )
                     }
                 }
             )
         }
-    ) {
+    ) { innerPadding ->
 
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .padding(innerPadding)
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
@@ -120,13 +123,16 @@ fun EditTaskScreen(
                 singleLine = false
             )
 
-            CardEditors(task, viewModel::onDateChange, viewModel::onTimeChange)
+            CardEditors(
+                task,
+                viewModel::onDateChange,
+                viewModel::onTimeChange
+            )
 
         }
     }
 }
 
-@ExperimentalMaterialApi
 @Composable
 private fun CardEditors(
     task: Task,
@@ -162,175 +168,28 @@ fun PickImageFromGallery(
     task: Task,
     userId: String
 ) {
-
-    val initialImage = painterResource(id = R.drawable.baseline_account_box_24)
-    val currentImage = remember { mutableStateOf<Any>(initialImage) }
-
-    LaunchedEffect(task.imageUri) {
-        task.imageUri?.let { uriString ->
-            if (uriString.isNotBlank()) {
-                val uri = Uri.parse(uriString)
-                val inputStream = if (uri.scheme == "content") {
-                    context.contentResolver.openInputStream(uri)
-                } else {
-                    FileInputStream(File(uri.path!!))
-                }
-                val bitmap = BitmapFactory.decodeStream(inputStream)
-                currentImage.value = bitmap.asImageBitmap()
-                inputStream?.close()
-            }
-        }
-    }
-
-
-
-    //todo - show the user that the image is changed after deleting the image ---
-
-    val launcher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.StartActivityForResult()
-    ) { result ->
-        if (result.resultCode == Activity.RESULT_OK) {
-            result.data?.data?.let { uri ->
-                viewModel.onImageChange(uri.toString(), context, task.id, userId)
-                val inputStream = context.contentResolver.openInputStream(uri)
-                val bitmap = BitmapFactory.decodeStream(inputStream)
-                currentImage.value = bitmap.asImageBitmap()
-                inputStream?.close()
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                    context.contentResolver.takePersistableUriPermission(
-                        uri,
-                        Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
-                    )
-                } else {
-                    val clipData = result.data?.clipData
-                    if (clipData != null) {
-                        for (i in 0 until clipData.itemCount) {
-                            val item = clipData.getItemAt(i)
-                            val uri = item.uri
-                            context.contentResolver.takePersistableUriPermission(
-                                uri,
-                                Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
-                            )
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    val bitmap = (currentImage.value as? ImageBitmap)?.asAndroidBitmap()
-    val squareBitmap = bitmap?.centerCropToSquare()
-    val softwareBitmap = squareBitmap?.toSoftwareBitmap()
-    val circularBitmap = softwareBitmap?.toCircularBitmap()
-
-    fun openImagePicker() {
-        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
-            addCategory(Intent.CATEGORY_OPENABLE)
-            type = "image/*"
-            putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
-            flags = Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION or
-                    Intent.FLAG_GRANT_READ_URI_PERMISSION or
-                    Intent.FLAG_GRANT_WRITE_URI_PERMISSION
-        }
-        launcher.launch(intent)
-    }
+    val updatedTask by rememberUpdatedState(task)
 
     Row(
         modifier = Modifier.padding(vertical = 16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        if (currentImage.value is ImageBitmap && circularBitmap != null) {
-            Image(
-                bitmap = circularBitmap.asImageBitmap(),
-                contentDescription = null,
-                modifier = Modifier
-                    .size(100.dp)
-                    .weight(1f, fill = false)
-            )
-        } else {
-            Image(
-                painter = painterResource(id = R.drawable.baseline_account_box_24),
-                contentDescription = "Logo",
+        val imageUrl = viewModel.imageUri.value
+
+        if (imageUrl != null) {
+            AsyncImage(
+                url = imageUrl,
                 modifier = Modifier
                     .size(100.dp)
                     .clip(CircleShape)
-                    .weight(1f, fill = false)
+                    .weight(1f, fill = false),
+                contentDescription = "Task Image"
             )
         }
 
-        Spacer(modifier = Modifier.width(16.dp))
-
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(3f, fill = false)
-        ) {
-            Button(
-                onClick = {
-                    openImagePicker()
-                },
-                colors = ButtonDefaults.buttonColors(
-                    contentColor = MaterialTheme.colors.onPrimary,
-                    backgroundColor = MaterialTheme.colors.secondary
-                ),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(text = "Pick Image")
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Button(
-                enabled = task.imageUri != null && task.imageUri!!.isNotEmpty(),
-                onClick = {
-                    task.imageUri = ""
-                    viewModel.bitmap = null
-                    currentImage.value = ""
-                },
-                colors = ButtonDefaults.buttonColors(
-                    contentColor = MaterialTheme.colors.onPrimary,
-                    backgroundColor = MaterialTheme.colors.secondary
-                ),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(text = "Delete Image")
-            }
-        }
     }
 }
 
-
-// Extension function to crop a Bitmap into a square
-fun Bitmap.centerCropToSquare(): Bitmap {
-    val dimension = Integer.min(width, height)
-    val xOffset = (width - dimension) / 2
-    val yOffset = (height - dimension) / 2
-    return Bitmap.createBitmap(this, xOffset, yOffset, dimension, dimension)
-}
-
-// Extension function to crop a Bitmap into a circle
-fun Bitmap.toCircularBitmap(): Bitmap {
-    val output = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
-    val canvas = Canvas(output)
-
-    val paint = Paint().apply {
-        isAntiAlias = true
-    }
-    val rect = Rect(0, 0, width, height)
-    val rectF = RectF(rect)
-
-    canvas.drawOval(rectF, paint)
-    paint.xfermode = PorterDuffXfermode(PorterDuff.Mode.SRC_IN)
-    canvas.drawBitmap(this, rect, rect, paint)
-
-    return output
-}
-
-// Extension function to convert a hardware Bitmap to a software Bitmap
-fun Bitmap.toSoftwareBitmap(): Bitmap {
-    val config = if (isMutable) Bitmap.Config.ARGB_8888 else Bitmap.Config.RGB_565
-    return copy(config, isMutable)
-}
 
 
 private fun showDatePicker(activity: AppCompatActivity, onDateChange: (Long) -> Unit) {

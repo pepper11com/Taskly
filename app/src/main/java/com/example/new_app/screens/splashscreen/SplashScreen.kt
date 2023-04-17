@@ -7,15 +7,15 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.CircularProgressIndicator
-import androidx.compose.material.MaterialTheme
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.new_app.common.composables.LoadingIndicator
 import kotlinx.coroutines.delay
 
-private const val SPLASH_TIMEOUT = 1000L
 
 @Composable
 fun SplashScreen(
@@ -23,27 +23,22 @@ fun SplashScreen(
     modifier: Modifier = Modifier,
 ) {
 
-    val viewModel: SplashScreenViewModel = SplashScreenViewModel()
+    val viewModel: SplashScreenViewModel = hiltViewModel()
 
     Column(
         modifier =
         modifier
             .fillMaxWidth()
             .fillMaxHeight()
-            .background(color = MaterialTheme.colors.background)
+            .background(color = MaterialTheme.colorScheme.background)
             .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        CircularProgressIndicator(color = MaterialTheme.colors.onBackground)
+        LoadingIndicator()
     }
 
-    LaunchedEffect(true) {
-        delay(SPLASH_TIMEOUT)
-        val user = viewModel.checkUserState()
-        viewModel.onAppStart(openAndPopUp, user)
-
-
-
+    LaunchedEffect(viewModel) {
+        viewModel.onAppStart(openAndPopUp)
     }
 }

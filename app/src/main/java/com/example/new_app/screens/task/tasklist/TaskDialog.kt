@@ -4,7 +4,7 @@ import android.content.Context
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.*
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -15,7 +15,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
-import coil.compose.AsyncImagePainter
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
 import com.example.new_app.R
@@ -121,7 +120,7 @@ fun ShowDialogWithTaskDetailsAndDelete(
                             viewModel.onTaskDelete(task)
                             onDismiss()
                         },
-                        colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.error)
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
                     ) {
                         Text("Delete")
                     }
@@ -129,7 +128,7 @@ fun ShowDialogWithTaskDetailsAndDelete(
                     Spacer(modifier = Modifier.width(8.dp))
 
                     Button(
-                        colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.secondary),
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary),
                         onClick = onDismiss,
                     ) {
                         Text("Cancel")

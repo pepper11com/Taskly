@@ -4,7 +4,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.*
+import androidx.compose.material.ContentAlpha
+import androidx.compose.material3.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
@@ -29,7 +30,6 @@ fun CustomTextField(
     errorMessage: String? = null
 ) {
     val isErrorState = remember { mutableStateOf(false) }
-    val focusRequester = remember { FocusRequester() }
 
     Column(modifier = modifier) {
         OutlinedTextField(
@@ -37,32 +37,27 @@ fun CustomTextField(
             onValueChange = onValueChange,
             label = { Text(label) },
             modifier = Modifier
-                .fillMaxWidth()
-                .focusRequester(focusRequester),
+                .fillMaxWidth(),
             isError = isError && isErrorState.value,
             singleLine = singleLine,
             keyboardOptions = keyboardOptions,
-            colors = TextFieldDefaults.outlinedTextFieldColors(
-                focusedBorderColor = MaterialTheme.colors.secondary,
-                focusedLabelColor = MaterialTheme.colors.secondary,
-                unfocusedBorderColor = MaterialTheme.colors.onSurface.copy(alpha = ContentAlpha.disabled)
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = MaterialTheme.colorScheme.secondary,
+                unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = ContentAlpha.disabled),
+                focusedLabelColor = MaterialTheme.colorScheme.secondary,
             )
         )
 
         if (isError && isErrorState.value && !errorMessage.isNullOrEmpty()) {
             Text(
                 text = errorMessage,
-                color = MaterialTheme.colors.error,
-                style = MaterialTheme.typography.caption,
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.padding(start = 16.dp)
             )
         }
     }
 
-    DisposableEffect(Unit) {
-        focusRequester.requestFocus()
-        onDispose { }
-    }
 
     LaunchedEffect(value) {
         isErrorState.value = value.isNotEmpty()
@@ -79,7 +74,6 @@ fun CustomPasswordTextField(
     errorMessage: String? = null
 ) {
     val isErrorState = remember { mutableStateOf(false) }
-    val focusRequester = remember { FocusRequester() }
     val passwordVisibility = remember { mutableStateOf(false) }
 
     Column(modifier = modifier) {
@@ -88,8 +82,7 @@ fun CustomPasswordTextField(
             onValueChange = onValueChange,
             label = { Text(label) },
             modifier = Modifier
-                .fillMaxWidth()
-                .focusRequester(focusRequester),
+                .fillMaxWidth(),
             isError = isError && isErrorState.value,
             singleLine = true,
             visualTransformation = if (passwordVisibility.value) VisualTransformation.None else PasswordVisualTransformation(),
@@ -102,26 +95,22 @@ fun CustomPasswordTextField(
                     )
                 }
             },
-            colors = TextFieldDefaults.outlinedTextFieldColors(
-                focusedBorderColor = MaterialTheme.colors.secondary,
-                unfocusedBorderColor = MaterialTheme.colors.onSurface.copy(alpha = ContentAlpha.disabled)
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = MaterialTheme.colorScheme.secondary,
+                unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = ContentAlpha.disabled),
             )
         )
 
         if (isError && isErrorState.value && !errorMessage.isNullOrEmpty()) {
             Text(
                 text = errorMessage,
-                color = MaterialTheme.colors.error,
-                style = MaterialTheme.typography.caption,
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.padding(start = 16.dp)
             )
         }
     }
 
-    DisposableEffect(Unit) {
-        focusRequester.requestFocus()
-        onDispose { }
-    }
 
     LaunchedEffect(value) {
         isErrorState.value = value.isNotEmpty()

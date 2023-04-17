@@ -4,29 +4,30 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.AlertDialog
-import androidx.compose.material.ButtonDefaults
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.new_app.LOGIN_SCREEN
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.new_app.SETTINGS_SCREEN
 import com.example.new_app.SPLASH_SCREEN
+import com.example.new_app.TASK_LIST_SCREEN
 import com.example.new_app.common.composables.CustomButton
+import com.example.new_app.common.composables.LoadingIndicator
+import com.example.new_app.common.util.Resource
 
 
 @Composable
 fun SettingsScreen(
-    openAndPopUp: (String, String) -> Unit
+    openAndPopUp: (String, String) -> Unit,
+    navigateToMainScreen: (String) -> Unit,
+    clearAndNavigateAndPopUp: (String, String) -> Unit,
+    clearAndPopUpMultiple: (String, List<String>) -> Unit,
 ) {
-    val viewModel: SettingsViewModel = viewModel()
+    val viewModel: SettingsViewModel = hiltViewModel()
     val showDialog = remember { mutableStateOf(false) }
+    val authenticationState by viewModel.settingsState.collectAsState()
 
     Column(
         modifier = Modifier
@@ -36,7 +37,7 @@ fun SettingsScreen(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         CustomButton(
-            onClick = { viewModel.onSignOutClick { route -> openAndPopUp(SPLASH_SCREEN, SETTINGS_SCREEN) } },
+            onClick = { viewModel.onSignOutClick() },
             text = "Logout",
             modifier = Modifier.padding(vertical = 8.dp)
         )
@@ -56,12 +57,14 @@ fun SettingsScreen(
             confirmButton = {
                 CustomButton(
                     onClick = {
-                        viewModel.onDeleteAccountClick { route -> openAndPopUp(SPLASH_SCREEN, SETTINGS_SCREEN) }
+                        viewModel.onDeleteAccountClick()
                         showDialog.value = false
                     },
                     text = "Yes, Delete Account",
                     modifier = Modifier.padding(8.dp),
-                    colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.error)
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error
+                    )
                 )
             },
             dismissButton = {
@@ -73,5 +76,27 @@ fun SettingsScreen(
             },
             modifier = Modifier.padding(16.dp)
         )
+    }
+
+    when (authenticationState) {
+        is Resource.Loading -> {
+            // Display a loading indicator
+            LoadingIndicator()
+        }
+
+        is Resource.Success -> {
+            // Handle successful sign-out
+//            clearAndNavigateAndPopUp(SPLASH_SCREEN, TASK_LIST_SCREEN)
+            clearAndPopUpMultiple(SPLASH_SCREEN, listOf(SETTINGS_SCREEN, TASK_LIST_SCREEN))
+            viewModel.resetSuccessState()
+        }
+
+        is Resource.Error -> {
+            // Handle error
+        }
+
+        else -> {
+            // Handle empty state
+        }
     }
 }

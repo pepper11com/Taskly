@@ -12,7 +12,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.*
+import androidx.compose.material.ContentAlpha
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -40,14 +41,14 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
 
 
-@OptIn(ExperimentalComposeUiApi::class)
+@OptIn(ExperimentalComposeUiApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun LocationPicker(
     modifier: Modifier = Modifier,
     onLocationSelected: (LatLng) -> Unit,
     onLocationNameSet: (String) -> Unit,
     showMapAndSearch: MutableState<Boolean>,
-    locationDisplay: MutableState<String>
+    locationDisplay: MutableState<String>,
 ) {
     val marker = remember { mutableStateOf<MarkerOptions?>(null) }
     val cameraPositionState = rememberCameraPositionState {
@@ -76,10 +77,11 @@ fun LocationPicker(
         }
     }
 
-    Column {
+    Column(
+        modifier = modifier
+    ) {
         Box(modifier = Modifier.fillMaxSize()) {
             GoogleMapView(
-                modifier = modifier,
                 cameraPositionState = cameraPositionState,
                 onMapLongClick = { latLng ->
                     val newMarker = MarkerOptions()
@@ -111,12 +113,13 @@ fun LocationPicker(
                             color = Color(0xA6F2F2F2),
                             shape = RoundedCornerShape(4.dp)
                         ),
-                    colors = TextFieldDefaults.outlinedTextFieldColors(
-                        focusedBorderColor = MaterialTheme.colors.secondary,
-                        focusedLabelColor = MaterialTheme.colors.secondary,
-                        unfocusedLabelColor = MaterialTheme.colors.secondary,
-                        unfocusedBorderColor = MaterialTheme.colors.onSurface.copy(alpha = ContentAlpha.disabled),
-                        textColor = Color.Black
+                    colors = TextFieldDefaults.colors(
+//                        focusedBorderColor = MaterialTheme.colorScheme.secondary,
+
+                        focusedLabelColor = MaterialTheme.colorScheme.secondary,
+                        unfocusedLabelColor = MaterialTheme.colorScheme.secondary,
+//                        unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = ContentAlpha.disabled),
+//                        textColor = Color.Black
                     ),
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                     keyboardActions = KeyboardActions(onSearch = {
@@ -147,7 +150,7 @@ fun LocationPicker(
                             .padding(top = 72.dp),
                         shape = RoundedCornerShape(4.dp),
                         color = Color.Black.copy(alpha = 0.8f),
-                        elevation = 4.dp
+//                        elevation = 4.dp
                     ) {
                         PlaceAutocomplete(
                             query = searchQuery.value,

@@ -1,11 +1,10 @@
 package com.example.new_app
 
 import android.content.res.Resources
-import android.net.Uri
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.*
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
@@ -30,23 +29,22 @@ import kotlinx.coroutines.CoroutineScope
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-@ExperimentalMaterialApi
 fun TaskApp() {
     New_AppTheme() {
-        Surface(color = MaterialTheme.colors.background) {
+        Surface(color = MaterialTheme.colorScheme.background) {
             val appState = rememberAppState()
 
             Scaffold(
                 snackbarHost = {
                     SnackbarHost(
-                        hostState = it,
+                        hostState = appState.snackbarState,
                         modifier = Modifier.padding(8.dp),
                         snackbar = { snackbarData ->
-                            Snackbar(snackbarData, contentColor = MaterialTheme.colors.onPrimary)
+                            Snackbar(snackbarData, contentColor = MaterialTheme.colorScheme.onPrimary)
                         }
                     )
                 },
-                scaffoldState = appState.scaffoldState
+
             ) { innerPaddingModifier ->
                 NavHost(
                     navController = appState.navController,
@@ -64,14 +62,14 @@ fun TaskApp() {
 
 @Composable
 fun rememberAppState(
-    scaffoldState: ScaffoldState = rememberScaffoldState(),
+    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
     navController: NavHostController = rememberNavController(),
     snackbarManager: SnackbarManager = SnackbarManager,
     resources: Resources = resources(),
     coroutineScope: CoroutineScope = rememberCoroutineScope()
 ) =
-    remember(scaffoldState, navController, snackbarManager, resources, coroutineScope) {
-        TaskAppState(scaffoldState, navController, snackbarManager, resources, coroutineScope)
+    remember(snackbarHostState, navController, snackbarManager, resources, coroutineScope) {
+        TaskAppState(snackbarHostState, navController, snackbarManager, resources, coroutineScope)
     }
 
 @Composable
@@ -82,7 +80,6 @@ fun resources(): Resources {
 }
 
 @RequiresApi(Build.VERSION_CODES.O)
-@ExperimentalMaterialApi
 fun NavGraphBuilder.taskAppGraph(
     appState: TaskAppState,
 ) {
@@ -96,12 +93,16 @@ fun NavGraphBuilder.taskAppGraph(
     composable(SETTINGS_SCREEN){
         SettingsScreen(
             openAndPopUp = { route, popUp -> appState.navigateAndPopUp(route, popUp) },
+            navigateToMainScreen = { route -> appState.clearAndNavigate(route) },
+            clearAndNavigateAndPopUp = { route, popUp -> appState.clearAndNavigateAndPopUp(route, popUp) },
+            clearAndPopUpMultiple = { route, popUpScreens -> appState.clearAndPopUpMultiple(route, popUpScreens) },
         )
     }
 
     composable(LOGIN_SCREEN) {
         LoginScreen(
-            openAndPopUp = { route, popUp -> appState.navigateAndPopUp(route, popUp) }
+            openAndPopUp = { route, popUp -> appState.navigateAndPopUp(route, popUp) },
+            navigateToMainScreen = { route -> appState.clearAndNavigate(route) }
         )
     }
 

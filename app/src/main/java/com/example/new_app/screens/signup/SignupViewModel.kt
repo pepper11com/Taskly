@@ -12,11 +12,17 @@ import com.example.new_app.common.snackbar.SnackbarManager
 import com.example.new_app.common.snackbar.SnackbarMessage
 import com.example.new_app.model.service.AccountService
 import com.example.new_app.model.service.FirebaseService
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
+import javax.inject.Inject
+@HiltViewModel
+class SignupViewModel @Inject constructor(
+    private val accountService: AccountService,
+    private val firebaseService: FirebaseService
+) : ViewModel() {
 
-class SignupViewModel : ViewModel() {
-    private val accountService = AccountService()
-    private val firebaseService = FirebaseService()
+//    private val accountService = AccountService()
+//    private val firebaseService = FirebaseService()
 
     var uiState = mutableStateOf(SignupUiState())
         private set

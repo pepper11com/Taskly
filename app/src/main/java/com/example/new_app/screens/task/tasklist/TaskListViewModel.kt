@@ -1,27 +1,33 @@
 package com.example.new_app.screens.task.tasklist
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.new_app.CREATE_TASK_SCREEN
 import com.example.new_app.TASK_ID_KEY
 import com.example.new_app.model.Task
+import com.example.new_app.model.service.AccountService
 import com.example.new_app.model.service.FirebaseService
-import com.example.new_app.util.Resource
-import com.google.firebase.auth.FirebaseUser
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class TaskListViewModel() : ViewModel() {
+@HiltViewModel
+class TaskListViewModel @Inject constructor(
+    private val firebaseService: FirebaseService,
+    private val accountService: AccountService
+) : ViewModel() {
 
-    private val firebaseService: FirebaseService = FirebaseService()
 
     private val _taskListUiState = MutableStateFlow(TaskListUiState(isLoading = true))
     val taskListUiState: StateFlow<TaskListUiState> = _taskListUiState.asStateFlow()
+
+    val currentUserId: String
+        get() = accountService.currentUserId
+
 
     init {
         viewModelScope.launch {

@@ -1,13 +1,11 @@
 package com.example.new_app.screens.task.create_edit_tasks.createtask
 
 import android.annotation.SuppressLint
-import android.app.Activity
 import android.content.Context
-import android.content.Intent
 import android.graphics.*
-import android.net.Uri
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
@@ -15,7 +13,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.*
+import androidx.compose.material3.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
@@ -23,27 +21,35 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
+import coil.compose.rememberAsyncImagePainter
+import coil.request.CachePolicy
+import coil.request.ImageRequest
 import com.example.new_app.R
+import com.example.new_app.SETTINGS_SCREEN
+import com.example.new_app.SPLASH_SCREEN
+import com.example.new_app.TASK_LIST_SCREEN
 import com.example.new_app.common.composables.CustomTextField
+import com.example.new_app.common.composables.LoadingIndicator
 import com.example.new_app.common.composables.RegularCardEditor
+import com.example.new_app.common.util.Resource
 import com.example.new_app.model.Task
 import com.example.new_app.screens.map.LocationPicker
 import com.example.new_app.screens.task.create_edit_tasks.TaskEditCreateViewModel
 import com.google.android.material.datepicker.MaterialDatePicker
 import com.google.android.material.timepicker.MaterialTimePicker
 import com.google.android.material.timepicker.TimeFormat
-import java.lang.Integer.min
 
 
+@OptIn(ExperimentalMaterial3Api::class)
 @RequiresApi(Build.VERSION_CODES.O)
-@OptIn(ExperimentalMaterialApi::class)
 @SuppressLint("UnusedMaterialScaffoldPaddingParameter")
 @Composable
 fun CreateTaskScreen(
@@ -51,24 +57,36 @@ fun CreateTaskScreen(
     taskId: String,
     userId: String
 ) {
-    val viewModel: TaskEditCreateViewModel = viewModel()
+    val viewModel: TaskEditCreateViewModel = hiltViewModel()
     val task by viewModel.task
 
     val showMapAndSearch = remember { mutableStateOf(false) }
     val locationDisplay = remember { mutableStateOf("") }
+    val newTaskState by viewModel.taskEditCreateState.collectAsState()
+
+    val activity = LocalContext.current as AppCompatActivity
+    val galleryLauncher = rememberLauncherForActivityResult(contract = ActivityResultContracts.GetContent()) { uri ->
+        uri?.let {
+            viewModel.onImageChange(it)
+        }
+    }
 
     LaunchedEffect(Unit) {
         viewModel.initialize(null)
     }
 
+
+
     Scaffold(
         topBar = {
             TopAppBar(
-                backgroundColor = MaterialTheme.colors.primary,
-                title = { Text("Create Task") },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                ),
+                title = { Text("Create Task", color = MaterialTheme.colorScheme.background) },
                 navigationIcon = {
                     IconButton(onClick = popUpScreen) {
-                        Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.Filled.ArrowBack, contentDescription = "Back", tint = MaterialTheme.colorScheme.background)
                     }
                 },
                 actions = {
@@ -83,14 +101,16 @@ fun CreateTaskScreen(
                             Icons.Filled.Done,
                             contentDescription = "Done",
                             tint = if (task.title.isNotBlank() && task.description.isNotBlank())
-                                Color.Black else MaterialTheme.colors.onSurface.copy(alpha = 0.5f)
+                                Color.Black else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
                         )
                     }
                 }
             )
         }
-    ) {
-        Box {
+    ) { innerPadding ->
+        Box(
+            modifier = Modifier.padding(innerPadding)
+        ) {
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
@@ -102,7 +122,8 @@ fun CreateTaskScreen(
                         LocalContext.current,
                         viewModel,
                         task,
-                        userId
+                        userId,
+                        galleryLauncher
                     )
                 }
 
@@ -113,8 +134,8 @@ fun CreateTaskScreen(
                             .fillMaxWidth(),
 
                         colors = ButtonDefaults.buttonColors(
-                            backgroundColor = MaterialTheme.colors.secondary,
-                            contentColor = MaterialTheme.colors.onPrimary
+                            containerColor = MaterialTheme.colorScheme.secondary,
+                            contentColor = MaterialTheme.colorScheme.onPrimary
                         ),
                     ) {
                         Text("Add Location")
@@ -132,8 +153,8 @@ fun CreateTaskScreen(
                                 .fillMaxWidth(),
 
                             colors = ButtonDefaults.buttonColors(
-                                backgroundColor = MaterialTheme.colors.error,
-                                contentColor = MaterialTheme.colors.onPrimary
+                                containerColor = MaterialTheme.colorScheme.error,
+                                contentColor = MaterialTheme.colorScheme.onPrimary
                             ),
                         ) {
                             Text("Delete Location")
@@ -149,14 +170,22 @@ fun CreateTaskScreen(
                         modifier = Modifier
                             .fillMaxWidth(),
 
-                        colors = TextFieldDefaults.textFieldColors(
-                            backgroundColor = MaterialTheme.colors.secondary,
-                            textColor = MaterialTheme.colors.onPrimary,
+                        colors = TextFieldDefaults.colors(
+//                            backgroundColor = MaterialTheme.colorScheme.secondary,
+                            focusedContainerColor = MaterialTheme.colorScheme.secondary,
+                            unfocusedContainerColor = MaterialTheme.colorScheme.secondary,
+                            disabledContainerColor = MaterialTheme.colorScheme.secondary,
+                            errorContainerColor = MaterialTheme.colorScheme.secondary,
+//                            textColor = MaterialTheme.colorScheme.onPrimary,
+                            focusedTextColor = MaterialTheme.colorScheme.onPrimary,
+                            unfocusedTextColor = MaterialTheme.colorScheme.onPrimary,
+                            disabledTextColor = MaterialTheme.colorScheme.onPrimary,
+                            errorTextColor = MaterialTheme.colorScheme.onPrimary,
                             focusedIndicatorColor = Color.Transparent,
                             unfocusedIndicatorColor = Color.Transparent,
-                            disabledLabelColor = MaterialTheme.colors.onPrimary,
-                            unfocusedLabelColor = MaterialTheme.colors.onPrimary,
-                            focusedLabelColor = MaterialTheme.colors.onPrimary,
+                            disabledLabelColor = MaterialTheme.colorScheme.onPrimary,
+                            unfocusedLabelColor = MaterialTheme.colorScheme.onPrimary,
+                            focusedLabelColor = MaterialTheme.colorScheme.onPrimary,
                         ),
                         shape = MaterialTheme.shapes.medium,
                         readOnly = true
@@ -197,7 +226,9 @@ fun CreateTaskScreen(
                     Scaffold(
                         topBar = {
                             TopAppBar(
-                                backgroundColor = MaterialTheme.colors.primary,
+                                colors = TopAppBarDefaults.topAppBarColors(
+                                    containerColor = MaterialTheme.colorScheme.primary,
+                                ),
                                 title = { Text("Map and Search Bar") },
                                 navigationIcon = {
                                     IconButton(onClick = { showMapAndSearch.value = false }) {
@@ -214,7 +245,7 @@ fun CreateTaskScreen(
                                             Icons.Filled.Done,
                                             contentDescription = "Done",
                                             tint = if (task.location != null)
-                                                Color.Black else MaterialTheme.colors.onSurface.copy(
+                                                Color.Black else MaterialTheme.colorScheme.onSurface.copy(
                                                 alpha = 0.5f
                                             )
                                         )
@@ -222,8 +253,9 @@ fun CreateTaskScreen(
                                 }
                             )
                         }
-                    ) {
+                    ) { innerPadding ->
                         LocationPicker(
+                            modifier = Modifier.padding(innerPadding),
                             onLocationSelected = viewModel::onLocationChange,
                             onLocationNameSet = { locationName ->
                                 viewModel.onLocationNameChange(locationName)
@@ -236,10 +268,29 @@ fun CreateTaskScreen(
                 }
             }
         }
+
+        when (newTaskState) {
+            is Resource.Loading -> {
+                // Display a loading indicator
+                LoadingIndicator()
+            }
+
+            is Resource.Success -> {
+
+            }
+
+            is Resource.Error -> {
+                // Handle error
+            }
+
+            else -> {
+                // Handle empty state
+            }
+        }
     }
 }
 
-@ExperimentalMaterialApi
+
 @Composable
 private fun CardEditors(
     task: Task,
@@ -272,133 +323,61 @@ fun PickImageFromGallery(
     context: Context,
     viewModel: TaskEditCreateViewModel,
     task: Task,
-    userId: String
+    userId: String,
+    galleryLauncher: ActivityResultLauncher<String>
 ) {
     val updatedTask by rememberUpdatedState(task)
-
-    val launcher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.StartActivityForResult()
-    ) { result ->
-        if (result.resultCode == Activity.RESULT_OK) {
-            result.data?.data?.let { uri ->
-                viewModel.onImageChange(uri.toString(), context, task.id, userId)
-            }
-        }
-    }
-
-    fun openImagePicker() {
-        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
-            addCategory(Intent.CATEGORY_OPENABLE)
-            type = "image/*"
-            putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
-            flags = Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION or
-                    Intent.FLAG_GRANT_READ_URI_PERMISSION or
-                    Intent.FLAG_GRANT_WRITE_URI_PERMISSION
-        }
-        launcher.launch(intent)
-    }
 
     Row(
         modifier = Modifier.padding(vertical = 16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        viewModel.bitmap?.let { btm ->
-            val squareBitmap = btm.centerCropToSquare()
-            val softwareBitmap = squareBitmap.toSoftwareBitmap()
-            val circularBitmap = softwareBitmap.toCircularBitmap()
-            Image(
-                bitmap = circularBitmap.asImageBitmap(),
-                contentDescription = null,
+        val imageUrl = viewModel.imageUri.value
+
+        if (imageUrl != null) {
+            AsyncImage(
+                url = imageUrl,
                 modifier = Modifier
                     .size(100.dp)
-                    .weight(1f, fill = false)
+                    .clip(CircleShape),
+                contentDescription = "Task Image"
             )
-        } ?: run {
-            Image(
-                painter = painterResource(id = R.drawable.baseline_account_box_24),
-                contentDescription = "Logo",
-                modifier = Modifier
-                    .size(100.dp)
-                    .clip(CircleShape)
-                    .weight(1f, fill = false)
-            )
-        }
-
-        Spacer(modifier = Modifier.width(16.dp))
-
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(3f, fill = false)
-        ) {
-            Button(
-                onClick = {
-                    openImagePicker()
-                },
-                colors = ButtonDefaults.buttonColors(
-                    contentColor = MaterialTheme.colors.onPrimary,
-                    backgroundColor = MaterialTheme.colors.secondary
-                ),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(text = "Pick Image")
+            Spacer(modifier = Modifier.width(16.dp))
+            IconButton(onClick = viewModel::onDeleteImageClick) {
+                Icon(Icons.Filled.Delete, contentDescription = "Delete Image")
             }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Button(
-                enabled = updatedTask.imageUri != null && updatedTask.imageUri!!.isNotEmpty(),
-                onClick = {
-                    updatedTask.imageUri = ""
-                    viewModel.bitmap = BitmapFactory.decodeResource(
-                        context.resources,
-                        R.drawable.baseline_account_box_24
-                    )
-                },
-                colors = ButtonDefaults.buttonColors(
-                    contentColor = MaterialTheme.colors.onPrimary,
-                    backgroundColor = MaterialTheme.colors.secondary
-                ),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(text = "Delete Image")
+        } else {
+            IconButton(onClick = {
+                galleryLauncher.launch("image/*")
+            }) {
+                Icon(Icons.Filled.AddAPhoto, contentDescription = "Pick Image from Gallery")
             }
         }
     }
 }
 
 
-// Extension function to crop a Bitmap into a square
-fun Bitmap.centerCropToSquare(): Bitmap {
-    val dimension = min(width, height)
-    val xOffset = (width - dimension) / 2
-    val yOffset = (height - dimension) / 2
-    return Bitmap.createBitmap(this, xOffset, yOffset, dimension, dimension)
+@Composable
+fun AsyncImage(url: String, modifier: Modifier = Modifier, contentDescription: String? = null) {
+
+    val painter = rememberAsyncImagePainter(
+        ImageRequest.Builder(LocalContext.current)
+            .data(
+                data = url
+            )
+            .apply(block = fun ImageRequest.Builder.() {
+                memoryCachePolicy(CachePolicy.ENABLED)
+            }).build()
+    )
+
+    Image(
+        painter = painter,
+        contentDescription = contentDescription,
+        contentScale = ContentScale.Crop,
+        modifier = modifier
+    )
 }
 
-// Extension function to crop a Bitmap into a circle
-fun Bitmap.toCircularBitmap(): Bitmap {
-    val output = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
-    val canvas = Canvas(output)
-
-    val paint = Paint().apply {
-        isAntiAlias = true
-    }
-    val rect = Rect(0, 0, width, height)
-    val rectF = RectF(rect)
-
-    canvas.drawOval(rectF, paint)
-    paint.xfermode = PorterDuffXfermode(PorterDuff.Mode.SRC_IN)
-    canvas.drawBitmap(this, rect, rect, paint)
-
-    return output
-}
-
-// Extension function to convert a hardware Bitmap to a software Bitmap
-fun Bitmap.toSoftwareBitmap(): Bitmap {
-    val config = if (isMutable) Bitmap.Config.ARGB_8888 else Bitmap.Config.RGB_565
-    return copy(config, isMutable)
-}
 
 
 private fun showDatePicker(activity: AppCompatActivity, onDateChange: (Long) -> Unit) {
