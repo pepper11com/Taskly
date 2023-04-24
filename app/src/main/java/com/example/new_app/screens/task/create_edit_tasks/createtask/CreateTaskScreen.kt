@@ -12,6 +12,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.*
 import androidx.compose.material.icons.Icons
@@ -21,6 +22,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
@@ -36,6 +38,7 @@ import com.example.new_app.R
 import com.example.new_app.SETTINGS_SCREEN
 import com.example.new_app.SPLASH_SCREEN
 import com.example.new_app.TASK_LIST_SCREEN
+import com.example.new_app.common.composables.CustomCreateTaskAppBar
 import com.example.new_app.common.composables.CustomMultiLineTextfield
 import com.example.new_app.common.composables.CustomTextField
 import com.example.new_app.common.composables.LoadingIndicator
@@ -75,46 +78,24 @@ fun CreateTaskScreen(
     LaunchedEffect(Unit) {
         viewModel.initialize(null)
     }
-
-
+    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                ),
-                title = { Text("Create Task", color = MaterialTheme.colorScheme.background) },
-                navigationIcon = {
-                    IconButton(onClick = popUpScreen) {
-                        Icon(Icons.Filled.ArrowBack, contentDescription = "Back", tint = MaterialTheme.colorScheme.background)
-                    }
-                },
-                actions = {
-                    IconButton(
-                        enabled = task.title.isNotBlank() && task.description.isNotBlank(),
-
-                        onClick = {
-                            viewModel.onDoneClick(null, popUpScreen)
-                        }
-                    ) {
-                        Icon(
-                            Icons.Filled.Done,
-                            contentDescription = "Done",
-                            tint = if (task.title.isNotBlank() && task.description.isNotBlank())
-                                Color.Black else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
-                        )
-                    }
-                }
+            CustomCreateTaskAppBar(
+                task = task,
+                viewModel = viewModel,
+                popUpScreen = popUpScreen,
+                scrollBehavior = scrollBehavior,
             )
         }
     ) { innerPadding ->
-        Box(
-            modifier = Modifier.padding(innerPadding)
-        ) {
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
+                    .nestedScroll(scrollBehavior.nestedScrollConnection)
+
+                .padding(innerPadding)
                     .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
@@ -270,7 +251,7 @@ fun CreateTaskScreen(
                     }
                 }
             }
-        }
+
 
         when (newTaskState) {
             is Resource.Loading -> {

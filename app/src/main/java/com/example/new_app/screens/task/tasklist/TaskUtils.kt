@@ -1,11 +1,26 @@
 package com.example.new_app.screens.task.tasklist
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import com.example.new_app.model.Task
 import java.lang.StringBuilder
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.util.Date
+import java.util.Locale
 
+
+@RequiresApi(Build.VERSION_CODES.O)
+val dateFormat = DateTimeFormatter.ofPattern("EEE, d MMM yyyy", Locale.ENGLISH)
+
+@RequiresApi(Build.VERSION_CODES.O)
 fun getFilteredTasks(tasks: List<Task>, status: TaskStatus): List<Task> {
-    val sortedTasks = tasks.sortedByDescending { task -> task.taskDate }
+
+    val sortedTasks = tasks.sortedWith(compareBy { task ->
+        LocalDate.parse(task.dueDate, dateFormat)
+    })
+
     return sortedTasks.filter { task ->
         when (status) {
             TaskStatus.DELETED -> task.status == TaskStatus.DELETED

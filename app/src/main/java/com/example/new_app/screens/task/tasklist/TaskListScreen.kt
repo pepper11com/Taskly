@@ -3,31 +3,23 @@ package com.example.new_app.screens.task.tasklist
 
 import android.annotation.SuppressLint
 import android.graphics.Bitmap
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.animation.core.*
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.TabPosition
-import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
-import androidx.compose.material3.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Deselect
-import androidx.compose.material.icons.filled.SelectAll
-import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.new_app.EDIT_TASK_SCREEN
-import com.example.new_app.LOGIN_SCREEN
-import com.example.new_app.SETTINGS_SCREEN
 import com.example.new_app.TASK_ID
 import com.example.new_app.TASK_ID_KEY
 import com.example.new_app.common.composables.CustomTabRow
@@ -35,9 +27,9 @@ import com.example.new_app.common.composables.CustomTopAppBar
 import com.example.new_app.common.composables.LoadingIndicator
 import com.example.new_app.model.Task
 import kotlinx.coroutines.launch
-import com.example.new_app.common.composables.DropdownContextMenu
 
 @OptIn(ExperimentalMaterial3Api::class)
+@RequiresApi(Build.VERSION_CODES.O)
 @SuppressLint("UnusedMaterialScaffoldPaddingParameter")
 @Composable
 fun TaskListScreen(
@@ -63,6 +55,7 @@ fun TaskListScreen(
         getFilteredTasks(uiState.tasks, TaskStatus.values()[selectedIndex.value])
     }
 
+    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
 
     Scaffold(
@@ -86,7 +79,8 @@ fun TaskListScreen(
                     selectedTasks = selectedTasks,
                     uiState = uiState,
                     openScreen = openScreen,
-                    viewModel = viewModel
+                    viewModel = viewModel,
+                    scrollBehavior = scrollBehavior,
                 )
 
                 CustomTabRow(
@@ -109,7 +103,11 @@ fun TaskListScreen(
                 )
             } else {
 
-                LazyColumn(modifier = Modifier.fillMaxSize()) {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .nestedScroll(scrollBehavior.nestedScrollConnection)
+                ) {
                     itemsIndexed(filteredTasks, key = { _, task -> task.id }) { index, task ->
                         val taskBitmap = remember { mutableStateOf<Bitmap?>(null) }
                         SwipeableTaskListItem(

@@ -11,8 +11,6 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.*
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.*
 import androidx.compose.runtime.snapshots.SnapshotStateList
@@ -34,6 +32,18 @@ import coil.request.ImageRequest
 import com.example.new_app.R
 import com.example.new_app.model.Task
 import kotlin.math.roundToInt
+import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.FractionalThreshold
+import androidx.compose.material.SwipeableState
+import androidx.compose.material.swipeable
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CheckboxDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Text
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
@@ -74,6 +84,7 @@ fun SwipeableTaskListItem(
                 }
                 swipeableState.snapTo(0)
             }
+
             1 -> {
                 if (status != TaskStatus.DELETED) {
                     viewModel.onTaskSwipeCompleted(task)
@@ -112,6 +123,154 @@ fun SwipeableTaskListItem(
 }
 
 
+//@OptIn(ExperimentalFoundationApi::class)
+//@Composable
+//fun TaskListItem(
+//    task: Task,
+//    taskBitmap: MutableState<Bitmap?>,
+//    onClick: () -> Unit,
+//    onLongPress: () -> Unit,
+//    offset: Offset = Offset.Zero,
+//    isSelected: Boolean,
+//    selectedTasks: SnapshotStateList<Task>,
+//    onSelectedTasksChange: (Task, Boolean) -> Unit,
+//) {
+//    val context = LocalContext.current
+//    val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+//
+//    val painter = rememberAsyncImagePainter(
+//        ImageRequest.Builder(LocalContext.current)
+//            .data(data = task.imageUri ?: R.drawable.baseline_account_box_24)
+//            .apply(block = fun ImageRequest.Builder.() {
+//                crossfade(true)
+//                error(R.drawable.baseline_account_box_24)
+//            }).build()
+//    )
+//
+//
+//    Card(
+//        colors = CardDefaults.cardColors(
+//            containerColor = Color(0xFF444444)
+//        ),
+//        modifier = Modifier
+//            .offset { IntOffset(offset.x.roundToInt(), offset.y.roundToInt()) }
+//            .padding(8.dp, 8.dp, 8.dp, 8.dp)
+//            .fillMaxWidth()
+//            .combinedClickable(
+//                onClick = onClick,
+//                onLongClick = {
+//                    onLongPress()
+//                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+//                        vibrator.vibrate(
+//                            VibrationEffect.createOneShot(
+//                                25,
+//                                VibrationEffect.DEFAULT_AMPLITUDE
+//                            )
+//                        )
+//                    } else {
+//                        vibrator.vibrate(25)
+//                    }
+//                },
+//            )
+//    ) {
+//        Row(
+//            modifier = Modifier
+//                .fillMaxWidth()
+//                .padding(8.dp),
+//            horizontalArrangement = Arrangement.SpaceBetween,
+//        ) {
+//            Column(
+//                modifier = Modifier
+//                    .fillMaxSize()
+//                    .weight(1f)
+//                    .padding(12.dp),
+//                verticalArrangement = Arrangement.SpaceBetween,
+//            ) {
+//                if (TaskStatus.ACTIVE != task.status) {
+//                    Checkbox(
+//                        checked = isSelected,
+//                        onCheckedChange = { isChecked ->
+//                            if (isChecked) {
+//                                selectedTasks.add(task)
+//                            } else {
+//                                selectedTasks.remove(task)
+//                            }
+//                        },
+//                        colors = CheckboxDefaults.colors(
+//                            checkmarkColor = Color(0xFFFF8C00),
+//                            disabledCheckedColor = MaterialTheme.colorScheme.background,
+//                            disabledIndeterminateColor = MaterialTheme.colorScheme.background,
+//                            uncheckedColor = MaterialTheme.colorScheme.background,
+//                            checkedColor = MaterialTheme.colorScheme.background,
+//                        )
+//                    )
+//                }
+//                Image(
+//                    painter = painter,
+//                    contentDescription = null,
+//                    contentScale = ContentScale.Crop,
+//                    modifier = Modifier
+//                        .size(40.dp)
+//                        .clip(RoundedCornerShape(5.dp)),
+//                )
+//                when (painter.state) {
+//                    is AsyncImagePainter.State.Loading -> {
+//                        CircularProgressIndicator(
+//                            color = Color(0xFFFF8C00),
+//                        )
+//                    }
+//
+//                    else -> {
+//                        // No action needed here
+//                    }
+//                }
+//
+//                Text(
+//                    text = task.title,
+//                    style = MaterialTheme.typography.titleSmall,
+//                    color = Color.White
+//                )
+//
+//                Text(
+//                    text = getDueDateAndTime(task),
+//                    fontSize = 12.sp,
+//                    color = Color.White
+//                )
+//            }
+//
+//            Column(
+//                modifier = Modifier
+//                    .fillMaxSize()
+//                    .weight(1f)
+//                    .height(IntrinsicSize.Max),
+//            ) {
+//                if (task.locationName != null) {
+//                    DialogMap(
+//                        task = task,
+//                        modifier = Modifier
+//                            .height(140.dp)
+//                            .width(180.dp)
+//                    )
+//                } else {
+//                    Box(
+//                        modifier = Modifier
+//                            .height(140.dp)
+//                            .width(180.dp)
+//                            .background(Color(0xFF666666), shape = RoundedCornerShape(8.dp))
+//                    )
+//                }
+//
+//                Text(
+//                    modifier = Modifier.padding(top = 2.dp, end = 2.dp),
+//                    text = if (task.locationName != null) task.locationName.toString() else "No Location Set",
+//                    fontSize = 9.sp,
+//                    color = Color.White,
+//                )
+//            }
+//        }
+//    }
+//}
+
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun TaskListItem(
@@ -122,30 +281,32 @@ fun TaskListItem(
     offset: Offset = Offset.Zero,
     isSelected: Boolean,
     selectedTasks: SnapshotStateList<Task>,
-    onSelectedTasksChange: (Task, Boolean) -> Unit
+    onSelectedTasksChange: (Task, Boolean) -> Unit,
 ) {
     val context = LocalContext.current
     val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
 
     val painter = rememberAsyncImagePainter(
         ImageRequest.Builder(LocalContext.current)
-            .data(data = task.imageUri ?: R.drawable.baseline_account_box_24).apply(block = fun ImageRequest.Builder.() {
+            .data(data = task.imageUri ?: R.drawable.baseline_account_box_24)
+            .apply(block = fun ImageRequest.Builder.() {
                 crossfade(true)
                 error(R.drawable.baseline_account_box_24)
             }).build()
     )
 
-
     Card(
-        backgroundColor = Color(0xFF444444),
+        colors = CardDefaults.cardColors(
+            containerColor = Color(0xFF444444)
+        ),
         modifier = Modifier
             .offset { IntOffset(offset.x.roundToInt(), offset.y.roundToInt()) }
-            .padding(8.dp, 8.dp, 8.dp, 8.dp)
+            .padding(8.dp)
+            .fillMaxWidth()
             .combinedClickable(
                 onClick = onClick,
                 onLongClick = {
                     onLongPress()
-
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                         vibrator.vibrate(
                             VibrationEffect.createOneShot(
@@ -159,70 +320,79 @@ fun TaskListItem(
                 },
             )
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(8.dp)
-        ) {
-            Box(
+        Column {
+            Row(
                 modifier = Modifier
-                    .size(40.dp)
+                    .fillMaxWidth()
+                    .padding(8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Image(
                     painter = painter,
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
-                        .size(40.dp)
-                        .clip(CircleShape),
+                        .size(48.dp)
+                        .clip(RoundedCornerShape(8.dp)),
                 )
-                when (painter.state) {
-                    is AsyncImagePainter.State.Loading -> {
-                        CircularProgressIndicator(
-                            modifier = Modifier.align(Alignment.Center)
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(start = 8.dp)
+                ) {
+                    Text(
+                        text = task.title,
+                        style = MaterialTheme.typography.titleLarge,
+                        color = Color.White
+                    )
+                    Text(
+                        text = getDueDateAndTime(task),
+                        fontSize = 12.sp,
+                        color = Color.White
+                    )
+                }
+                if (TaskStatus.ACTIVE != task.status) {
+                    Checkbox(
+                        checked = isSelected,
+                        onCheckedChange = { isChecked ->
+                            if (isChecked) {
+                                selectedTasks.add(task)
+                            } else {
+                                selectedTasks.remove(task)
+                            }
+                        },
+                        colors = CheckboxDefaults.colors(
+                            checkmarkColor = Color(0xFFFF8C00),
+                            disabledCheckedColor = MaterialTheme.colorScheme.background,
+                            disabledIndeterminateColor = MaterialTheme.colorScheme.background,
+                            uncheckedColor = MaterialTheme.colorScheme.background,
+                            checkedColor = MaterialTheme.colorScheme.background,
                         )
-                    }
-                    else -> {
-                        // No action needed here
-                    }
+                    )
                 }
             }
 
-            if (TaskStatus.ACTIVE != task.status) {
-                Checkbox(
-                    modifier = Modifier.padding(8.dp, 0.dp),
-                    checked = isSelected,
-                    onCheckedChange = { isChecked ->
-                        if (isChecked) {
-                            selectedTasks.add(task)
-                        } else {
-                            selectedTasks.remove(task)
-                        }
-                    },
-                    colors = CheckboxDefaults.colors(
-                        checkmarkColor = Color(0xFFFF8C00),
-                        disabledColor = MaterialTheme.colorScheme.background,
-                        disabledIndeterminateColor = MaterialTheme.colorScheme.background,
-                        uncheckedColor = MaterialTheme.colorScheme.background,
-                        checkedColor = MaterialTheme.colorScheme.background,
-                    )
+            if (task.locationName != null) {
+                DialogMap(
+                    task = task,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp)
+                        .height(140.dp)
+                )
+                Text(
+                    modifier = Modifier.padding(start = 14.dp, bottom = 12.dp),
+                    text = task.locationName.toString(),
+                    fontSize = 9.sp,
+                    color = Color.White,
                 )
             } else {
-                Spacer(modifier = Modifier.padding(8.dp, 0.dp))
-            }
-
-            Column(modifier = Modifier.weight(1f)) {
-                Text(text = task.title, style = MaterialTheme.typography.titleSmall, color = Color.White)
-                CompositionLocalProvider(LocalContentAlpha provides ContentAlpha.medium) {
-                    Text(text = getDueDateAndTime(task), fontSize = 12.sp, color = Color.White)
-                }
-            }
-
-            CompositionLocalProvider(LocalContentAlpha provides ContentAlpha.medium) {
-                Text(
-                    text = if (TaskStatus.ACTIVE == task.status) "Pending" else if (TaskStatus.DELETED == task.status) "Deleted" else "Completed",
-                    color = if (TaskStatus.ACTIVE == task.status) Color(0xFFE53935) else if (TaskStatus.DELETED == task.status) Color(0xFFE53935) else Color(0xFF43A047),
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp)
+                        .height(140.dp)
+                        .background(Color(0xFF666666), shape = RoundedCornerShape(8.dp))
                 )
             }
         }

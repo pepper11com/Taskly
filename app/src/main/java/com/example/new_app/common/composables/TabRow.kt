@@ -38,6 +38,14 @@ fun CustomTabRow(
         containerColor = MaterialTheme.colorScheme.background,
         contentColor = Color.White,
         indicator = indicator,
+        divider = {
+            Spacer(
+                Modifier
+                    .padding(horizontal = 24.dp)
+                    .height(1.dp)
+                    .background(Color.White)
+            )
+        },
     ) {
         tabTitles.forEachIndexed { index, title ->
             Tab(

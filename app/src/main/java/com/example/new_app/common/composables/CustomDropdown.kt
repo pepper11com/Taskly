@@ -9,6 +9,7 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 
 
@@ -25,7 +26,7 @@ fun DropdownContextMenu(
                 modifier = Modifier.padding(8.dp, 0.dp),
                 imageVector = Icons.Default.MoreVert,
                 contentDescription = "More",
-                tint = MaterialTheme.colorScheme.background
+                tint = Color.White
             )
         }
 
