@@ -2,6 +2,7 @@ package com.example.new_app.screens.splashscreen
 
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.viewModelScope
+import com.example.new_app.AUTHENTICATION_SCREEN
 import com.example.new_app.LOGIN_SCREEN
 import com.example.new_app.SPLASH_SCREEN
 import com.example.new_app.TASK_LIST_SCREEN
@@ -33,8 +34,13 @@ class SplashScreenViewModel @Inject constructor(
     }
 
 
-    fun onAppStart(openAndPopUp: (String, String) -> Unit) {
-        if(accountService.hasUser) openAndPopUp(TASK_LIST_SCREEN, SPLASH_SCREEN)
-        else openAndPopUp(LOGIN_SCREEN, SPLASH_SCREEN)
+    fun onAppStart(openAndPopUp: (String, String) -> Unit, clearBackstack: () -> Unit) {
+        if (accountService.hasUser) {
+            clearBackstack()
+            openAndPopUp(TASK_LIST_SCREEN, SPLASH_SCREEN)
+        } else {
+            clearBackstack()
+            openAndPopUp(AUTHENTICATION_SCREEN, SPLASH_SCREEN)
+        }
     }
 }

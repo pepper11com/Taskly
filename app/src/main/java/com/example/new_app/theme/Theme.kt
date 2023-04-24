@@ -10,13 +10,15 @@ import com.google.accompanist.systemuicontroller.rememberSystemUiController
 private val DarkColorPalette = darkColorScheme(
     primary = DarkOrange,
     onPrimary = DarkGrey,
-    secondary = LightOrange
+    secondary = LightOrange,
+    background = Color(0xFF000000),
 )
 
 private val LightColorPalette = lightColorScheme(
     primary = DarkOrange,
     onPrimary = DarkGrey,
-    secondary = LightOrange
+    secondary = LightOrange,
+    background = Color(0xFFFFFFFF),
 
     /* Other default colors to override
     primary: Color,
@@ -56,11 +58,21 @@ fun New_AppTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     content: @Composable () -> Unit
 ) {
+
+    val systemUiController = rememberSystemUiController()
+
     val colors = if (darkTheme) {
         DarkColorPalette
     } else {
         LightColorPalette
     }
+
+//    SideEffect {
+//        systemUiController.setSystemBarsColor(
+//            color =  Color(0x2F000000),
+//            darkIcons = false
+//        )
+//    }
 
     MaterialTheme(
         colorScheme = colors,

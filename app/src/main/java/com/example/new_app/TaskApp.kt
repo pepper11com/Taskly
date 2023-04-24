@@ -17,6 +17,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.new_app.common.snackbar.SnackbarManager
+import com.example.new_app.screens.authentication.AuthenticationScreen
 import com.example.new_app.screens.task.create_edit_tasks.createtask.CreateTaskScreen
 import com.example.new_app.screens.login.LoginScreen
 import com.example.new_app.screens.settings.SettingsScreen
@@ -45,11 +46,10 @@ fun TaskApp() {
                     )
                 },
 
-            ) { innerPaddingModifier ->
+            ) { _ ->
                 NavHost(
                     navController = appState.navController,
                     startDestination = SPLASH_SCREEN,
-                    modifier = Modifier.padding(innerPaddingModifier)
                 ) {
                     taskAppGraph(
                         appState,
@@ -87,7 +87,9 @@ fun NavGraphBuilder.taskAppGraph(
     composable(SPLASH_SCREEN) {
         SplashScreen(
             openAndPopUp = { route, popUp -> appState.navigateAndPopUp(route, popUp) },
-        )
+            clearBackstack = { appState.clearBackstack() },
+
+            )
     }
 
     composable(SETTINGS_SCREEN){
@@ -96,6 +98,19 @@ fun NavGraphBuilder.taskAppGraph(
             navigateToMainScreen = { route -> appState.clearAndNavigate(route) },
             clearAndNavigateAndPopUp = { route, popUp -> appState.clearAndNavigateAndPopUp(route, popUp) },
             clearAndPopUpMultiple = { route, popUpScreens -> appState.clearAndPopUpMultiple(route, popUpScreens) },
+
+            openScreen = { route -> appState.navigate(route) },
+            clearBackstack = { appState.clearBackstack() },
+
+            navigateToLogin = { route -> appState.clearAndNavigate(route) }
+
+        )
+    }
+
+    composable(AUTHENTICATION_SCREEN) {
+        AuthenticationScreen(
+            openAndPopUp = { route, popUp -> appState.navigateAndPopUp(route, popUp) },
+            navigateToMainScreen = { route -> appState.clearAndNavigate(route) }
         )
     }
 

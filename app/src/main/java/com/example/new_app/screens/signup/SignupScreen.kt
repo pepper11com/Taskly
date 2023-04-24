@@ -15,40 +15,47 @@ import com.example.new_app.common.composables.CustomPasswordTextField
 import com.example.new_app.common.composables.CustomTextField
 
 @Composable
-fun SignupScreen(openAndPopUp: (String, String) -> Unit) {
+fun SignupScreen(
+    openAndPopUp: (String, String) -> Unit
+) {
     val viewModel: SignupViewModel = hiltViewModel()
     val uiState by viewModel.uiState
 
-    SignupContent(
-        uiState = uiState,
-        viewModel = viewModel,
-        onSignupClick = { viewModel.onSignUpClick { route, popUp -> openAndPopUp(route, popUp) } },
-        onBackToLoginClick = {
-            openAndPopUp(LOGIN_SCREEN, SIGN_UP_SCREEN)
-        }
-    )
+  Column {
+      SignupContent(
+          uiState = uiState,
+          viewModel = viewModel,
+          onSignupClick = {
+              viewModel.onSignUpClick { route, popUp ->
+                  openAndPopUp(
+                      route,
+                      popUp
+                  )
+              }
+          },
+          onBackToLoginClick = {
+              openAndPopUp(LOGIN_SCREEN, SIGN_UP_SCREEN)
+          }
+      )
+  }
+
 }
 
 @Composable
 fun SignupContent(
+    modifier: Modifier = Modifier,
     uiState: SignupUiState,
     viewModel: SignupViewModel,
     onSignupClick: () -> Unit,
     onBackToLoginClick: () -> Unit
 ) {
 
-
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(
-            text = "Sign Up",
-            style = MaterialTheme.typography.titleMedium,
-            modifier = Modifier.padding(bottom = 32.dp)
-        )
 
         CustomTextField(
             value = uiState.email,
@@ -80,13 +87,17 @@ fun SignupContent(
         CustomButton(
             text = "Sign Up",
             onClick = { onSignupClick() },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.secondary,
+                contentColor = MaterialTheme.colorScheme.background
+            )
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
         TextButton(onClick = { onBackToLoginClick() }) {
-            Text("Already have an account? Log in")
+            Text("Already have an account? Log in", color = MaterialTheme.colorScheme.secondary)
         }
 
         if (uiState.isLoading) {

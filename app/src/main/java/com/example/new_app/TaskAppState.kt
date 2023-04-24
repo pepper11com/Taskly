@@ -63,5 +63,7 @@ class TaskAppState(
             }
         }
     }
-
+    fun clearBackstack() {
+        navController.popBackStack()
+    }
 }

@@ -3,12 +3,14 @@ package com.example.new_app
 
 import android.os.Build
 import android.os.Bundle
+import android.view.WindowManager
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.core.view.WindowCompat
 import com.example.new_app.BuildConfig.MAPS_API_KEY
 import com.example.new_app.screens.splashscreen.SplashScreenViewModel
 import com.google.android.gms.maps.MapsInitializer
@@ -39,11 +41,14 @@ class MainActivity : AppCompatActivity() {
         Places.initialize(applicationContext, MAPS_API_KEY)
         MapsInitializer.initialize(applicationContext)
 
+
         installSplashScreen().apply {
             setKeepOnScreenCondition() {
                 viewModel.isLoading.value
             }
         }
+
+//        WindowCompat.setDecorFitsSystemWindows(window, false)
 
         setContent {
             TaskApp()

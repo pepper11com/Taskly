@@ -20,6 +20,7 @@ import kotlinx.coroutines.delay
 @Composable
 fun SplashScreen(
     openAndPopUp: (String, String) -> Unit,
+    clearBackstack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
 
@@ -39,6 +40,6 @@ fun SplashScreen(
     }
 
     LaunchedEffect(viewModel) {
-        viewModel.onAppStart(openAndPopUp)
+        viewModel.onAppStart(openAndPopUp, clearBackstack)
     }
 }

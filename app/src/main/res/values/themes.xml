@@ -6,9 +6,11 @@
         <item name="android:colorPrimary">@color/dark_orange</item>
 
 
+        <item name="android:statusBarColor" >#000000</item>
+        <item name="android:navigationBarColor">#000000</item>
+<!--        <item name="android:statusBarColor">@android:color/transparent</item>-->
+<!--        <item name="android:navigationBarColor">@android:color/transparent</item>-->
 
-        <item name="android:statusBarColor" >?android:colorPrimary</item>
-        <item name="android:navigationBarColor">?android:colorPrimary</item>
     </style>
 
     <style name="Theme.New_App.NoActionBar">

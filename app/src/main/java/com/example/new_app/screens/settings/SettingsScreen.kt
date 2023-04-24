@@ -10,6 +10,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.new_app.LOGIN_SCREEN
 import com.example.new_app.SETTINGS_SCREEN
 import com.example.new_app.SPLASH_SCREEN
 import com.example.new_app.TASK_LIST_SCREEN
@@ -24,6 +25,10 @@ fun SettingsScreen(
     navigateToMainScreen: (String) -> Unit,
     clearAndNavigateAndPopUp: (String, String) -> Unit,
     clearAndPopUpMultiple: (String, List<String>) -> Unit,
+
+    openScreen: (String) -> Unit,
+    clearBackstack: () -> Unit,
+    navigateToLogin: (String) -> Unit = {}
 ) {
     val viewModel: SettingsViewModel = hiltViewModel()
     val showDialog = remember { mutableStateOf(false) }
@@ -85,10 +90,11 @@ fun SettingsScreen(
         }
 
         is Resource.Success -> {
-            // Handle successful sign-out
-//            clearAndNavigateAndPopUp(SPLASH_SCREEN, TASK_LIST_SCREEN)
-            clearAndPopUpMultiple(SPLASH_SCREEN, listOf(SETTINGS_SCREEN, TASK_LIST_SCREEN))
-            viewModel.resetSuccessState()
+            LaunchedEffect(key1 = authenticationState) {
+                viewModel.resetSuccessState()
+                clearBackstack()
+                navigateToLogin(SPLASH_SCREEN)
+            }
         }
 
         is Resource.Error -> {
@@ -99,4 +105,5 @@ fun SettingsScreen(
             // Handle empty state
         }
     }
+
 }

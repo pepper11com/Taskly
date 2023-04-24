@@ -36,6 +36,7 @@ import com.example.new_app.R
 import com.example.new_app.SETTINGS_SCREEN
 import com.example.new_app.SPLASH_SCREEN
 import com.example.new_app.TASK_LIST_SCREEN
+import com.example.new_app.common.composables.CustomMultiLineTextfield
 import com.example.new_app.common.composables.CustomTextField
 import com.example.new_app.common.composables.LoadingIndicator
 import com.example.new_app.common.composables.RegularCardEditor
@@ -171,12 +172,10 @@ fun CreateTaskScreen(
                             .fillMaxWidth(),
 
                         colors = TextFieldDefaults.colors(
-//                            backgroundColor = MaterialTheme.colorScheme.secondary,
                             focusedContainerColor = MaterialTheme.colorScheme.secondary,
                             unfocusedContainerColor = MaterialTheme.colorScheme.secondary,
                             disabledContainerColor = MaterialTheme.colorScheme.secondary,
                             errorContainerColor = MaterialTheme.colorScheme.secondary,
-//                            textColor = MaterialTheme.colorScheme.onPrimary,
                             focusedTextColor = MaterialTheme.colorScheme.onPrimary,
                             unfocusedTextColor = MaterialTheme.colorScheme.onPrimary,
                             disabledTextColor = MaterialTheme.colorScheme.onPrimary,
@@ -193,7 +192,6 @@ fun CreateTaskScreen(
                 }
 
 
-
                 item {
                     CustomTextField(
                         value = task.title,
@@ -204,17 +202,22 @@ fun CreateTaskScreen(
                 }
 
                 item {
-                    CustomTextField(
+                    CustomMultiLineTextfield(
                         value = task.description,
                         onValueChange = viewModel::onDescriptionChange,
-                        label = "Description",
                         modifier = Modifier.fillMaxWidth(),
-                        singleLine = false
+                        hintText = "Description",
+                        textStyle = MaterialTheme.typography.bodySmall,
+                        maxLines = 4
                     )
                 }
 
                 item {
-                    CardEditors(task, viewModel::onDateChange, viewModel::onTimeChange)
+                    CardEditors(
+                        task,
+                        viewModel::onDateChange,
+                        viewModel::onTimeChange
+                    )
                 }
             }
 

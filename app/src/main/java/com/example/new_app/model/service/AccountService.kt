@@ -62,7 +62,6 @@ class AccountService @Inject constructor(
         firebaseAuth.currentUser!!.delete().await()
     }
 
-
     suspend fun signOut(): Resource<Unit> {
         return try {
             if (firebaseAuth.currentUser!!.isAnonymous) {

@@ -11,8 +11,8 @@ import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -98,6 +98,7 @@ fun CustomPasswordTextField(
             colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = MaterialTheme.colorScheme.secondary,
                 unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = ContentAlpha.disabled),
+                focusedLabelColor = MaterialTheme.colorScheme.secondary,
             )
         )
 
@@ -115,5 +116,32 @@ fun CustomPasswordTextField(
     LaunchedEffect(value) {
         isErrorState.value = value.isNotEmpty()
     }
+}
+
+@Composable
+fun CustomMultiLineTextfield(
+    value: String,
+    onValueChange: (String) -> Unit,
+    modifier: Modifier = Modifier,
+    hintText: String = "",
+    textStyle: TextStyle = MaterialTheme.typography.bodySmall,
+    maxLines: Int = 4,
+) {
+    OutlinedTextField(
+        value = value,
+        onValueChange = onValueChange,
+        label = { Text(hintText) },
+        textStyle = textStyle,
+        maxLines = maxLines,
+        modifier = Modifier.fillMaxWidth(),
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedBorderColor = MaterialTheme.colorScheme.secondary,
+            unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = ContentAlpha.disabled),
+            focusedLabelColor = MaterialTheme.colorScheme.secondary,
+        ),
+        singleLine = false,
+        keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done)
+    )
+
 }
 
