@@ -6,6 +6,7 @@ import android.graphics.Bitmap
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.animation.core.*
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -28,7 +29,7 @@ import com.example.new_app.common.composables.LoadingIndicator
 import com.example.new_app.model.Task
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @RequiresApi(Build.VERSION_CODES.O)
 @SuppressLint("UnusedMaterialScaffoldPaddingParameter")
 @Composable
@@ -110,40 +111,44 @@ fun TaskListScreen(
                 ) {
                     itemsIndexed(filteredTasks, key = { _, task -> task.id }) { index, task ->
                         val taskBitmap = remember { mutableStateOf<Bitmap?>(null) }
-                        SwipeableTaskListItem(
-                            context = context,
-                            task = task,
-                            onClick = {
-                                openScreen(
-                                    "$EDIT_TASK_SCREEN$TASK_ID_KEY".replace(
-                                        "{$TASK_ID}",
-                                        task.id.toString()
+                        Column(
+                            modifier = Modifier.animateItemPlacement()
+                        ){
+                            SwipeableTaskListItem(
+                                context = context,
+                                task = task,
+                                onClick = {
+                                    openScreen(
+                                        "$EDIT_TASK_SCREEN$TASK_ID_KEY".replace(
+                                            "{$TASK_ID}",
+                                            task.id.toString()
+                                        )
                                     )
-                                )
-                            },
-                            viewModel = viewModel,
-                            onLongPress = {
-                                scope.launch {
-                                    currentTask.value = task
-                                    showDialog.value = true
-                                }
-                            },
-                            status = task.status,
-                            taskBitmap = taskBitmap,
-                            isSelected = task in selectedTasks,
-                            selectedTasks = selectedTasks,
-                            onSelectedTasksChange = { selectedTask, isChecked ->
-                                if (isChecked) {
-                                    selectedTasks.add(selectedTask)
-                                } else {
-                                    selectedTasks.remove(selectedTask)
-                                }
-                            },
-                            onTaskSwipedBackToActive = { task ->
-                                selectedTasks.remove(task)
-                            },
-                        )
-                        Divider()
+                                },
+                                viewModel = viewModel,
+                                onLongPress = {
+                                    scope.launch {
+                                        currentTask.value = task
+                                        showDialog.value = true
+                                    }
+                                },
+                                status = task.status,
+                                taskBitmap = taskBitmap,
+                                isSelected = task in selectedTasks,
+                                selectedTasks = selectedTasks,
+                                onSelectedTasksChange = { selectedTask, isChecked ->
+                                    if (isChecked) {
+                                        selectedTasks.add(selectedTask)
+                                    } else {
+                                        selectedTasks.remove(selectedTask)
+                                    }
+                                },
+                                onTaskSwipedBackToActive = { task ->
+                                    selectedTasks.remove(task)
+                                },
+                            )
+                            Divider()
+                        }
                     }
                 }
             }
