@@ -12,6 +12,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.*
@@ -31,6 +32,8 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.new_app.R
 import com.example.new_app.common.composables.CustomTextField
@@ -139,7 +142,8 @@ private fun CardEditors(
     onDateChange: (Long) -> Unit,
     onTimeChange: (Int, Int) -> Unit
 ) {
-    val activity = LocalContext.current as AppCompatActivity
+    val showDatePicker = remember { mutableStateOf(false) }
+    val showTimePicker = remember { mutableStateOf(false) }
 
     RegularCardEditor(
         R.string.date,
@@ -147,8 +151,18 @@ private fun CardEditors(
         task.dueDate,
         Modifier.padding(top = 16.dp)
     ) {
-        showDatePicker(activity, onDateChange)
+        showDatePicker.value = true
     }
+
+    com.example.new_app.screens.task.create_edit_tasks.createtask.ShowDate(
+        onDateChange = onDateChange,
+        openDialog = showDatePicker
+    )
+
+    com.example.new_app.screens.task.create_edit_tasks.createtask.ShowTimePicker(
+        onTimeChange = onTimeChange,
+        openDialog = showTimePicker
+    )
 
     RegularCardEditor(
         R.string.time,
@@ -156,7 +170,7 @@ private fun CardEditors(
         task.dueTime,
         Modifier.padding(top = 16.dp)
     ) {
-        showTimePicker(activity, onTimeChange)
+        showTimePicker.value = true
     }
 }
 
@@ -192,26 +206,142 @@ fun PickImageFromGallery(
 
 
 
-private fun showDatePicker(activity: AppCompatActivity, onDateChange: (Long) -> Unit) {
-    val picker = MaterialDatePicker.Builder.datePicker()
-        .setTheme(R.style.CustomDatePickerTheme) // set the custom theme here
-        .build()
 
-    activity.let {
-        picker.show(it.supportFragmentManager, picker.toString())
-        picker.addOnPositiveButtonClickListener { timeInMillis -> onDateChange(timeInMillis) }
+@SuppressLint("UnrememberedMutableState")
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ShowDate(
+    onDateChange: (Long) -> Unit,
+    openDialog: MutableState<Boolean>
+) {
+    if (openDialog.value) {
+        val datePickerState = rememberDatePickerState()
+        val confirmEnabled = derivedStateOf { datePickerState.selectedDateMillis != null }
+        DatePickerDialog(
+            onDismissRequest = {
+                openDialog.value = false
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        onDateChange(datePickerState.selectedDateMillis!!)
+                        openDialog.value = false
+                    },
+                    enabled = confirmEnabled.value
+                ) {
+                    Text("OK")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        openDialog.value = false
+                    }
+                ) {
+                    Text("Cancel")
+                }
+            }
+        ) {
+            DatePicker(
+                state = datePickerState
+            )
+        }
     }
 }
 
-private fun showTimePicker(activity: AppCompatActivity, onTimeChange: (Int, Int) -> Unit) {
-    val picker = MaterialTimePicker.Builder()
-        .setTimeFormat(TimeFormat.CLOCK_24H)
-        .setTheme(R.style.CustomTimePickerTheme) // set the custom theme here
-        .build()
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ShowTimePicker(
+    onTimeChange: (Int, Int) -> Unit,
+    openDialog: MutableState<Boolean>
+) {
+    val timePickerState = rememberTimePickerState()
 
-    activity.let {
-        picker.show(it.supportFragmentManager, picker.toString())
-        picker.addOnPositiveButtonClickListener { onTimeChange(picker.hour, picker.minute) }
+    val content = @Composable {
+        TimePicker(
+            state = timePickerState,
+            modifier = Modifier,
+            colors = TimePickerDefaults.colors(
+                clockDialSelectedContentColor = Color.White,
+                clockDialUnselectedContentColor = Color.White,
+                containerColor = Color.White,
+                timeSelectorSelectedContainerColor = Color.White.copy(alpha = 0.5f),
+                timeSelectorSelectedContentColor = Color.White,
+            ),
+            layoutType = TimePickerDefaults.layoutType()
+        )
+    }
+
+    if (openDialog.value) {
+        TimePickerDialog(
+            onCancel = {
+                openDialog.value = false
+            },
+            onConfirm = {
+                val selectedHour = timePickerState.hour
+                val selectedMinute = timePickerState.minute
+                onTimeChange(selectedHour, selectedMinute)
+                openDialog.value = false
+            },
+            content = content
+        )
     }
 }
+
+@Composable
+fun TimePickerDialog(
+    title: String = "Select Time",
+    onCancel: () -> Unit,
+    onConfirm: () -> Unit,
+    toggle: @Composable () -> Unit = {},
+    content: @Composable () -> Unit,
+) {
+    Dialog(
+        onDismissRequest = onCancel,
+        properties = DialogProperties(
+            usePlatformDefaultWidth = false
+        ),
+    ) {
+        Surface(
+            shape = MaterialTheme.shapes.extraLarge,
+            tonalElevation = 6.dp,
+            modifier = Modifier
+                .width(IntrinsicSize.Min)
+                .height(IntrinsicSize.Min)
+                .background(
+                    shape = MaterialTheme.shapes.extraLarge,
+                    color = MaterialTheme.colorScheme.surface
+                ),
+        ) {
+            toggle()
+            Column(
+                modifier = Modifier.padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 20.dp),
+                    text = title,
+                    style = MaterialTheme.typography.labelMedium
+                )
+                content()
+                Row(
+                    modifier = Modifier
+                        .height(40.dp)
+                        .fillMaxWidth()
+                ) {
+                    Spacer(modifier = Modifier.weight(1f))
+                    TextButton(
+                        onClick = onCancel
+                    ) { Text("Cancel") }
+                    TextButton(
+                        onClick = onConfirm
+                    ) { Text("OK") }
+                }
+            }
+        }
+    }
+}
+
 

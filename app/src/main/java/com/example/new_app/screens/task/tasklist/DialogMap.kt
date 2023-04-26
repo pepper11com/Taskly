@@ -1,18 +1,27 @@
 package com.example.new_app.screens.task.tasklist
 
 import android.os.Bundle
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import coil.compose.AsyncImagePainter
+import coil.compose.rememberAsyncImagePainter
+import coil.request.ImageRequest
 import com.example.new_app.model.Task
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.MapView
 import com.google.android.gms.maps.model.*
+import com.example.new_app.BuildConfig.MAPS_API_KEY
 
 
 @Composable
@@ -87,6 +96,51 @@ fun GoogleMapViewSmall(
                 // No need to update the marker on every recomposition
             }
         }
+    )
+}
+
+
+fun generateStaticMapUrl(
+    task: Task
+): String {
+    val apiKey = MAPS_API_KEY
+    val latitude = task.location?.latitude
+    val longitude = task.location?.longitude
+    val zoom = 14
+    val size = "700x450"
+    val scale = 2
+    return "https://maps.googleapis.com/maps/api/staticmap?center=$latitude,$longitude&zoom=$zoom&size=$size&scale=$scale&markers=color:red|$latitude,$longitude&key=$apiKey"
+}
+
+
+@Composable
+fun StaticMap(
+    staticMapUrl: String,
+    modifier: Modifier = Modifier
+) {
+
+    val painter = rememberAsyncImagePainter(
+        ImageRequest.Builder(LocalContext.current)
+            .data(data = staticMapUrl)
+            .apply(block = fun ImageRequest.Builder.() {
+                crossfade(true)
+            }).build()
+    )
+
+    if (painter.state is AsyncImagePainter.State.Error) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color(0xFF666666), shape = RoundedCornerShape(8.dp))
+        )
+        return
+    }
+
+    Image(
+        painter = painter,
+        contentDescription = "Static Map",
+        modifier = modifier,
+        contentScale = ContentScale.Crop,
     )
 }
 

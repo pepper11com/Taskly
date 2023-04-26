@@ -10,13 +10,13 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -24,9 +24,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
@@ -35,9 +33,6 @@ import coil.compose.rememberAsyncImagePainter
 import coil.request.CachePolicy
 import coil.request.ImageRequest
 import com.example.new_app.R
-import com.example.new_app.SETTINGS_SCREEN
-import com.example.new_app.SPLASH_SCREEN
-import com.example.new_app.TASK_LIST_SCREEN
 import com.example.new_app.common.composables.CustomCreateTaskAppBar
 import com.example.new_app.common.composables.CustomMultiLineTextfield
 import com.example.new_app.common.composables.CustomTextField
@@ -47,9 +42,6 @@ import com.example.new_app.common.util.Resource
 import com.example.new_app.model.Task
 import com.example.new_app.screens.map.LocationPicker
 import com.example.new_app.screens.task.create_edit_tasks.TaskEditCreateViewModel
-import com.google.android.material.datepicker.MaterialDatePicker
-import com.google.android.material.timepicker.MaterialTimePicker
-import com.google.android.material.timepicker.TimeFormat
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -69,11 +61,12 @@ fun CreateTaskScreen(
     val newTaskState by viewModel.taskEditCreateState.collectAsState()
 
     val activity = LocalContext.current as AppCompatActivity
-    val galleryLauncher = rememberLauncherForActivityResult(contract = ActivityResultContracts.GetContent()) { uri ->
-        uri?.let {
-            viewModel.onImageChange(it)
+    val galleryLauncher =
+        rememberLauncherForActivityResult(contract = ActivityResultContracts.GetContent()) { uri ->
+            uri?.let {
+                viewModel.onImageChange(it)
+            }
         }
-    }
 
     LaunchedEffect(Unit) {
         viewModel.initialize(null)
@@ -90,167 +83,168 @@ fun CreateTaskScreen(
             )
         }
     ) { innerPadding ->
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .nestedScroll(scrollBehavior.nestedScrollConnection)
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .nestedScroll(scrollBehavior.nestedScrollConnection)
 
                 .padding(innerPadding)
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                item {
-                    PickImageFromGallery(
-                        LocalContext.current,
-                        viewModel,
-                        task,
-                        userId,
-                        galleryLauncher
-                    )
-                }
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            item {
+                PickImageFromGallery(
+                    LocalContext.current,
+                    viewModel,
+                    task,
+                    userId,
+                    galleryLauncher
+                )
+            }
 
+            item {
+                Button(
+                    onClick = { showMapAndSearch.value = !showMapAndSearch.value },
+                    modifier = Modifier
+                        .fillMaxWidth(),
+
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.secondary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary
+                    ),
+                ) {
+                    Text("Add Location")
+                }
+            }
+
+            if (locationDisplay.value != "") {
                 item {
                     Button(
-                        onClick = { showMapAndSearch.value = !showMapAndSearch.value },
+                        onClick = {
+                            locationDisplay.value = ""
+                            viewModel.onLocationReset()
+                        },
                         modifier = Modifier
                             .fillMaxWidth(),
 
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.secondary,
+                            containerColor = MaterialTheme.colorScheme.error,
                             contentColor = MaterialTheme.colorScheme.onPrimary
                         ),
                     ) {
-                        Text("Add Location")
+                        Text("Delete Location")
                     }
-                }
-
-                if (locationDisplay.value != "") {
-                    item {
-                        Button(
-                            onClick = {
-                                locationDisplay.value = ""
-                                viewModel.onLocationReset()
-                            },
-                            modifier = Modifier
-                                .fillMaxWidth(),
-
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.error,
-                                contentColor = MaterialTheme.colorScheme.onPrimary
-                            ),
-                        ) {
-                            Text("Delete Location")
-                        }
-                    }
-                }
-
-
-                item {
-                    TextField(
-                        value = if (locationDisplay.value == "") "No Location Selected" else locationDisplay.value,
-                        onValueChange = { },
-                        modifier = Modifier
-                            .fillMaxWidth(),
-
-                        colors = TextFieldDefaults.colors(
-                            focusedContainerColor = MaterialTheme.colorScheme.secondary,
-                            unfocusedContainerColor = MaterialTheme.colorScheme.secondary,
-                            disabledContainerColor = MaterialTheme.colorScheme.secondary,
-                            errorContainerColor = MaterialTheme.colorScheme.secondary,
-                            focusedTextColor = MaterialTheme.colorScheme.onPrimary,
-                            unfocusedTextColor = MaterialTheme.colorScheme.onPrimary,
-                            disabledTextColor = MaterialTheme.colorScheme.onPrimary,
-                            errorTextColor = MaterialTheme.colorScheme.onPrimary,
-                            focusedIndicatorColor = Color.Transparent,
-                            unfocusedIndicatorColor = Color.Transparent,
-                            disabledLabelColor = MaterialTheme.colorScheme.onPrimary,
-                            unfocusedLabelColor = MaterialTheme.colorScheme.onPrimary,
-                            focusedLabelColor = MaterialTheme.colorScheme.onPrimary,
-                        ),
-                        shape = MaterialTheme.shapes.medium,
-                        readOnly = true
-                    )
-                }
-
-
-                item {
-                    CustomTextField(
-                        value = task.title,
-                        onValueChange = viewModel::onTitleChange,
-                        label = "Title",
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
-
-                item {
-                    CustomMultiLineTextfield(
-                        value = task.description,
-                        onValueChange = viewModel::onDescriptionChange,
-                        modifier = Modifier.fillMaxWidth(),
-                        hintText = "Description",
-                        textStyle = MaterialTheme.typography.bodySmall,
-                        maxLines = 4
-                    )
-                }
-
-                item {
-                    CardEditors(
-                        task,
-                        viewModel::onDateChange,
-                        viewModel::onTimeChange
-                    )
                 }
             }
 
-            if (showMapAndSearch.value) {
-                Dialog(
-                    onDismissRequest = { showMapAndSearch.value = false },
-                    properties = DialogProperties(usePlatformDefaultWidth = false)
-                ) {
-                    Scaffold(
-                        topBar = {
-                            TopAppBar(
-                                colors = TopAppBarDefaults.topAppBarColors(
-                                    containerColor = MaterialTheme.colorScheme.primary,
-                                ),
-                                title = { Text("Map and Search Bar") },
-                                navigationIcon = {
-                                    IconButton(onClick = { showMapAndSearch.value = false }) {
-                                        Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
-                                    }
-                                },
-                                actions = {
-                                    IconButton(
-                                        onClick = {
-                                            showMapAndSearch.value = false
-                                        }
-                                    ) {
-                                        Icon(
-                                            Icons.Filled.Done,
-                                            contentDescription = "Done",
-                                            tint = if (task.location != null)
-                                                Color.Black else MaterialTheme.colorScheme.onSurface.copy(
-                                                alpha = 0.5f
-                                            )
-                                        )
-                                    }
+
+            item {
+                TextField(
+                    value = if (locationDisplay.value == "") "No Location Selected" else locationDisplay.value,
+                    onValueChange = { },
+                    modifier = Modifier
+                        .fillMaxWidth(),
+
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = MaterialTheme.colorScheme.secondary,
+                        unfocusedContainerColor = MaterialTheme.colorScheme.secondary,
+                        disabledContainerColor = MaterialTheme.colorScheme.secondary,
+                        errorContainerColor = MaterialTheme.colorScheme.secondary,
+                        focusedTextColor = MaterialTheme.colorScheme.onPrimary,
+                        unfocusedTextColor = MaterialTheme.colorScheme.onPrimary,
+                        disabledTextColor = MaterialTheme.colorScheme.onPrimary,
+                        errorTextColor = MaterialTheme.colorScheme.onPrimary,
+                        focusedIndicatorColor = Color.Transparent,
+                        unfocusedIndicatorColor = Color.Transparent,
+                        disabledLabelColor = MaterialTheme.colorScheme.onPrimary,
+                        unfocusedLabelColor = MaterialTheme.colorScheme.onPrimary,
+                        focusedLabelColor = MaterialTheme.colorScheme.onPrimary,
+                    ),
+                    shape = MaterialTheme.shapes.medium,
+                    readOnly = true
+                )
+            }
+
+
+            item {
+                CustomTextField(
+                    value = task.title,
+                    onValueChange = viewModel::onTitleChange,
+                    label = "Title",
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+            }
+
+            item {
+                CustomMultiLineTextfield(
+                    value = task.description,
+                    onValueChange = viewModel::onDescriptionChange,
+                    modifier = Modifier.fillMaxWidth(),
+                    hintText = "Description",
+                    textStyle = MaterialTheme.typography.bodySmall,
+                    maxLines = 4
+                )
+            }
+
+            item {
+                CardEditors(
+                    task,
+                    viewModel::onDateChange,
+                    viewModel::onTimeChange
+                )
+            }
+        }
+
+        if (showMapAndSearch.value) {
+            Dialog(
+                onDismissRequest = { showMapAndSearch.value = false },
+                properties = DialogProperties(usePlatformDefaultWidth = false)
+            ) {
+                Scaffold(
+                    topBar = {
+                        TopAppBar(
+                            colors = TopAppBarDefaults.topAppBarColors(
+                                containerColor = MaterialTheme.colorScheme.primary,
+                            ),
+                            title = { Text("Map and Search Bar") },
+                            navigationIcon = {
+                                IconButton(onClick = { showMapAndSearch.value = false }) {
+                                    Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
                                 }
-                            )
-                        }
-                    ) { innerPadding ->
-                        LocationPicker(
-                            modifier = Modifier.padding(innerPadding),
-                            onLocationSelected = viewModel::onLocationChange,
-                            onLocationNameSet = { locationName ->
-                                viewModel.onLocationNameChange(locationName)
-                                locationDisplay.value = locationName
                             },
-                            showMapAndSearch = showMapAndSearch,
-                            locationDisplay = locationDisplay
+                            actions = {
+                                IconButton(
+                                    onClick = {
+                                        showMapAndSearch.value = false
+                                    }
+                                ) {
+                                    Icon(
+                                        Icons.Filled.Done,
+                                        contentDescription = "Done",
+                                        tint = if (task.location != null)
+                                            Color.Black else MaterialTheme.colorScheme.onSurface.copy(
+                                            alpha = 0.5f
+                                        )
+                                    )
+                                }
+                            }
                         )
                     }
+                ) { innerPadding ->
+                    LocationPicker(
+                        modifier = Modifier.padding(innerPadding),
+                        onLocationSelected = viewModel::onLocationChange,
+                        onLocationNameSet = { locationName ->
+                            viewModel.onLocationNameChange(locationName)
+                            locationDisplay.value = locationName
+                        },
+                        showMapAndSearch = showMapAndSearch,
+                        locationDisplay = locationDisplay
+                    )
                 }
             }
+        }
 
 
         when (newTaskState) {
@@ -281,7 +275,8 @@ private fun CardEditors(
     onDateChange: (Long) -> Unit,
     onTimeChange: (Int, Int) -> Unit
 ) {
-    val activity = LocalContext.current as AppCompatActivity
+    val showDatePicker = remember { mutableStateOf(false) }
+    val showTimePicker = remember { mutableStateOf(false) }
 
     RegularCardEditor(
         R.string.date,
@@ -289,8 +284,18 @@ private fun CardEditors(
         task.dueDate,
         Modifier.padding(top = 16.dp)
     ) {
-        showDatePicker(activity, onDateChange)
+        showDatePicker.value = true
     }
+
+    ShowDate(
+        onDateChange = onDateChange,
+        openDialog = showDatePicker
+    )
+
+    ShowTimePicker(
+        onTimeChange = onTimeChange,
+        openDialog = showTimePicker
+    )
 
     RegularCardEditor(
         R.string.time,
@@ -298,7 +303,7 @@ private fun CardEditors(
         task.dueTime,
         Modifier.padding(top = 16.dp)
     ) {
-        showTimePicker(activity, onTimeChange)
+        showTimePicker.value = true
     }
 }
 
@@ -363,30 +368,143 @@ fun AsyncImage(url: String, modifier: Modifier = Modifier, contentDescription: S
 }
 
 
-
-private fun showDatePicker(activity: AppCompatActivity, onDateChange: (Long) -> Unit) {
-    val picker = MaterialDatePicker.Builder.datePicker()
-        .setTheme(R.style.CustomDatePickerTheme) // set the custom theme here
-        .build()
-
-    activity.let {
-        picker.show(it.supportFragmentManager, picker.toString())
-        picker.addOnPositiveButtonClickListener { timeInMillis -> onDateChange(timeInMillis) }
+@SuppressLint("UnrememberedMutableState")
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ShowDate(
+    onDateChange: (Long) -> Unit,
+    openDialog: MutableState<Boolean>
+) {
+    if (openDialog.value) {
+        val datePickerState = rememberDatePickerState()
+        val confirmEnabled = derivedStateOf { datePickerState.selectedDateMillis != null }
+        DatePickerDialog(
+            onDismissRequest = {
+                openDialog.value = false
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        onDateChange(datePickerState.selectedDateMillis!!)
+                        openDialog.value = false
+                    },
+                    enabled = confirmEnabled.value
+                ) {
+                    Text("OK")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        openDialog.value = false
+                    }
+                ) {
+                    Text("Cancel")
+                }
+            }
+        ) {
+            DatePicker(
+                state = datePickerState
+            )
+        }
     }
 }
 
-private fun showTimePicker(activity: AppCompatActivity, onTimeChange: (Int, Int) -> Unit) {
-    val picker = MaterialTimePicker.Builder()
-        .setTimeFormat(TimeFormat.CLOCK_24H)
-        .setTheme(R.style.CustomTimePickerTheme) // set the custom theme here
-        .build()
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ShowTimePicker(
+    onTimeChange: (Int, Int) -> Unit,
+    openDialog: MutableState<Boolean>
+) {
+    val timePickerState = rememberTimePickerState()
 
-    activity.let {
-        picker.show(it.supportFragmentManager, picker.toString())
-        picker.addOnPositiveButtonClickListener { onTimeChange(picker.hour, picker.minute) }
+    val content = @Composable {
+        TimePicker(
+            state = timePickerState,
+            modifier = Modifier,
+            colors = TimePickerDefaults.colors(
+                clockDialSelectedContentColor = Color.White,
+                clockDialUnselectedContentColor = Color.White,
+                containerColor = Color.White,
+                timeSelectorSelectedContainerColor = Color.White.copy(alpha = 0.5f),
+                timeSelectorSelectedContentColor = Color.White,
+            ),
+            layoutType = TimePickerDefaults.layoutType()
+        )
+    }
+
+    if (openDialog.value) {
+        TimePickerDialog(
+            onCancel = {
+                openDialog.value = false
+            },
+            onConfirm = {
+                val selectedHour = timePickerState.hour
+                val selectedMinute = timePickerState.minute
+                onTimeChange(selectedHour, selectedMinute)
+                openDialog.value = false
+            },
+            content = content
+        )
     }
 }
 
+
+@Composable
+fun TimePickerDialog(
+    title: String = "Select Time",
+    onCancel: () -> Unit,
+    onConfirm: () -> Unit,
+    toggle: @Composable () -> Unit = {},
+    content: @Composable () -> Unit,
+) {
+    Dialog(
+        onDismissRequest = onCancel,
+        properties = DialogProperties(
+            usePlatformDefaultWidth = false
+        ),
+    ) {
+        Surface(
+            shape = MaterialTheme.shapes.extraLarge,
+            tonalElevation = 6.dp,
+            modifier = Modifier
+                .width(IntrinsicSize.Min)
+                .height(IntrinsicSize.Min)
+                .background(
+                    shape = MaterialTheme.shapes.extraLarge,
+                    color = MaterialTheme.colorScheme.surface
+                ),
+        ) {
+            toggle()
+            Column(
+                modifier = Modifier.padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 20.dp),
+                    text = title,
+                    style = MaterialTheme.typography.labelMedium
+                )
+                content()
+                Row(
+                    modifier = Modifier
+                        .height(40.dp)
+                        .fillMaxWidth()
+                ) {
+                    Spacer(modifier = Modifier.weight(1f))
+                    TextButton(
+                        onClick = onCancel
+                    ) { Text("Cancel") }
+                    TextButton(
+                        onClick = onConfirm
+                    ) { Text("OK") }
+                }
+            }
+        }
+    }
+}
 
 
 

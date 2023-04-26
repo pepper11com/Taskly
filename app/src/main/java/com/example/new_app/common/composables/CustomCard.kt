@@ -31,7 +31,14 @@ fun RegularCardEditor(
     modifier: Modifier,
     onEditClick: () -> Unit
 ) {
-    CardEditor(title, icon, content, onEditClick, MaterialTheme.colorScheme.onSurface, modifier)
+    CardEditor(
+        title,
+        icon,
+        content,
+        onEditClick,
+        MaterialTheme.colorScheme.onSurface,
+        modifier
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

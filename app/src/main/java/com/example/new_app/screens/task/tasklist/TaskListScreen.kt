@@ -10,6 +10,7 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -27,6 +28,7 @@ import com.example.new_app.common.composables.CustomTabRow
 import com.example.new_app.common.composables.CustomTopAppBar
 import com.example.new_app.common.composables.LoadingIndicator
 import com.example.new_app.model.Task
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
@@ -56,7 +58,18 @@ fun TaskListScreen(
         getFilteredTasks(uiState.tasks, TaskStatus.values()[selectedIndex.value])
     }
 
+    val shouldScrollToNewTask = remember { mutableStateOf(false) }
+
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+
+    val listState = rememberLazyListState()
+
+//    LaunchedEffect(filteredTasks) {
+//        if (filteredTasks.isNotEmpty()) {
+//            delay(1000)
+//            listState.animateScrollToItem(index = filteredTasks.lastIndex)
+//        }
+//    }
 
 
     Scaffold(
@@ -103,8 +116,8 @@ fun TaskListScreen(
                     modifier = Modifier.fillMaxSize()
                 )
             } else {
-
                 LazyColumn(
+                    state = listState,
                     modifier = Modifier
                         .fillMaxSize()
                         .nestedScroll(scrollBehavior.nestedScrollConnection)

@@ -226,13 +226,15 @@ fun TaskListItem(
                 }
             }
 
-            if (task.locationName != null) {
-                DialogMap(
-                    task = task,
+            if (task.locationName != null && task.location != null) {
+                val staticMapUrl = generateStaticMapUrl(task)
+                StaticMap(
+                    staticMapUrl = staticMapUrl,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(8.dp)
                         .height(140.dp)
+                        .clip(RoundedCornerShape(8.dp)),
                 )
                 Text(
                     modifier = Modifier.padding(start = 14.dp, bottom = 12.dp),

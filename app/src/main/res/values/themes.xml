@@ -5,12 +5,8 @@
 
         <item name="android:colorPrimary">@color/dark_orange</item>
 
-
         <item name="android:statusBarColor" >#000000</item>
         <item name="android:navigationBarColor">#000000</item>
-<!--        <item name="android:statusBarColor">@android:color/transparent</item>-->
-<!--        <item name="android:navigationBarColor">@android:color/transparent</item>-->
-
     </style>
 
     <style name="Theme.New_App.NoActionBar">
@@ -18,13 +14,6 @@
         <item name="android:windowNoTitle">true</item>
     </style>
 
-    <style name="CustomDatePickerTheme" parent="ThemeOverlay.MaterialComponents.MaterialCalendar">
-        <item name="colorPrimary">@color/bright_orange</item>
-    </style>
-
-    <style name="CustomTimePickerTheme" parent="ThemeOverlay.MaterialComponents.TimePicker">
-        <item name="colorPrimary">@color/bright_orange</item>
-    </style>
 
 
 </resources>

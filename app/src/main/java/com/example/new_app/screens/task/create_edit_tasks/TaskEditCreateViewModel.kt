@@ -1,8 +1,6 @@
 package com.example.new_app.screens.task.create_edit_tasks
 
-import android.content.Context
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Build
 import androidx.annotation.RequiresApi
@@ -10,9 +8,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewModelScope
-import com.example.new_app.R
-import com.example.new_app.TASK_DEFAULT_ID
-import com.example.new_app.common.ext.idFromParameter
 import com.example.new_app.common.snackbar.SnackbarManager
 import com.example.new_app.common.snackbar.SnackbarMessage
 import com.example.new_app.common.util.Resource
