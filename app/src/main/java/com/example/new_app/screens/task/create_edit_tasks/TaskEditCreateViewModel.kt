@@ -1,13 +1,18 @@
 package com.example.new_app.screens.task.create_edit_tasks
 
+import android.content.Context
 import android.graphics.Bitmap
+import android.graphics.drawable.BitmapDrawable
 import android.net.Uri
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewModelScope
+import coil.ImageLoader
+import coil.request.ImageRequest
 import com.example.new_app.common.snackbar.SnackbarManager
 import com.example.new_app.common.snackbar.SnackbarMessage
 import com.example.new_app.common.util.Resource
@@ -20,9 +25,13 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
 import com.google.firebase.storage.FirebaseStorage
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.io.File
+import java.io.FileOutputStream
 import java.text.SimpleDateFormat
 import java.time.ZoneId
 import java.util.*
@@ -46,6 +55,7 @@ class TaskEditCreateViewModel @Inject constructor(
     private val _taskEditCreateState = MutableStateFlow<Resource<Unit>>(Resource.Empty())
     val taskEditCreateState: StateFlow<Resource<Unit>> get() = _taskEditCreateState
 
+    val locationDisplay = mutableStateOf("")
 
     fun initialize(taskId: String?) {
         viewModelScope.launch {
@@ -77,6 +87,7 @@ class TaskEditCreateViewModel @Inject constructor(
         marker?.remove()
         task.value = task.value.copy(location = null)
         task.value = task.value.copy(locationName = null)
+        locationDisplay.value = ""
     }
 
 
@@ -97,20 +108,49 @@ class TaskEditCreateViewModel @Inject constructor(
         imageUri.value = newValue.toString()
     }
 
-    suspend fun uploadImageAndSaveTask(
-        newTask: Task,
-        taskId: String,
-        userId: String,
-        imageUri: Uri
-    ): Task {
+    private suspend fun compressImage(context: Context, uri: Uri): Uri {
+        return withContext(Dispatchers.IO) {
+            val imageLoader = ImageLoader(context)
+            val size = 720
+            val request = ImageRequest.Builder(context)
+                .data(uri)
+                .size(size)
+                .build()
+
+            val result = (imageLoader.execute(request).drawable as? BitmapDrawable)?.bitmap
+            val compressedFile = File.createTempFile("compressed", ".jpg", context.cacheDir)
+
+            when (result?.byteCount!!){
+                in 0..5000000 -> {
+                    FileOutputStream(compressedFile).use { fileOutputStream ->
+                        result.compress(Bitmap.CompressFormat.JPEG, 75, fileOutputStream)
+                    }
+                }
+                in 5000001..10000000 -> {
+                    FileOutputStream(compressedFile).use { fileOutputStream ->
+                        result.compress(Bitmap.CompressFormat.JPEG, 50, fileOutputStream)
+                    }
+                }
+                else -> {
+                    FileOutputStream(compressedFile).use { fileOutputStream ->
+                        result.compress(Bitmap.CompressFormat.JPEG, 25, fileOutputStream)
+                    }
+                }
+            }
+
+            Uri.fromFile(compressedFile)
+        }
+    }
+
+    private suspend fun uploadImageAndSaveTask(newTask: Task, taskId: String, userId: String, imageUri: Uri, context: Context): Task {
         val path = "task_images/$userId/$taskId"
-        println("path: $path")
-        val imageUrl = firebaseService.uploadImage(imageUri, path)
+        val compressedImageUri = compressImage(context, imageUri)
+        val imageUrl = firebaseService.uploadImage(compressedImageUri, path)
         return newTask.copy(imageUri = imageUrl)
     }
 
 
-    fun onDoneClick(taskId: String?, popUpScreen: () -> Unit) {
+    fun onDoneClick(context: Context, taskId: String?, popUpScreen: () -> Unit, onTaskCreated: (String) -> Unit) {
         viewModelScope.launch {
             _taskEditCreateState.value = Resource.Loading()
             try {
@@ -134,7 +174,8 @@ class TaskEditCreateViewModel @Inject constructor(
                                         newTask.copy(id = savedTaskId),
                                         it,
                                         accountService.currentUserId,
-                                        imageUri
+                                        imageUri,
+                                        context
                                     )
                                 }
 
@@ -143,6 +184,10 @@ class TaskEditCreateViewModel @Inject constructor(
                                     firebaseService.updateTask(updatedTask)
                                 }
                             }
+
+                            onTaskCreated(savedTaskId!!)
+                            Log.d("TaskEditCreateViewModel", "Task created successfully with id: ----  $savedTaskId  -------")
+                            resetTask()
                         }
                         is Resource.Error -> {
                             _taskEditCreateState.value = Resource.Error(saveResult.message ?: "Unknown error")
@@ -167,10 +212,15 @@ class TaskEditCreateViewModel @Inject constructor(
                             task.value,
                             taskId,
                             accountService.currentUserId,
-                            imageUri
+                            imageUri,
+                            context
                         )
                         when (val updateResult = firebaseService.updateTask(updatedTask)) {
-                            is Resource.Success -> { /* Task updated successfully */ }
+                            is Resource.Success -> {
+                                onTaskCreated(taskId)
+                                Log.d("TaskEditCreateViewModel", "Task EDITED successfully with id: ----  $taskId  -------")
+                                resetTask()
+                            }
                             is Resource.Error -> {
                                 _taskEditCreateState.value = Resource.Error(updateResult.message ?: "Unknown error")
                                 snackbarManager.showSnackbarMessage(
@@ -223,7 +273,6 @@ class TaskEditCreateViewModel @Inject constructor(
     }
 
 
-
     fun onDeleteImageClick() {
         viewModelScope.launch {
             task.value.imageUri?.let { imageUrl ->
@@ -234,7 +283,11 @@ class TaskEditCreateViewModel @Inject constructor(
             }
         }
     }
-
+    fun resetTask() {
+        task.value = Task()
+        imageUri.value = null
+        onLocationReset()
+    }
 
     private fun Int.toClockPattern(): String {
         return if (this < 10) "0$this" else "$this"

@@ -10,6 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -18,11 +19,13 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.new_app.common.snackbar.SnackbarManager
 import com.example.new_app.screens.authentication.AuthenticationScreen
+import com.example.new_app.screens.google_maps.LocationPickerScreen
 import com.example.new_app.screens.task.create_edit_tasks.createtask.CreateTaskScreen
 import com.example.new_app.screens.login.LoginScreen
 import com.example.new_app.screens.settings.SettingsScreen
 import com.example.new_app.screens.signup.SignupScreen
 import com.example.new_app.screens.splashscreen.SplashScreen
+import com.example.new_app.screens.task.create_edit_tasks.TaskEditCreateViewModel
 import com.example.new_app.screens.task.create_edit_tasks.edit_task.EditTaskScreen
 import com.example.new_app.screens.task.tasklist.TaskListScreen
 import com.example.new_app.theme.New_AppTheme
@@ -30,7 +33,10 @@ import kotlinx.coroutines.CoroutineScope
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun TaskApp() {
+fun TaskApp(
+    mainViewModel: SharedViewModel = hiltViewModel(),
+    taskEditCreateViewModel: TaskEditCreateViewModel = hiltViewModel(),
+) {
     New_AppTheme() {
         Surface(color = MaterialTheme.colorScheme.background) {
             val appState = rememberAppState()
@@ -53,6 +59,8 @@ fun TaskApp() {
                 ) {
                     taskAppGraph(
                         appState,
+                        mainViewModel,
+                        taskEditCreateViewModel
                     )
                 }
             }
@@ -82,14 +90,15 @@ fun resources(): Resources {
 @RequiresApi(Build.VERSION_CODES.O)
 fun NavGraphBuilder.taskAppGraph(
     appState: TaskAppState,
+    mainViewModel: SharedViewModel,
+    taskEditCreateViewModel: TaskEditCreateViewModel
 ) {
 
     composable(SPLASH_SCREEN) {
         SplashScreen(
             openAndPopUp = { route, popUp -> appState.navigateAndPopUp(route, popUp) },
             clearBackstack = { appState.clearBackstack() },
-
-            )
+        )
     }
 
     composable(SETTINGS_SCREEN){
@@ -129,7 +138,16 @@ fun NavGraphBuilder.taskAppGraph(
 
     composable(TASK_LIST_SCREEN) {
         TaskListScreen(
-            openScreen = { route -> appState.navigate(route) }
+            openScreen = { route -> appState.navigate(route) },
+            mainViewModel = mainViewModel,
+        )
+    }
+
+    composable(TASK_MAP_SCREEN){
+        LocationPickerScreen(
+            openAndPopUp = { route, popUp -> appState.navigateAndPopUp(route, popUp) },
+            openScreen = { route -> appState.navigate(route) },
+            viewModel = taskEditCreateViewModel
         )
     }
 
@@ -140,7 +158,8 @@ fun NavGraphBuilder.taskAppGraph(
         EditTaskScreen(
             popUpScreen = { appState.popUp() },
             taskId = it.arguments?.getString(TASK_ID) ?: TASK_DEFAULT_ID,
-            userId = it.arguments?.getString("userId") ?: ""
+            userId = it.arguments?.getString("userId") ?: "",
+            mainViewModel = mainViewModel
         )
     }
 
@@ -152,8 +171,14 @@ fun NavGraphBuilder.taskAppGraph(
         CreateTaskScreen(
             popUpScreen = { appState.popUp() },
             taskId = it.arguments?.getString(TASK_ID) ?: TASK_DEFAULT_ID,
-            userId = it.arguments?.getString("userId") ?: ""
+            userId = it.arguments?.getString("userId") ?: "",
+            mainViewModel = mainViewModel,
+            openAndPopUp = { route, popUp -> appState.navigateAndPopUp(route, popUp) },
+            openScreen = { route -> appState.navigate(route) },
+            viewModel = taskEditCreateViewModel
         )
     }
+
+
 
 }

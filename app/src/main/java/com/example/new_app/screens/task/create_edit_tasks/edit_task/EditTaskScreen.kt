@@ -36,6 +36,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.new_app.R
+import com.example.new_app.SharedViewModel
 import com.example.new_app.common.composables.CustomTextField
 import com.example.new_app.common.composables.RegularCardEditor
 import com.example.new_app.model.Task
@@ -55,10 +56,12 @@ import java.io.FileInputStream
 fun EditTaskScreen(
     popUpScreen: () -> Unit,
     taskId: String,
-    userId: String
+    userId: String,
+    mainViewModel: SharedViewModel,
 ) {
     val viewModel: TaskEditCreateViewModel = hiltViewModel()
     val task by viewModel.task
+    val context = LocalContext.current
 
     LaunchedEffect(Unit) {
         viewModel.initialize(taskId)
@@ -81,7 +84,9 @@ fun EditTaskScreen(
                         enabled = task.title.isNotBlank() && task.description.isNotBlank(),
 
                         onClick = {
-                            viewModel.onDoneClick(taskId, popUpScreen)
+                            viewModel.onDoneClick(context, taskId, popUpScreen,
+                                onTaskCreated = { newTaskId -> mainViewModel.updateLastAddedTaskId(newTaskId) }
+                            )
                         }
                     ) {
                         Icon(

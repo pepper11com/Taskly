@@ -25,9 +25,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.semantics.isContainer
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.compose.ui.zIndex
 import com.google.android.gms.maps.CameraUpdate
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
@@ -43,15 +46,14 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
 
-
 @OptIn(ExperimentalComposeUiApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun LocationPicker(
     modifier: Modifier = Modifier,
     onLocationSelected: (LatLng) -> Unit,
     onLocationNameSet: (String) -> Unit,
-    showMapAndSearch: MutableState<Boolean>,
     locationDisplay: MutableState<String>,
+    searchInput: MutableState<String>
 ) {
     val marker = remember { mutableStateOf<MarkerOptions?>(null) }
     val cameraPositionState = rememberCameraPositionState {
@@ -102,13 +104,34 @@ fun LocationPicker(
                 cameraUpdate = cameraUpdate.value
             )
 
-            Box(modifier = Modifier.align(Alignment.TopStart)) {
+            Box(
+                modifier = Modifier
+//                    .align(Alignment.TopStart).semantics { isContainer = true }.zIndex(1f)
+                    .fillMaxWidth()
+            ) {
                 SearchBar(
                     query = searchQuery.value,
                     onQueryChange = { newValue ->
                         isUserInput.value = true
                         searchQuery.value = newValue
+                        searchInput.value = newValue
                     },
+                    colors = SearchBarDefaults.colors(
+                        containerColor = Color.Black,
+                        dividerColor = Color.White,
+                        inputFieldColors = TextFieldDefaults.colors(
+                            disabledTextColor = Color.Black,
+                            errorTextColor = Color.Black,
+                            cursorColor = Color.White,
+                            focusedIndicatorColor = Color.Transparent,
+                            unfocusedIndicatorColor = Color.Transparent,
+                            disabledIndicatorColor = Color.Transparent,
+                            errorIndicatorColor = Color.Transparent,
+                            focusedLabelColor = Color.Black,
+                            unfocusedLabelColor = Color.Black,
+                            errorLabelColor = Color.Black,
+                        )
+                    ),
                     onSearch = {
                         searchLocation(
                             searchQuery.value,
@@ -130,8 +153,7 @@ fun LocationPicker(
                     onActiveChange = { isActive ->
                         showAutocompleteResults.value = isActive
                     },
-                    modifier = Modifier
-                        .fillMaxWidth(),
+                    modifier = Modifier.align(Alignment.TopCenter),
 
                     leadingIcon = {
                         //when clicked on the searchbar change icon from search to back arrow and the back arrow closes the searchbar

@@ -8,7 +8,6 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
-import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -28,11 +27,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.rememberAsyncImagePainter
 import coil.request.CachePolicy
 import coil.request.ImageRequest
 import com.example.new_app.R
+import com.example.new_app.SharedViewModel
+import com.example.new_app.TASK_MAP_SCREEN
 import com.example.new_app.common.composables.CustomCreateTaskAppBar
 import com.example.new_app.common.composables.CustomMultiLineTextfield
 import com.example.new_app.common.composables.CustomTextField
@@ -40,7 +40,6 @@ import com.example.new_app.common.composables.LoadingIndicator
 import com.example.new_app.common.composables.RegularCardEditor
 import com.example.new_app.common.util.Resource
 import com.example.new_app.model.Task
-import com.example.new_app.screens.map.LocationPicker
 import com.example.new_app.screens.task.create_edit_tasks.TaskEditCreateViewModel
 
 
@@ -51,16 +50,17 @@ import com.example.new_app.screens.task.create_edit_tasks.TaskEditCreateViewMode
 fun CreateTaskScreen(
     popUpScreen: () -> Unit,
     taskId: String,
-    userId: String
+    userId: String,
+    mainViewModel: SharedViewModel,
+    openAndPopUp: (String, String) -> Unit,
+    openScreen: (String) -> Unit,
+    viewModel: TaskEditCreateViewModel
 ) {
-    val viewModel: TaskEditCreateViewModel = hiltViewModel()
-    val task by viewModel.task
 
-    val showMapAndSearch = remember { mutableStateOf(false) }
-    val locationDisplay = remember { mutableStateOf("") }
+    val task by viewModel.task
+    val context = LocalContext.current
     val newTaskState by viewModel.taskEditCreateState.collectAsState()
 
-    val activity = LocalContext.current as AppCompatActivity
     val galleryLauncher =
         rememberLauncherForActivityResult(contract = ActivityResultContracts.GetContent()) { uri ->
             uri?.let {
@@ -80,6 +80,8 @@ fun CreateTaskScreen(
                 viewModel = viewModel,
                 popUpScreen = popUpScreen,
                 scrollBehavior = scrollBehavior,
+                mainViewModel = mainViewModel,
+                context = context
             )
         }
     ) { innerPadding ->
@@ -104,10 +106,11 @@ fun CreateTaskScreen(
 
             item {
                 Button(
-                    onClick = { showMapAndSearch.value = !showMapAndSearch.value },
+                    onClick = {
+                        openScreen(TASK_MAP_SCREEN)
+                    },
                     modifier = Modifier
                         .fillMaxWidth(),
-
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.secondary,
                         contentColor = MaterialTheme.colorScheme.onPrimary
@@ -117,11 +120,11 @@ fun CreateTaskScreen(
                 }
             }
 
-            if (locationDisplay.value != "") {
+            if (viewModel.locationDisplay.value != "") {
                 item {
                     Button(
                         onClick = {
-                            locationDisplay.value = ""
+                            viewModel.locationDisplay.value = ""
                             viewModel.onLocationReset()
                         },
                         modifier = Modifier
@@ -140,7 +143,7 @@ fun CreateTaskScreen(
 
             item {
                 TextField(
-                    value = if (locationDisplay.value == "") "No Location Selected" else locationDisplay.value,
+                    value = if (viewModel.locationDisplay.value == "") "No Location Selected" else viewModel.locationDisplay.value,
                     onValueChange = { },
                     modifier = Modifier
                         .fillMaxWidth(),
@@ -182,7 +185,7 @@ fun CreateTaskScreen(
                     onValueChange = viewModel::onDescriptionChange,
                     modifier = Modifier.fillMaxWidth(),
                     hintText = "Description",
-                    textStyle = MaterialTheme.typography.bodySmall,
+                    textStyle = MaterialTheme.typography.bodyLarge,
                     maxLines = 4
                 )
             }
@@ -195,57 +198,6 @@ fun CreateTaskScreen(
                 )
             }
         }
-
-        if (showMapAndSearch.value) {
-            Dialog(
-                onDismissRequest = { showMapAndSearch.value = false },
-                properties = DialogProperties(usePlatformDefaultWidth = false)
-            ) {
-                Scaffold(
-                    topBar = {
-                        TopAppBar(
-                            colors = TopAppBarDefaults.topAppBarColors(
-                                containerColor = MaterialTheme.colorScheme.primary,
-                            ),
-                            title = { Text("Map and Search Bar") },
-                            navigationIcon = {
-                                IconButton(onClick = { showMapAndSearch.value = false }) {
-                                    Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
-                                }
-                            },
-                            actions = {
-                                IconButton(
-                                    onClick = {
-                                        showMapAndSearch.value = false
-                                    }
-                                ) {
-                                    Icon(
-                                        Icons.Filled.Done,
-                                        contentDescription = "Done",
-                                        tint = if (task.location != null)
-                                            Color.Black else MaterialTheme.colorScheme.onSurface.copy(
-                                            alpha = 0.5f
-                                        )
-                                    )
-                                }
-                            }
-                        )
-                    }
-                ) { innerPadding ->
-                    LocationPicker(
-                        modifier = Modifier.padding(innerPadding),
-                        onLocationSelected = viewModel::onLocationChange,
-                        onLocationNameSet = { locationName ->
-                            viewModel.onLocationNameChange(locationName)
-                            locationDisplay.value = locationName
-                        },
-                        showMapAndSearch = showMapAndSearch,
-                        locationDisplay = locationDisplay
-                    )
-                }
-            }
-        }
-
 
         when (newTaskState) {
             is Resource.Loading -> {

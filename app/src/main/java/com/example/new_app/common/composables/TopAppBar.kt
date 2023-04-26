@@ -1,5 +1,6 @@
 package com.example.new_app.common.composables
 
+import android.content.Context
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -28,6 +29,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
 import com.example.new_app.SETTINGS_SCREEN
+import com.example.new_app.SharedViewModel
 import com.example.new_app.model.Task
 import com.example.new_app.screens.task.create_edit_tasks.TaskEditCreateViewModel
 import com.example.new_app.screens.task.tasklist.TaskListUiState
@@ -45,7 +47,8 @@ fun CustomTopAppBar(
     viewModel: TaskListViewModel,
     scrollBehavior: TopAppBarScrollBehavior
 ) {
-    MediumTopAppBar(
+//    MediumTopAppBar(
+    TopAppBar(
         modifier = Modifier.fillMaxWidth(),
         scrollBehavior = scrollBehavior,
         colors = TopAppBarDefaults.topAppBarColors(
@@ -120,7 +123,9 @@ fun CustomCreateTaskAppBar(
     task: Task,
     viewModel: TaskEditCreateViewModel,
     popUpScreen: () -> Unit,
-    scrollBehavior: TopAppBarScrollBehavior
+    scrollBehavior: TopAppBarScrollBehavior,
+    mainViewModel: SharedViewModel,
+    context: Context
 ){
     Column {
         MediumTopAppBar(
@@ -130,7 +135,12 @@ fun CustomCreateTaskAppBar(
             ),
             title = { Text("Create Task", color = Color.White) },
             navigationIcon = {
-                IconButton(onClick = popUpScreen) {
+                IconButton(
+                    onClick = {
+                        popUpScreen()
+                        viewModel.resetTask()
+                    }
+                ) {
                     Icon(Icons.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
                 }
             },
@@ -139,7 +149,12 @@ fun CustomCreateTaskAppBar(
                     enabled = task.title.isNotBlank() && task.description.isNotBlank(),
 
                     onClick = {
-                        viewModel.onDoneClick(null, popUpScreen)
+                        viewModel.onDoneClick(
+                            context,
+                            null,
+                            popUpScreen,
+                            onTaskCreated = { newTaskId -> mainViewModel.updateLastAddedTaskId(newTaskId) }
+                        )
                     }
                 ) {
                     Icon(
@@ -160,5 +175,4 @@ fun CustomCreateTaskAppBar(
             thickness = 1.dp
         )
     }
-
 }

@@ -36,6 +36,8 @@ class MainActivity : AppCompatActivity() {
 
         //todo - make google-maps a separate screen!!!!!!!!!!!!
 
+        //todo - also delete the image from the storage when deleting a task
+
         Places.initialize(applicationContext, MAPS_API_KEY)
         MapsInitializer.initialize(applicationContext)
 

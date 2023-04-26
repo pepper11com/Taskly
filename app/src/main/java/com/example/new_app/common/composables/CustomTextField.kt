@@ -1,9 +1,14 @@
 package com.example.new_app.common.composables
 
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.ContentAlpha
 import androidx.compose.material3.*
 import androidx.compose.material.icons.Icons
@@ -11,12 +16,16 @@ import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 
 @Composable
 fun CustomTextField(
@@ -140,8 +149,36 @@ fun CustomMultiLineTextfield(
             focusedLabelColor = MaterialTheme.colorScheme.secondary,
         ),
         singleLine = false,
-        keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done)
+        keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
     )
+}
 
+@Composable
+fun CustomCopyTrueTextField(
+    modifier: Modifier = Modifier,
+    textAlign: TextAlign = TextAlign.Center,
+    fontSize: TextUnit = 12.sp,
+    lineHeight: TextUnit = 16.sp,
+    color: Color = Color.White,
+    value: String,
+    maxLines: Int = 2,
+){
+    BasicTextField(
+        value = value,
+        onValueChange = {},
+        modifier = modifier
+            .padding(horizontal = 2.dp, vertical = 0.dp)
+            .verticalScroll(rememberScrollState()),
+        textStyle = TextStyle(
+            textAlign = textAlign,
+            fontSize = fontSize,
+            lineHeight = lineHeight,
+            color = color
+        ),
+        maxLines = maxLines,
+        readOnly = true,
+        interactionSource = remember { MutableInteractionSource() },
+        keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
+    )
 }
 

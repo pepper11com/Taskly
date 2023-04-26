@@ -5,7 +5,12 @@ import android.graphics.Bitmap
 import android.os.Build
 import android.os.VibrationEffect
 import android.os.Vibrator
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateOffsetAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.combinedClickable
@@ -44,6 +49,9 @@ import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.draw.alpha
+import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
@@ -59,6 +67,7 @@ fun SwipeableTaskListItem(
     selectedTasks: SnapshotStateList<Task>,
     onSelectedTasksChange: (Task, Boolean) -> Unit,
     onTaskSwipedBackToActive: (Task) -> Unit,
+    isFlashing: Boolean = false
 ) {
     //width of the swipeable item
     val screenWidth = LocalConfiguration.current.screenWidthDp.dp
@@ -118,11 +127,10 @@ fun SwipeableTaskListItem(
             isSelected = isSelected,
             selectedTasks = selectedTasks,
             onSelectedTasksChange = onSelectedTasksChange,
+            isFlashing = isFlashing
         )
     }
 }
-
-
 
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -136,9 +144,26 @@ fun TaskListItem(
     isSelected: Boolean,
     selectedTasks: SnapshotStateList<Task>,
     onSelectedTasksChange: (Task, Boolean) -> Unit,
+    isFlashing: Boolean = false
 ) {
     val context = LocalContext.current
     val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+    val flashState = rememberSaveable { mutableStateOf(isFlashing) }
+
+    val flashColor = animateColorAsState(
+        targetValue = if (flashState.value) Color(0xFFCCCCCC) else Color(0xFF444444),
+        animationSpec = tween(durationMillis = 5000)
+    )
+
+    LaunchedEffect(flashState.value) {
+        if (flashState.value) {
+            flashState.value = false
+        }
+    }
+
+    SideEffect {
+        flashState.value = isFlashing
+    }
 
     val painter = rememberAsyncImagePainter(
         ImageRequest.Builder(LocalContext.current)
@@ -149,9 +174,10 @@ fun TaskListItem(
             }).build()
     )
 
+
     Card(
         colors = CardDefaults.cardColors(
-            containerColor = Color(0xFF444444)
+            containerColor = flashColor.value
         ),
         modifier = Modifier
             .offset { IntOffset(offset.x.roundToInt(), offset.y.roundToInt()) }

@@ -16,12 +16,14 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.new_app.EDIT_TASK_SCREEN
+import com.example.new_app.SharedViewModel
 import com.example.new_app.TASK_ID
 import com.example.new_app.TASK_ID_KEY
 import com.example.new_app.common.composables.CustomTabRow
@@ -37,6 +39,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun TaskListScreen(
     openScreen: (String) -> Unit,
+    mainViewModel: SharedViewModel
 ) {
     val viewModel: TaskListViewModel = hiltViewModel()
 
@@ -58,18 +61,27 @@ fun TaskListScreen(
         getFilteredTasks(uiState.tasks, TaskStatus.values()[selectedIndex.value])
     }
 
-    val shouldScrollToNewTask = remember { mutableStateOf(false) }
-
-    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
-
+    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
     val listState = rememberLazyListState()
 
-//    LaunchedEffect(filteredTasks) {
-//        if (filteredTasks.isNotEmpty()) {
-//            delay(1000)
-//            listState.animateScrollToItem(index = filteredTasks.lastIndex)
-//        }
-//    }
+    val lastAddedTaskId by mainViewModel.lastAddedTaskId.observeAsState(null)
+    val isScreenVisible = remember { mutableStateOf(true) }
+
+    LaunchedEffect(lastAddedTaskId) {
+        if (lastAddedTaskId != null && isScreenVisible.value) {
+            val lastAddedTaskIndex = filteredTasks.indexOfFirst { it.id == lastAddedTaskId }
+            if (lastAddedTaskIndex != -1) {
+                delay(500)
+                listState.animateScrollToItem(lastAddedTaskIndex)
+                mainViewModel.updateLastAddedTaskId(null)
+            }
+        }
+    }
+    DisposableEffect(Unit) {
+        onDispose {
+            isScreenVisible.value = false
+        }
+    }
 
 
     Scaffold(
@@ -159,6 +171,7 @@ fun TaskListScreen(
                                 onTaskSwipedBackToActive = { task ->
                                     selectedTasks.remove(task)
                                 },
+                                isFlashing = task.id == lastAddedTaskId
                             )
                             Divider()
                         }

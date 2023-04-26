@@ -14,11 +14,14 @@ import java.util.Locale
 @RequiresApi(Build.VERSION_CODES.O)
 val dateFormat = DateTimeFormatter.ofPattern("EEE, d MMM yyyy", Locale.ENGLISH)
 
+
+//TODO add more filters so the user can filter by date, priority, etc
 @RequiresApi(Build.VERSION_CODES.O)
 fun getFilteredTasks(tasks: List<Task>, status: TaskStatus): List<Task> {
-
     val sortedTasks = tasks.sortedWith(compareBy { task ->
-        LocalDate.parse(task.dueDate, dateFormat)
+        runCatching {
+            LocalDate.parse(task.dueDate, dateFormat)
+        }.getOrNull()
     })
 
     return sortedTasks.filter { task ->
@@ -30,6 +33,7 @@ fun getFilteredTasks(tasks: List<Task>, status: TaskStatus): List<Task> {
         }
     }
 }
+
 fun onSelectAllTasks(selectedIndex: Int, selectedTasks: SnapshotStateList<Task>, taskList: List<Task>) {
 
     val status = when (selectedIndex) {
@@ -59,6 +63,10 @@ fun getDueDateAndTime(task: Task): String {
     if (task.dueTime.orEmpty().isNotBlank()) {
         stringBuilder.append("at ")
         stringBuilder.append(task.dueTime)
+    }
+
+    if (stringBuilder.isEmpty()) {
+        stringBuilder.append("No due date and time set")
     }
 
     return stringBuilder.toString()
