@@ -10,6 +10,7 @@ import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 
 
@@ -17,39 +18,40 @@ import androidx.compose.ui.unit.dp
 fun DropdownContextMenu(
     options: List<String>,
     modifier: Modifier,
-    onActionClick: (String) -> Unit
+    onActionClick: (String) -> Unit,
+    imageVector: ImageVector = Icons.Default.MoreVert,
+    trailingIcon: ImageVector = Icons.Default.Delete
 ) {
     var isExpanded by remember { mutableStateOf(false) }
 
-        IconButton(onClick = { isExpanded = true }) {
-            Icon(
-                modifier = Modifier.padding(8.dp, 0.dp),
-                imageVector = Icons.Default.MoreVert,
-                contentDescription = "More",
-                tint = Color.White
+    IconButton(onClick = { isExpanded = true }) {
+        Icon(
+            modifier = Modifier.padding(8.dp, 0.dp),
+            imageVector = imageVector,
+            contentDescription = "More",
+            tint = Color.White
+        )
+    }
+
+    DropdownMenu(
+        expanded = isExpanded,
+        onDismissRequest = { isExpanded = false },
+        modifier = Modifier.width(180.dp)
+    ) {
+        options.forEach { selectionOption ->
+            DropdownMenuItem(
+                onClick = {
+                    isExpanded = false
+                    onActionClick(selectionOption)
+                },
+                text = { Text(text = selectionOption) },
+                trailingIcon = {
+                    Icon(
+                        imageVector = trailingIcon,
+                        contentDescription = "Delete",
+                    )
+                }
             )
         }
-
-        DropdownMenu(
-            expanded = isExpanded,
-            onDismissRequest = { isExpanded = false },
-            modifier = Modifier.width(180.dp)
-        ) {
-            options.forEach { selectionOption ->
-                DropdownMenuItem(
-                    onClick = {
-                        isExpanded = false
-                        onActionClick(selectionOption)
-                    },
-                    text = { Text(text = selectionOption) },
-                    trailingIcon = {
-                        Icon(
-                            Icons.Default.Delete,
-                            contentDescription = "Delete",
-                        )
-                    }
-                )
-            }
-        }
-
+    }
 }

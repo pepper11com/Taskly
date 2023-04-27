@@ -1,6 +1,7 @@
 package com.example.new_app.model.service
 
 import android.net.Uri
+import android.util.Log
 import com.example.new_app.common.util.Resource
 import com.example.new_app.model.Task
 import com.example.new_app.model.User
@@ -67,9 +68,27 @@ class FirebaseService @Inject constructor(
 
     suspend fun delete(taskId: String) {
         firebaseAuth.currentUser?.uid?.let { uid ->
+            // Gets the task before deleting it
+            val task = currentCollection(uid).document(taskId).get().await().toObject<Task>()
+
+            // Deletes the task from Firestore
             currentCollection(uid).document(taskId).delete().await()
+
+            // Deletes the image from Firebase Storage if there's one associated with the task
+            task?.imageUri?.let { imageUrl ->
+                val path = imageUrl
+                    .substringAfter("example-f27a3.appspot.com/o/")
+                    .substringBefore("?")
+                    .replace("%2F", "/")
+
+                Log.d("FirebaseService", "imageUrl: $imageUrl")
+                Log.d("FirebaseService", "path: $path")
+
+                firebaseStorage.reference.child(path).delete().await()
+            }
         }
     }
+
 
     suspend fun deleteAllForUser(userId: String) {
         val matchingTasks = currentCollection(userId).get().await()
@@ -91,11 +110,35 @@ class FirebaseService @Inject constructor(
     }
 
 
-    suspend fun deleteTasks (tasks: List<Task>) {
-        firebaseAuth.currentUser?.uid?.let { uid ->
-            tasks.map { currentCollection(uid).document(it.id).delete().asDeferred() }.awaitAll()
+    suspend fun deleteTasks(tasks: List<Task>): Resource<Unit> {
+        return try {
+            firebaseAuth.currentUser?.uid?.let { uid ->
+                tasks.forEach { task ->
+                    // Delete the task from Firestore
+                    currentCollection(uid).document(task.id).delete().await()
+
+                    // Delete the image from Firebase Storage if there's one associated with the task
+                    task.imageUri?.let { imageUrl ->
+                        val path = imageUrl
+                            .substringAfter("example-f27a3.appspot.com/o/")
+                            .substringBefore("?")
+                            .replace("%2F", "/")
+
+                        Log.d("FirebaseService", "imageUrl: $imageUrl")
+                        Log.d("FirebaseService", "path: $path")
+
+                        firebaseStorage.reference.child(path).delete().await()
+                    }
+                }
+            }
+            Resource.Success(Unit)
+        } catch (e: Exception) {
+            Resource.Error(e.message ?: "Unknown error")
         }
     }
+
+
+
 
     suspend fun uploadImage(uri: Uri, path: String): String {
         val storageRef = firebaseStorage.reference.child(path)

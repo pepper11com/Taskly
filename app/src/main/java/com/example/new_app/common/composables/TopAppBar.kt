@@ -8,9 +8,14 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Deselect
 import androidx.compose.material.icons.filled.Done
+import androidx.compose.material.icons.filled.Filter
+import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.SelectAll
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Sort
+import androidx.compose.material.icons.filled.SortByAlpha
+import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -34,6 +39,7 @@ import com.example.new_app.model.Task
 import com.example.new_app.screens.task.create_edit_tasks.TaskEditCreateViewModel
 import com.example.new_app.screens.task.tasklist.TaskListUiState
 import com.example.new_app.screens.task.tasklist.TaskListViewModel
+import com.example.new_app.screens.task.tasklist.TaskSortType
 import com.example.new_app.screens.task.tasklist.onSelectAllTasks
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -55,7 +61,6 @@ fun CustomTopAppBar(
             containerColor = MaterialTheme.colorScheme.background,
         ),
         actions = {
-
             if (selectedIndex.value != 1) {
                 if (selectedTasks.isEmpty()) {
                     IconButton(
@@ -85,6 +90,22 @@ fun CustomTopAppBar(
                     }
                 }
             }
+            DropdownContextMenu(
+                options = listOf("Sort by Date Created (Asc)", "Sort by Date Created (Desc)", "Sort by Title (A-Z)", "Sort by Title (Z-A)", "Sort by Due Date (Asc)", "Sort by Due Date (Desc)"),
+                modifier = Modifier.padding(end = 8.dp),
+                onActionClick = { action ->
+                    when (action) {
+                        "Sort by Date Created (Asc)" -> viewModel.updateSortType(TaskSortType.DATE_CREATED_ASC)
+                        "Sort by Date Created (Desc)" -> viewModel.updateSortType(TaskSortType.DATE_CREATED_DESC)
+                        "Sort by Title (A-Z)" -> viewModel.updateSortType(TaskSortType.TITLE_ASC)
+                        "Sort by Title (Z-A)" -> viewModel.updateSortType(TaskSortType.TITLE_DESC)
+                        "Sort by Due Date (Asc)" -> viewModel.updateSortType(TaskSortType.DUE_DATE_ASC)
+                        "Sort by Due Date (Desc)" -> viewModel.updateSortType(TaskSortType.DUE_DATE_DESC)
+                    }
+                },
+                imageVector = Icons.Default.Tune,
+                trailingIcon = Icons.Default.Done
+            )
             if (selectedTasks.isEmpty()) {
                 IconButton(onClick = { openScreen(SETTINGS_SCREEN) }) {
                     Icon(
@@ -101,7 +122,6 @@ fun CustomTopAppBar(
                         when (action) {
                             "Delete All Selected" -> {
                                 viewModel.onDeleteSelectedTasks(selectedTasks)
-                                selectedTasks.clear()
                             }
                         }
                     }
@@ -161,7 +181,7 @@ fun CustomCreateTaskAppBar(
                         Icons.Filled.Done,
                         contentDescription = "Done",
                         tint = if (task.title.isNotBlank() && task.description.isNotBlank())
-                            Color.White else Color.White.copy(alpha = 0.5f)
+                            MaterialTheme.colorScheme.primary else Color.White.copy(alpha = 0.5f)
                     )
                 }
             }

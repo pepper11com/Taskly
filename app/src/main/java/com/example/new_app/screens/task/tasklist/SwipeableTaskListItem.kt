@@ -67,7 +67,8 @@ fun SwipeableTaskListItem(
     selectedTasks: SnapshotStateList<Task>,
     onSelectedTasksChange: (Task, Boolean) -> Unit,
     onTaskSwipedBackToActive: (Task) -> Unit,
-    isFlashing: Boolean = false
+    isFlashing: Boolean = false,
+
 ) {
     //width of the swipeable item
     val screenWidth = LocalConfiguration.current.screenWidthDp.dp

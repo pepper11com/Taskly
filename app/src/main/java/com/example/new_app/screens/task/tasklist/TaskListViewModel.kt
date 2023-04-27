@@ -1,9 +1,13 @@
 package com.example.new_app.screens.task.tasklist
 
+import android.util.Log
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.new_app.CREATE_TASK_SCREEN
 import com.example.new_app.TASK_ID_KEY
+import com.example.new_app.common.util.Resource
 import com.example.new_app.model.Task
 import com.example.new_app.model.service.AccountService
 import com.example.new_app.model.service.FirebaseService
@@ -25,6 +29,12 @@ class TaskListViewModel @Inject constructor(
     private val _taskListUiState = MutableStateFlow(TaskListUiState(isLoading = true))
     val taskListUiState: StateFlow<TaskListUiState> = _taskListUiState.asStateFlow()
 
+    private val _deleteTasksState = MutableStateFlow<Resource<Unit>>(Resource.Empty())
+    val deleteTasksState: StateFlow<Resource<Unit>> get() = _deleteTasksState
+
+    private val _sortType = MutableStateFlow<TaskSortType>(TaskSortType.DUE_DATE_DESC)
+    val sortType: StateFlow<TaskSortType> = _sortType.asStateFlow()
+
     val currentUserId: String
         get() = accountService.currentUserId
 
@@ -39,6 +49,10 @@ class TaskListViewModel @Inject constructor(
         firebaseService.tasks
             .catch { e -> _taskListUiState.value = TaskListUiState(error = e.message) }
             .collect { tasks -> _taskListUiState.value = TaskListUiState(tasks = tasks, isLoading = false) }
+    }
+
+    fun updateSortType(sortType: TaskSortType) {
+        _sortType.value = sortType
     }
 
     fun onAddClick(openScreen: (String) -> Unit, userId: String) {
@@ -76,8 +90,19 @@ class TaskListViewModel @Inject constructor(
 
     fun onDeleteSelectedTasks(tasks: List<Task>) {
         viewModelScope.launch {
-            firebaseService.deleteTasks(tasks)
+            Log.d("TaskListViewModel", "onDeleteSelectedTasks: ${tasks.size}")
+            tasks.forEach { task ->
+                launch {
+                    firebaseService.delete(task.id)
+                }
+            }
         }
     }
+
+
+    fun resetDeleteTasksState() {
+        _deleteTasksState.value = Resource.Empty()
+    }
+
 
 }

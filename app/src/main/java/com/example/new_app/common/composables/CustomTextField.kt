@@ -36,7 +36,12 @@ fun CustomTextField(
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     singleLine: Boolean = true,
     isError: Boolean = false,
-    errorMessage: String? = null
+    errorMessage: String? = null,
+    colors: TextFieldColors = OutlinedTextFieldDefaults.colors(
+        focusedBorderColor = MaterialTheme.colorScheme.secondary,
+        unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = ContentAlpha.disabled),
+        focusedLabelColor = MaterialTheme.colorScheme.secondary,
+    )
 ) {
     val isErrorState = remember { mutableStateOf(false) }
 
@@ -50,11 +55,7 @@ fun CustomTextField(
             isError = isError && isErrorState.value,
             singleLine = singleLine,
             keyboardOptions = keyboardOptions,
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = MaterialTheme.colorScheme.secondary,
-                unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = ContentAlpha.disabled),
-                focusedLabelColor = MaterialTheme.colorScheme.secondary,
-            )
+            colors = colors
         )
 
         if (isError && isErrorState.value && !errorMessage.isNullOrEmpty()) {
@@ -135,6 +136,11 @@ fun CustomMultiLineTextfield(
     hintText: String = "",
     textStyle: TextStyle = MaterialTheme.typography.bodySmall,
     maxLines: Int = 4,
+    colors: TextFieldColors = OutlinedTextFieldDefaults.colors(
+        focusedBorderColor = MaterialTheme.colorScheme.secondary,
+        unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = ContentAlpha.disabled),
+        focusedLabelColor = MaterialTheme.colorScheme.secondary,
+    )
 ) {
     OutlinedTextField(
         value = value,
@@ -143,11 +149,7 @@ fun CustomMultiLineTextfield(
         textStyle = textStyle,
         maxLines = maxLines,
         modifier = Modifier.fillMaxWidth(),
-        colors = OutlinedTextFieldDefaults.colors(
-            focusedBorderColor = MaterialTheme.colorScheme.secondary,
-            unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = ContentAlpha.disabled),
-            focusedLabelColor = MaterialTheme.colorScheme.secondary,
-        ),
+        colors = colors,
         singleLine = false,
         keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
     )

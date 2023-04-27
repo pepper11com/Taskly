@@ -281,8 +281,10 @@ class TaskEditCreateViewModel @Inject constructor(
                 task.value = task.value.copy(imageUri = null)
                 imageUri.value = null
             }
+            imageUri.value = null
         }
     }
+
     fun resetTask() {
         task.value = Task()
         imageUri.value = null

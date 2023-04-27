@@ -10,19 +10,34 @@ import java.time.format.DateTimeFormatter
 import java.util.Date
 import java.util.Locale
 
+enum class TaskSortType {
+    DATE_CREATED_ASC,
+    DATE_CREATED_DESC,
+    TITLE_ASC,
+    TITLE_DESC,
+    DUE_DATE_ASC,
+    DUE_DATE_DESC
+}
+
 
 @RequiresApi(Build.VERSION_CODES.O)
 val dateFormat = DateTimeFormatter.ofPattern("EEE, d MMM yyyy", Locale.ENGLISH)
 
-
-//TODO add more filters so the user can filter by date, priority, etc
 @RequiresApi(Build.VERSION_CODES.O)
-fun getFilteredTasks(tasks: List<Task>, status: TaskStatus): List<Task> {
+fun sortTasksByDueDate(tasks: List<Task>, ascending: Boolean): List<Task> {
+    val dateFormat = DateTimeFormatter.ofPattern("EEE, d MMM yyyy", Locale.ENGLISH)
     val sortedTasks = tasks.sortedWith(compareBy { task ->
         runCatching {
             LocalDate.parse(task.dueDate, dateFormat)
         }.getOrNull()
     })
+    return if (ascending) sortedTasks else sortedTasks.reversed()
+}
+
+
+@RequiresApi(Build.VERSION_CODES.O)
+fun getFilteredTasks(tasks: List<Task>, status: TaskStatus, sortType: TaskSortType): List<Task> {
+    val sortedTasks = sortTasks(tasks, sortType)
 
     return sortedTasks.filter { task ->
         when (status) {
@@ -70,4 +85,16 @@ fun getDueDateAndTime(task: Task): String {
     }
 
     return stringBuilder.toString()
+}
+
+@RequiresApi(Build.VERSION_CODES.O)
+fun sortTasks(tasks: List<Task>, sortType: TaskSortType): List<Task> {
+    return when (sortType) {
+        TaskSortType.DATE_CREATED_ASC -> tasks.sortedBy { it.taskDate }
+        TaskSortType.DATE_CREATED_DESC -> tasks.sortedByDescending { it.taskDate }
+        TaskSortType.TITLE_ASC -> tasks.sortedBy { it.title }
+        TaskSortType.TITLE_DESC -> tasks.sortedByDescending { it.title }
+        TaskSortType.DUE_DATE_ASC -> sortTasksByDueDate(tasks, true)
+        TaskSortType.DUE_DATE_DESC -> sortTasksByDueDate(tasks, false)
+    }
 }

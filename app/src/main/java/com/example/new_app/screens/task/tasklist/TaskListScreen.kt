@@ -12,6 +12,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
@@ -29,9 +30,12 @@ import com.example.new_app.TASK_ID_KEY
 import com.example.new_app.common.composables.CustomTabRow
 import com.example.new_app.common.composables.CustomTopAppBar
 import com.example.new_app.common.composables.LoadingIndicator
+import com.example.new_app.common.util.Resource
 import com.example.new_app.model.Task
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.ui.text.font.FontWeight
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @RequiresApi(Build.VERSION_CODES.O)
@@ -45,6 +49,10 @@ fun TaskListScreen(
 
     val userId = viewModel.currentUserId
 
+    val deleteTasksState by viewModel.deleteTasksState.collectAsState()
+
+    val sortType by viewModel.sortType.collectAsState()
+
     val context = LocalContext.current
     val uiState by viewModel.taskListUiState.collectAsState()
     val scope = rememberCoroutineScope()
@@ -57,8 +65,14 @@ fun TaskListScreen(
     val tabTitles = listOf("Deleted Tasks", "Tasks", "Completed Tasks")
     val selectedIndex = remember { mutableStateOf(1) }
 
-    val filteredTasks = remember(uiState.tasks, selectedIndex.value) {
-        getFilteredTasks(uiState.tasks, TaskStatus.values()[selectedIndex.value])
+//    val filteredTasks = remember(uiState.tasks, selectedIndex.value) {
+//        getFilteredTasks(uiState.tasks, TaskStatus.values()[selectedIndex.value])
+//    }
+
+    val filteredTasks = remember(uiState.tasks, selectedIndex.value, sortType) {
+        val filtered =
+            getFilteredTasks(uiState.tasks, TaskStatus.values()[selectedIndex.value], sortType)
+        sortTasks(filtered, sortType)
     }
 
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
@@ -67,6 +81,11 @@ fun TaskListScreen(
     val lastAddedTaskId by mainViewModel.lastAddedTaskId.observeAsState(null)
     val isScreenVisible = remember { mutableStateOf(true) }
 
+    val expandedFab by remember {
+        derivedStateOf {
+            listState.firstVisibleItemIndex == 0
+        }
+    }
     LaunchedEffect(lastAddedTaskId) {
         if (lastAddedTaskId != null && isScreenVisible.value) {
             val lastAddedTaskIndex = filteredTasks.indexOfFirst { it.id == lastAddedTaskId }
@@ -87,15 +106,21 @@ fun TaskListScreen(
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         floatingActionButton = {
-            FloatingActionButton(
-                shape = CircleShape,
+            ExtendedFloatingActionButton(
+                shape = RoundedCornerShape(16.dp),
+                expanded = expandedFab,
                 onClick = { viewModel.onAddClick(openScreen, userId) },
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.background,
-                modifier = Modifier.padding(16.dp)
-            ) {
-                Icon(Icons.Filled.Add, "Add")
-            }
+                modifier = Modifier.padding(16.dp),
+                icon = { Icon(Icons.Filled.Add, "Localized description") },
+                text = {
+                    Text(
+                        text = "New Task",
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                },
+            )
         },
         topBar = {
             Column {
@@ -138,7 +163,7 @@ fun TaskListScreen(
                         val taskBitmap = remember { mutableStateOf<Bitmap?>(null) }
                         Column(
                             modifier = Modifier.animateItemPlacement()
-                        ){
+                        ) {
                             SwipeableTaskListItem(
                                 context = context,
                                 task = task,
@@ -174,6 +199,7 @@ fun TaskListScreen(
                                 isFlashing = task.id == lastAddedTaskId
                             )
                             Divider()
+                            //todo hmm no now I got the problem again that the lazylist doesnt know if I had selected a task that is not in my view
                         }
                     }
                 }
@@ -185,6 +211,27 @@ fun TaskListScreen(
                     viewModel = viewModel,
                     onDismiss = { showDialog.value = false },
                 )
+            }
+
+            when (deleteTasksState) {
+                is Resource.Loading -> {
+                    // Display a loading indicator
+                    LoadingIndicator()
+                }
+
+                is Resource.Success -> {
+                    // Handle successful deletion of tasks
+                    selectedTasks.clear()
+                    viewModel.resetDeleteTasksState()
+                }
+
+                is Resource.Error -> {
+                    // Handle error
+                }
+
+                else -> {
+                    // Handle empty state
+                }
             }
         }
     }

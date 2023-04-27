@@ -54,12 +54,13 @@ fun LocationPickerScreen(
                     IconButton(
                         onClick = {
                             openAndPopUp(CREATE_TASK_SCREEN, TASK_MAP_SCREEN)
-                        }
+                        },
+                        enabled = searchInput.value.isNotEmpty()
                     ) {
                         Icon(
                             Icons.Filled.Done,
                             contentDescription = "Done",
-                            tint = if (searchInput.value.isEmpty()) Color.White.copy(alpha = 0.5f) else Color.White,
+                            tint = if (searchInput.value.isEmpty()) Color.White.copy(alpha = 0.5f) else MaterialTheme.colorScheme.primary,
                         )
                     }
                 }

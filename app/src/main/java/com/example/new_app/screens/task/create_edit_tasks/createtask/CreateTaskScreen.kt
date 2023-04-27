@@ -13,6 +13,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.selection.TextSelectionColors
+import androidx.compose.material.ContentAlpha
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -24,6 +27,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
@@ -89,12 +94,13 @@ fun CreateTaskScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .nestedScroll(scrollBehavior.nestedScrollConnection)
-
                 .padding(innerPadding)
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+
             item {
+                SectionTitle("Image")
                 PickImageFromGallery(
                     LocalContext.current,
                     viewModel,
@@ -105,92 +111,66 @@ fun CreateTaskScreen(
             }
 
             item {
-                Button(
-                    onClick = {
-                        openScreen(TASK_MAP_SCREEN)
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.secondary,
-                        contentColor = MaterialTheme.colorScheme.onPrimary
-                    ),
-                ) {
-                    Text("Add Location")
-                }
+                Divider()
             }
-
-            if (viewModel.locationDisplay.value != "") {
-                item {
-                    Button(
-                        onClick = {
-                            viewModel.locationDisplay.value = ""
-                            viewModel.onLocationReset()
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth(),
-
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.error,
-                            contentColor = MaterialTheme.colorScheme.onPrimary
-                        ),
-                    ) {
-                        Text("Delete Location")
-                    }
-                }
-            }
-
 
             item {
-                TextField(
-                    value = if (viewModel.locationDisplay.value == "") "No Location Selected" else viewModel.locationDisplay.value,
-                    onValueChange = { },
-                    modifier = Modifier
-                        .fillMaxWidth(),
-
-                    colors = TextFieldDefaults.colors(
-                        focusedContainerColor = MaterialTheme.colorScheme.secondary,
-                        unfocusedContainerColor = MaterialTheme.colorScheme.secondary,
-                        disabledContainerColor = MaterialTheme.colorScheme.secondary,
-                        errorContainerColor = MaterialTheme.colorScheme.secondary,
-                        focusedTextColor = MaterialTheme.colorScheme.onPrimary,
-                        unfocusedTextColor = MaterialTheme.colorScheme.onPrimary,
-                        disabledTextColor = MaterialTheme.colorScheme.onPrimary,
-                        errorTextColor = MaterialTheme.colorScheme.onPrimary,
-                        focusedIndicatorColor = Color.Transparent,
-                        unfocusedIndicatorColor = Color.Transparent,
-                        disabledLabelColor = MaterialTheme.colorScheme.onPrimary,
-                        unfocusedLabelColor = MaterialTheme.colorScheme.onPrimary,
-                        focusedLabelColor = MaterialTheme.colorScheme.onPrimary,
-                    ),
-                    shape = MaterialTheme.shapes.medium,
-                    readOnly = true
-                )
-            }
-
-
-            item {
+                // Title Section
+                SectionTitle("Title & Description")
                 CustomTextField(
                     value = task.title,
                     onValueChange = viewModel::onTitleChange,
                     label = "Title",
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    colors= OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Color.White.copy(alpha = 0.7f),
+                        unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = ContentAlpha.disabled),
+                        focusedLabelColor = Color.White.copy(alpha = 0.7f),
+                        cursorColor = Color.White.copy(alpha = 0.7f),
+                        selectionColors = TextSelectionColors(
+                            Color(0xFF444444),
+                            Color(0xFF444444).copy(alpha = 0.5f),
+                        )
+                    )
                 )
 
-            }
-
-            item {
                 CustomMultiLineTextfield(
                     value = task.description,
                     onValueChange = viewModel::onDescriptionChange,
                     modifier = Modifier.fillMaxWidth(),
                     hintText = "Description",
                     textStyle = MaterialTheme.typography.bodyLarge,
-                    maxLines = 4
+                    maxLines = 4,
+                    colors= OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Color.White.copy(alpha = 0.7f),
+                        unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = ContentAlpha.disabled),
+                        focusedLabelColor = Color.White.copy(alpha = 0.7f),
+                        cursorColor = Color.White.copy(alpha = 0.7f),
+                        selectionColors = TextSelectionColors(
+                            Color(0xFF444444),
+                            Color(0xFF444444).copy(alpha = 0.5f),
+                        )
+                    )
+                )
+            }
+
+
+            item {
+                Divider(
+                    modifier = Modifier
+                        .padding(top = 18.dp,)
                 )
             }
 
             item {
+                // Date and Time Section
+                SectionTitle("Location, Date & Time")
+                ShowLocation(
+                    viewModel.locationDisplay,
+                    onEditClick = { openScreen(TASK_MAP_SCREEN) },
+                    onLocationReset = viewModel::onLocationReset
+                )
+
                 CardEditors(
                     task,
                     viewModel::onDateChange,
@@ -217,6 +197,77 @@ fun CreateTaskScreen(
                 // Handle empty state
             }
         }
+    }
+}
+
+@Composable
+fun SectionTitle(title: String) {
+    Text(
+        text = title,
+        style = MaterialTheme.typography.titleLarge,
+        fontWeight = FontWeight.Bold,
+        modifier = Modifier.padding(vertical = 8.dp),
+        color = Color.White
+    )
+}
+
+@Composable
+fun ShowLocation(
+    locationDisplay: MutableState<String>,
+    onEditClick: () -> Unit,
+    onLocationReset: () -> Unit
+) {
+    val content = locationDisplay.value
+
+    if (content.isNotBlank()) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+        ){
+            RegularCardEditor(
+                title = R.string.location,
+                icon = Icons.Filled.EditLocation,
+                content = content,
+                modifier = Modifier
+                    .padding(top = 16.dp)
+                    .weight(1f),
+                onEditClick = onEditClick,
+                location = true
+            )
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            Button(
+                onClick = onLocationReset,
+                modifier = Modifier
+                    .align(Alignment.CenterVertically)
+                    .padding(top = 16.dp)
+                    .size(56.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF444444),
+                    contentColor = Color.White
+                ),
+                shape = RoundedCornerShape(4.dp),
+                elevation = ButtonDefaults.buttonElevation(
+                    defaultElevation = 5.dp,
+                    pressedElevation = 5.dp,
+                    disabledElevation = 5.dp
+                ),
+                contentPadding = PaddingValues(0.dp),
+            ) {
+                Icon(Icons.Filled.Delete, contentDescription = "Delete Location")
+            }
+        }
+
+    } else {
+        RegularCardEditor(
+            title = R.string.location,
+            icon = Icons.Filled.EditLocation,
+            content = stringResource(R.string.no_location_selected),
+            modifier = Modifier.padding(top = 16.dp),
+            onEditClick = onEditClick
+        )
     }
 }
 
