@@ -20,7 +20,9 @@ import com.example.new_app.model.CustomLatLng
 import com.example.new_app.model.Task
 import com.example.new_app.model.service.AccountService
 import com.example.new_app.model.service.FirebaseService
+import com.example.new_app.model.service.scheduleTaskReminder
 import com.example.new_app.screens.TaskAppViewModel
+import com.example.new_app.screens.task.tasklist.generateStaticMapUrl
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
 import com.google.firebase.storage.FirebaseStorage
@@ -184,8 +186,16 @@ class TaskEditCreateViewModel @Inject constructor(
                                     firebaseService.updateTask(updatedTask)
                                 }
                             }
+                            var imageUrl: String? = null
+                            if (task.value.location?.latitude != null && task.value.location?.longitude != null) {
+                                imageUrl = generateStaticMapUrl(task.value)
+                            }
 
                             onTaskCreated(savedTaskId!!)
+                            task.value.dueDateToMillis()?.let { dueDateMillis ->
+                                scheduleTaskReminder(savedTaskId, task.value.title, task.value.locationName ?: task.value.description, dueDateMillis, imageUrl, context)
+                            }
+
                             Log.d("TaskEditCreateViewModel", "Task created successfully with id: ----  $savedTaskId  -------")
                             resetTask()
                         }
@@ -219,6 +229,16 @@ class TaskEditCreateViewModel @Inject constructor(
                             is Resource.Success -> {
                                 onTaskCreated(taskId)
                                 Log.d("TaskEditCreateViewModel", "Task EDITED successfully with id: ----  $taskId  -------")
+
+                                var imageUrl: String? = null
+                                if (task.value.location?.latitude != null && task.value.location?.longitude != null) {
+                                    imageUrl = generateStaticMapUrl(task.value)
+                                }
+
+                                task.value.dueDateToMillis()?.let { dueDateMillis ->
+                                    scheduleTaskReminder(taskId, task.value.title, task.value.locationName ?: task.value.description, dueDateMillis, imageUrl, context)
+                                }
+
                                 resetTask()
                             }
                             is Resource.Error -> {
@@ -238,7 +258,15 @@ class TaskEditCreateViewModel @Inject constructor(
                         }
                     } else {
                         when (val updateResult = firebaseService.updateTask(task.value)) {
-                            is Resource.Success -> { /* Task updated successfully */ }
+                            is Resource.Success -> {
+                                var imageUrl: String? = null
+                                if (task.value.location?.latitude != null && task.value.location?.longitude != null) {
+                                    imageUrl = generateStaticMapUrl(task.value)
+                                }
+                                task.value.dueDateToMillis()?.let { dueDateMillis ->
+                                    scheduleTaskReminder(taskId, task.value.title, task.value.locationName ?: task.value.description, dueDateMillis, imageUrl, context)
+                                }
+                            }
                             is Resource.Error -> {
                                 _taskEditCreateState.value = Resource.Error(updateResult.message ?: "Unknown error")
                                 snackbarManager.showSnackbarMessage(

@@ -35,6 +35,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.ui.text.font.FontWeight
+import com.example.new_app.model.service.Notification
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @RequiresApi(Build.VERSION_CODES.O)
@@ -163,6 +164,7 @@ fun TaskListScreen(
                         .fillMaxSize()
                         .nestedScroll(scrollBehavior.nestedScrollConnection)
                 ) {
+
                     itemsIndexed(filteredTasks, key = { _, task -> task.id }) { _, task ->
                         val taskBitmap = remember { mutableStateOf<Bitmap?>(null) }
                         Column(

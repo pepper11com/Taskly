@@ -52,6 +52,9 @@ fun DropdownContextMenu(
                     )
                 }
             )
+            Divider(
+                modifier = Modifier.padding(horizontal = 8.dp),
+            )
         }
     }
 }
