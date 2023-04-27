@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -45,6 +44,8 @@ fun TaskListScreen(
     openScreen: (String) -> Unit,
     mainViewModel: SharedViewModel
 ) {
+    //todo -add on click the id of the task to a list so we can use that to delete the tasks
+    //todo -and use the old method of keeping the checkmark in place
     val viewModel: TaskListViewModel = hiltViewModel()
 
     val userId = viewModel.currentUserId
@@ -74,6 +75,8 @@ fun TaskListScreen(
             getFilteredTasks(uiState.tasks, TaskStatus.values()[selectedIndex.value], sortType)
         sortTasks(filtered, sortType)
     }
+
+    val taskSelectionStates = remember { mutableMapOf<String, MutableState<Boolean>>() }
 
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
     val listState = rememberLazyListState()
@@ -132,6 +135,7 @@ fun TaskListScreen(
                     openScreen = openScreen,
                     viewModel = viewModel,
                     scrollBehavior = scrollBehavior,
+                    mainViewModel = mainViewModel,
                 )
 
                 CustomTabRow(
@@ -159,7 +163,7 @@ fun TaskListScreen(
                         .fillMaxSize()
                         .nestedScroll(scrollBehavior.nestedScrollConnection)
                 ) {
-                    itemsIndexed(filteredTasks, key = { _, task -> task.id }) { index, task ->
+                    itemsIndexed(filteredTasks, key = { _, task -> task.id }) { _, task ->
                         val taskBitmap = remember { mutableStateOf<Bitmap?>(null) }
                         Column(
                             modifier = Modifier.animateItemPlacement()
@@ -171,7 +175,7 @@ fun TaskListScreen(
                                     openScreen(
                                         "$EDIT_TASK_SCREEN$TASK_ID_KEY".replace(
                                             "{$TASK_ID}",
-                                            task.id.toString()
+                                            task.id
                                         )
                                     )
                                 },
@@ -184,7 +188,7 @@ fun TaskListScreen(
                                 },
                                 status = task.status,
                                 taskBitmap = taskBitmap,
-                                isSelected = task in selectedTasks,
+                                isSelected = taskSelectionStates.getOrPut(task.id) { mutableStateOf(task in selectedTasks) },
                                 selectedTasks = selectedTasks,
                                 onSelectedTasksChange = { selectedTask, isChecked ->
                                     if (isChecked) {
@@ -196,10 +200,10 @@ fun TaskListScreen(
                                 onTaskSwipedBackToActive = { task ->
                                     selectedTasks.remove(task)
                                 },
-                                isFlashing = task.id == lastAddedTaskId
+                                isFlashing = task.id == lastAddedTaskId,
+                                mainViewModel = mainViewModel,
                             )
                             Divider()
-                            //todo hmm no now I got the problem again that the lazylist doesnt know if I had selected a task that is not in my view
                         }
                     }
                 }

@@ -51,6 +51,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.draw.alpha
+import com.example.new_app.SharedViewModel
 import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterialApi::class)
@@ -63,12 +64,12 @@ fun SwipeableTaskListItem(
     viewModel: TaskListViewModel,
     onLongPress: () -> Unit,
     status: TaskStatus,
-    isSelected: Boolean,
+    isSelected: MutableState<Boolean>,
     selectedTasks: SnapshotStateList<Task>,
     onSelectedTasksChange: (Task, Boolean) -> Unit,
     onTaskSwipedBackToActive: (Task) -> Unit,
     isFlashing: Boolean = false,
-
+    mainViewModel: SharedViewModel
 ) {
     //width of the swipeable item
     val screenWidth = LocalConfiguration.current.screenWidthDp.dp
@@ -128,7 +129,8 @@ fun SwipeableTaskListItem(
             isSelected = isSelected,
             selectedTasks = selectedTasks,
             onSelectedTasksChange = onSelectedTasksChange,
-            isFlashing = isFlashing
+            isFlashing = isFlashing,
+            mainViewModel = mainViewModel
         )
     }
 }
@@ -142,14 +144,16 @@ fun TaskListItem(
     onClick: () -> Unit,
     onLongPress: () -> Unit,
     offset: Offset = Offset.Zero,
-    isSelected: Boolean,
+    isSelected: MutableState<Boolean>,
     selectedTasks: SnapshotStateList<Task>,
     onSelectedTasksChange: (Task, Boolean) -> Unit,
-    isFlashing: Boolean = false
+    isFlashing: Boolean = false,
+    mainViewModel: SharedViewModel
 ) {
     val context = LocalContext.current
     val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
     val flashState = rememberSaveable { mutableStateOf(isFlashing) }
+    val taskIsSelected = mainViewModel.selectedTaskIds.collectAsState().value.contains(task.id)
 
     val flashColor = animateColorAsState(
         targetValue = if (flashState.value) Color(0xFFCCCCCC) else Color(0xFF444444),
@@ -234,13 +238,11 @@ fun TaskListItem(
                 }
                 if (TaskStatus.ACTIVE != task.status) {
                     Checkbox(
-                        checked = isSelected,
+                        checked = taskIsSelected,
                         onCheckedChange = { isChecked ->
-                            if (isChecked) {
-                                selectedTasks.add(task)
-                            } else {
-                                selectedTasks.remove(task)
-                            }
+                            isSelected.value = isChecked
+                            onSelectedTasksChange(task, isChecked)
+                            mainViewModel.onTaskSelection(task.id, isChecked)
                         },
                         colors = CheckboxDefaults.colors(
                             checkmarkColor = Color(0xFFFF8C00),

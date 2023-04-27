@@ -3,6 +3,7 @@ package com.example.new_app.screens.task.tasklist
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.snapshots.SnapshotStateList
+import com.example.new_app.SharedViewModel
 import com.example.new_app.model.Task
 import java.lang.StringBuilder
 import java.time.LocalDate
@@ -49,7 +50,24 @@ fun getFilteredTasks(tasks: List<Task>, status: TaskStatus, sortType: TaskSortTy
     }
 }
 
-fun onSelectAllTasks(selectedIndex: Int, selectedTasks: SnapshotStateList<Task>, taskList: List<Task>) {
+//fun onSelectAllTasks(selectedIndex: Int, selectedTasks: SnapshotStateList<Task>, taskList: List<Task>) {
+//
+//    val status = when (selectedIndex) {
+//        0 -> TaskStatus.DELETED
+//        2 -> TaskStatus.COMPLETED
+//        else -> TaskStatus.ACTIVE
+//    }
+//
+//    val tasksToSelect = taskList.filter { it.status == status }
+//
+//    tasksToSelect.forEach { task ->
+//        if (task !in selectedTasks) {
+//            selectedTasks.add(task)
+//        }
+//    }
+//}
+
+fun onSelectAllTasks(selectedIndex: Int, mainViewModel: SharedViewModel, taskList: List<Task>) {
 
     val status = when (selectedIndex) {
         0 -> TaskStatus.DELETED
@@ -60,11 +78,10 @@ fun onSelectAllTasks(selectedIndex: Int, selectedTasks: SnapshotStateList<Task>,
     val tasksToSelect = taskList.filter { it.status == status }
 
     tasksToSelect.forEach { task ->
-        if (task !in selectedTasks) {
-            selectedTasks.add(task)
-        }
+        mainViewModel.onTaskSelection(task.id, true)
     }
 }
+
 
 
 fun getDueDateAndTime(task: Task): String {

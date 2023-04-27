@@ -88,16 +88,28 @@ class TaskListViewModel @Inject constructor(
         }
     }
 
-    fun onDeleteSelectedTasks(tasks: List<Task>) {
+//    fun onDeleteSelectedTasks(tasks: List<Task>) {
+//        viewModelScope.launch {
+//            Log.d("TaskListViewModel", "onDeleteSelectedTasks: ${tasks.size}")
+//            tasks.forEach { task ->
+//                launch {
+//                    firebaseService.delete(task.id)
+//                }
+//            }
+//        }
+//    }
+
+    fun onDeleteSelectedTasks(taskIds: List<String>) {
         viewModelScope.launch {
-            Log.d("TaskListViewModel", "onDeleteSelectedTasks: ${tasks.size}")
-            tasks.forEach { task ->
+            Log.d("TaskListViewModel", "onDeleteSelectedTasks: ${taskIds.size}")
+            taskIds.forEach { taskId ->
                 launch {
-                    firebaseService.delete(task.id)
+                    firebaseService.delete(taskId)
                 }
             }
         }
     }
+
 
 
     fun resetDeleteTasksState() {

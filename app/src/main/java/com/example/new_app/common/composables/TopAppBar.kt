@@ -8,13 +8,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Deselect
 import androidx.compose.material.icons.filled.Done
-import androidx.compose.material.icons.filled.Filter
-import androidx.compose.material.icons.filled.FilterList
-import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.SelectAll
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.Sort
-import androidx.compose.material.icons.filled.SortByAlpha
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -28,10 +23,11 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
 import com.example.new_app.SETTINGS_SCREEN
 import com.example.new_app.SharedViewModel
@@ -51,9 +47,11 @@ fun CustomTopAppBar(
     uiState: TaskListUiState,
     openScreen: (String) -> Unit,
     viewModel: TaskListViewModel,
-    scrollBehavior: TopAppBarScrollBehavior
+    scrollBehavior: TopAppBarScrollBehavior,
+    mainViewModel: SharedViewModel,
 ) {
-//    MediumTopAppBar(
+    val selectedTaskIds by mainViewModel.selectedTaskIds.collectAsState()
+
     TopAppBar(
         modifier = Modifier.fillMaxWidth(),
         scrollBehavior = scrollBehavior,
@@ -62,12 +60,12 @@ fun CustomTopAppBar(
         ),
         actions = {
             if (selectedIndex.value != 1) {
-                if (selectedTasks.isEmpty()) {
+                if (selectedTaskIds.isEmpty()) {
                     IconButton(
                         onClick = {
                             onSelectAllTasks(
                                 selectedIndex.value,
-                                selectedTasks,
+                                mainViewModel,
                                 uiState.tasks
                             )
                         }
@@ -79,11 +77,11 @@ fun CustomTopAppBar(
                         )
                     }
                 } else {
-                    if (!selectedTasks.isEmpty()) {
-                        IconButton(onClick = { selectedTasks.clear() }) {
+                    if (selectedTaskIds.isNotEmpty()) {
+                        IconButton(onClick = { mainViewModel.clearSelectedTaskIds() }) {
                             Icon(
                                 Icons.Default.Deselect,
-                                contentDescription = "Select All",
+                                contentDescription = "Deselect All",
                                 tint = Color.White
                             )
                         }
@@ -106,7 +104,7 @@ fun CustomTopAppBar(
                 imageVector = Icons.Default.Tune,
                 trailingIcon = Icons.Default.Done
             )
-            if (selectedTasks.isEmpty()) {
+            if (selectedTaskIds.isEmpty()) {
                 IconButton(onClick = { openScreen(SETTINGS_SCREEN) }) {
                     Icon(
                         Icons.Filled.Settings,
@@ -121,7 +119,8 @@ fun CustomTopAppBar(
                     onActionClick = { action ->
                         when (action) {
                             "Delete All Selected" -> {
-                                viewModel.onDeleteSelectedTasks(selectedTasks)
+                                viewModel.onDeleteSelectedTasks(selectedTaskIds.toList())
+                                mainViewModel.clearSelectedTaskIds()
                             }
                         }
                     }
