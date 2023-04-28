@@ -193,7 +193,7 @@ class TaskEditCreateViewModel @Inject constructor(
 
                             onTaskCreated(savedTaskId!!)
                             task.value.dueDateToMillis()?.let { dueDateMillis ->
-                                scheduleTaskReminder(savedTaskId, task.value.title, task.value.locationName ?: task.value.description, dueDateMillis, imageUrl, context)
+                                scheduleTaskReminder(savedTaskId, "${task.value.title} at: ${task.value.dueTime}", task.value.locationName ?: task.value.description, dueDateMillis, imageUrl, context)
                             }
 
                             Log.d("TaskEditCreateViewModel", "Task created successfully with id: ----  $savedTaskId  -------")
@@ -236,7 +236,7 @@ class TaskEditCreateViewModel @Inject constructor(
                                 }
 
                                 task.value.dueDateToMillis()?.let { dueDateMillis ->
-                                    scheduleTaskReminder(taskId, task.value.title, task.value.locationName ?: task.value.description, dueDateMillis, imageUrl, context)
+                                    scheduleTaskReminder(taskId, "${task.value.title} at: ${task.value.dueTime}", task.value.locationName ?: task.value.description, dueDateMillis, imageUrl, context)
                                 }
 
                                 resetTask()
@@ -264,7 +264,7 @@ class TaskEditCreateViewModel @Inject constructor(
                                     imageUrl = generateStaticMapUrl(task.value)
                                 }
                                 task.value.dueDateToMillis()?.let { dueDateMillis ->
-                                    scheduleTaskReminder(taskId, task.value.title, task.value.locationName ?: task.value.description, dueDateMillis, imageUrl, context)
+                                    scheduleTaskReminder(taskId, "${task.value.title} at: ${task.value.dueTime}", task.value.locationName ?: task.value.description, dueDateMillis, imageUrl, context)
                                 }
                             }
                             is Resource.Error -> {

@@ -16,6 +16,7 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.example.new_app.SharedViewModel
 import com.example.new_app.model.Task
 
 
@@ -25,6 +26,7 @@ fun CustomTabRow(
     tabTitles: List<String>,
     selectedTasks: MutableList<Task>,
     rowColor: Color = MaterialTheme.colorScheme.secondary,
+    mainViewModel: SharedViewModel = SharedViewModel(),
 ){
     val indicator = @Composable { tabPositions: List<TabPosition> ->
         HomeCategoryTabIndicator(
@@ -54,9 +56,11 @@ fun CustomTabRow(
                 onClick = {
                     if (index != selectedIndex.value) {
                         selectedIndex.value = index
-                        if (index == 1) {
+                        //TODO - test this new commented out code
+//                        if (index == 1) {
                             selectedTasks.clear()
-                        }
+                            mainViewModel.clearSelectedTaskIds()
+//                        }
                     }
                 },
                 selectedContentColor = rowColor,

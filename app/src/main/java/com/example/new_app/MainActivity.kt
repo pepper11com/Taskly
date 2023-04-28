@@ -3,17 +3,29 @@ package com.example.new_app
 
 import android.os.Build
 import android.os.Bundle
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material3.Button
+import androidx.compose.material3.Text
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.example.new_app.BuildConfig.MAPS_API_KEY
 import com.example.new_app.screens.splashscreen.SplashScreenViewModel
 import com.google.android.gms.maps.MapsInitializer
 import com.google.android.libraries.places.api.Places
 import dagger.hilt.android.AndroidEntryPoint
+import android.Manifest
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
@@ -23,20 +35,15 @@ class MainActivity : AppCompatActivity() {
     @OptIn(ExperimentalMaterialApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        //https://console.firebase.google.com/u/0/project/example-f27a3/authentication/emails
-        //https://console.firebase.google.com/u/0/project/example-f27a3/settings/general/android:com.example.new_app
 
-        //todo - be able to change task filter (the list)
-        //todo - DockedSearchBar
         //todo - settings screen top bar
         //todo - edit task screen - location
         //todo - add a search bar to search for tasks
-        //todo - notification when task is due
         //todo - when swiping to delete or to complete a task, show a icon with color under the task
 
-        //todo - make google-maps a separate screen!!!!!!!!!!!!
+        //todo - automatically set task to delete if it is overdue
 
-        //todo - also delete the image from the storage when deleting a task
+        //todo - we got an navigation bug againnnnn when logging out :))))))))))
 
         Places.initialize(applicationContext, MAPS_API_KEY)
         MapsInitializer.initialize(applicationContext)
@@ -48,12 +55,9 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-//        WindowCompat.setDecorFitsSystemWindows(window, false)
-
         setContent {
             TaskApp()
         }
-
     }
 }
 

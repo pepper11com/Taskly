@@ -1,6 +1,10 @@
 package com.example.new_app.common.composables
 
+import android.Manifest
 import android.content.Context
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -8,6 +12,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Deselect
 import androidx.compose.material.icons.filled.Done
+import androidx.compose.material.icons.filled.LocationOff
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Map
+import androidx.compose.material.icons.filled.NearMe
+import androidx.compose.material.icons.filled.NearMeDisabled
 import androidx.compose.material.icons.filled.SelectAll
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Tune
@@ -49,6 +58,7 @@ fun CustomTopAppBar(
     viewModel: TaskListViewModel,
     scrollBehavior: TopAppBarScrollBehavior,
     mainViewModel: SharedViewModel,
+    mapsVisible: MutableState<Boolean>,
 ) {
     val selectedTaskIds by mainViewModel.selectedTaskIds.collectAsState()
 
@@ -88,6 +98,20 @@ fun CustomTopAppBar(
                     }
                 }
             }
+
+                IconButton(
+                    onClick = {
+                        mapsVisible.value = !mapsVisible.value
+                    }
+                ) {
+                    Icon(
+                        imageVector = if (mapsVisible.value) Icons.Default.LocationOn else Icons.Default.LocationOff,
+                        contentDescription = "Toggle Map",
+                        tint = Color.White
+                    )
+                }
+
+
             DropdownContextMenu(
                 options = listOf("Sort by Date Created (Asc)", "Sort by Date Created (Desc)", "Sort by Title (A-Z)", "Sort by Title (Z-A)", "Sort by Due Date (Asc)", "Sort by Due Date (Desc)"),
                 modifier = Modifier.padding(end = 8.dp),
@@ -146,6 +170,18 @@ fun CustomCreateTaskAppBar(
     mainViewModel: SharedViewModel,
     context: Context
 ){
+    val notificationResultLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+        onResult = {isGranted ->
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                mainViewModel.onPermissionResult(
+                    isGranted = isGranted,
+                    permission = Manifest.permission.POST_NOTIFICATIONS
+                )
+            }
+        }
+    )
+
     Column {
         MediumTopAppBar(
             scrollBehavior = scrollBehavior,
@@ -168,6 +204,11 @@ fun CustomCreateTaskAppBar(
                     enabled = task.title.isNotBlank() && task.description.isNotBlank(),
 
                     onClick = {
+
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                             notificationResultLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                        }
+
                         viewModel.onDoneClick(
                             context,
                             null,

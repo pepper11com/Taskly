@@ -1,6 +1,7 @@
 package com.example.new_app
 
 import android.util.Log
+import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -16,6 +17,16 @@ class SharedViewModel : ViewModel() {
     private val _selectedTaskIds = MutableStateFlow<Set<String>>(emptySet())
     val selectedTaskIds: StateFlow<Set<String>> = _selectedTaskIds.asStateFlow()
 
+    val visiblePermissionDialog = mutableStateListOf<String>()
+
+    fun onPermissionResult(
+        permission: String,
+        isGranted: Boolean,
+    ){
+        if(!isGranted){
+            visiblePermissionDialog.add(0, permission)
+        }
+    }
 
     fun updateLastAddedTaskId(newTaskId: String?) {
         _lastAddedTaskId.value = newTaskId

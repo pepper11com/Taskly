@@ -27,7 +27,7 @@ class Notification (
     var message: String,
 ){
     val channelID: String = "FCM100"
-    val channelName: String = "FCMMessage"
+    val channelName: String = "Task Notification"
     val notificationManager = context.applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
     lateinit var notificationChannel: NotificationChannel
     lateinit var notificationBuilder: NotificationCompat.Builder

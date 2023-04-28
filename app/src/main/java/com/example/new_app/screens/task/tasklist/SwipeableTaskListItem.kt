@@ -7,6 +7,8 @@ import android.os.VibrationEffect
 import android.os.Vibrator
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.animateOffsetAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -51,6 +53,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.unit.Dp
 import com.example.new_app.SharedViewModel
 import kotlinx.coroutines.delay
 
@@ -69,7 +72,8 @@ fun SwipeableTaskListItem(
     onSelectedTasksChange: (Task, Boolean) -> Unit,
     onTaskSwipedBackToActive: (Task) -> Unit,
     isFlashing: Boolean = false,
-    mainViewModel: SharedViewModel
+    mainViewModel: SharedViewModel,
+    mapsVisible: MutableState<Boolean>
 ) {
     //width of the swipeable item
     val screenWidth = LocalConfiguration.current.screenWidthDp.dp
@@ -130,7 +134,8 @@ fun SwipeableTaskListItem(
             selectedTasks = selectedTasks,
             onSelectedTasksChange = onSelectedTasksChange,
             isFlashing = isFlashing,
-            mainViewModel = mainViewModel
+            mainViewModel = mainViewModel,
+            mapVisible = mapsVisible.value
         )
     }
 }
@@ -148,7 +153,9 @@ fun TaskListItem(
     selectedTasks: SnapshotStateList<Task>,
     onSelectedTasksChange: (Task, Boolean) -> Unit,
     isFlashing: Boolean = false,
-    mainViewModel: SharedViewModel
+    mainViewModel: SharedViewModel,
+    mapVisible: Boolean = true,
+    mapHeight: Dp = 140.dp
 ) {
     val context = LocalContext.current
     val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
@@ -158,6 +165,10 @@ fun TaskListItem(
     val flashColor = animateColorAsState(
         targetValue = if (flashState.value) Color(0xFFCCCCCC) else Color(0xFF444444),
         animationSpec = tween(durationMillis = 5000)
+    )
+    val animatedMapHeight = animateDpAsState(
+        targetValue = if (mapVisible) mapHeight else 0.dp,
+        animationSpec = tween(durationMillis = 400)
     )
 
     LaunchedEffect(flashState.value) {
@@ -255,31 +266,33 @@ fun TaskListItem(
                 }
             }
 
-            if (task.locationName != null && task.location != null) {
-                val staticMapUrl = generateStaticMapUrl(task)
-                StaticMap(
-                    staticMapUrl = staticMapUrl,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(8.dp)
-                        .height(140.dp)
-                        .clip(RoundedCornerShape(8.dp)),
-                )
-                Text(
-                    modifier = Modifier.padding(start = 14.dp, bottom = 12.dp),
-                    text = task.locationName.toString(),
-                    fontSize = 9.sp,
-                    color = Color.White,
-                )
-            } else {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(8.dp)
-                        .height(140.dp)
-                        .background(Color(0xFF666666), shape = RoundedCornerShape(8.dp))
-                )
-            }
+
+                if (task.locationName != null && task.location != null) {
+                    val staticMapUrl = generateStaticMapUrl(task)
+                    StaticMap(
+                        staticMapUrl = staticMapUrl,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(8.dp)
+                            .height(animatedMapHeight.value)
+                            .clip(RoundedCornerShape(8.dp)),
+                    )
+                    Text(
+                        modifier = Modifier.padding(start = 14.dp, bottom = 12.dp),
+                        text = task.locationName.toString(),
+                        fontSize = 9.sp,
+                        color = Color.White,
+                    )
+                } else {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(8.dp)
+                            .height(animatedMapHeight.value)
+                            .background(Color(0xFF666666), shape = RoundedCornerShape(8.dp))
+                    )
+                }
+
         }
     }
 }

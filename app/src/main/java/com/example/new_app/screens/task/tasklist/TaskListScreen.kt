@@ -45,8 +45,7 @@ fun TaskListScreen(
     openScreen: (String) -> Unit,
     mainViewModel: SharedViewModel
 ) {
-    //todo -add on click the id of the task to a list so we can use that to delete the tasks
-    //todo -and use the old method of keeping the checkmark in place
+
     val viewModel: TaskListViewModel = hiltViewModel()
 
     val userId = viewModel.currentUserId
@@ -90,6 +89,8 @@ fun TaskListScreen(
             listState.firstVisibleItemIndex == 0
         }
     }
+    val mapsVisible = remember { mutableStateOf(true) }
+
     LaunchedEffect(lastAddedTaskId) {
         if (lastAddedTaskId != null && isScreenVisible.value) {
             val lastAddedTaskIndex = filteredTasks.indexOfFirst { it.id == lastAddedTaskId }
@@ -137,6 +138,7 @@ fun TaskListScreen(
                     viewModel = viewModel,
                     scrollBehavior = scrollBehavior,
                     mainViewModel = mainViewModel,
+                    mapsVisible = mapsVisible,
                 )
 
                 CustomTabRow(
@@ -144,6 +146,7 @@ fun TaskListScreen(
                     tabTitles = tabTitles,
                     selectedTasks = selectedTasks,
                     rowColor = MaterialTheme.colorScheme.primary,
+                    mainViewModel = mainViewModel,
                 )
             }
         },
@@ -204,6 +207,7 @@ fun TaskListScreen(
                                 },
                                 isFlashing = task.id == lastAddedTaskId,
                                 mainViewModel = mainViewModel,
+                                mapsVisible = mapsVisible,
                             )
                             Divider()
                         }
