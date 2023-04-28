@@ -18,10 +18,12 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.new_app.common.snackbar.SnackbarManager
+import com.example.new_app.model.service.GoogleAuth
 import com.example.new_app.screens.authentication.AuthenticationScreen
 import com.example.new_app.screens.google_maps.LocationPickerScreen
 import com.example.new_app.screens.task.create_edit_tasks.createtask.CreateTaskScreen
 import com.example.new_app.screens.login.LoginScreen
+import com.example.new_app.screens.screen_switcher.NavigatorScreen
 import com.example.new_app.screens.settings.SettingsScreen
 import com.example.new_app.screens.signup.SignupScreen
 import com.example.new_app.screens.splashscreen.SplashScreen
@@ -36,6 +38,7 @@ import kotlinx.coroutines.CoroutineScope
 fun TaskApp(
     mainViewModel: SharedViewModel = hiltViewModel(),
     taskEditCreateViewModel: TaskEditCreateViewModel = hiltViewModel(),
+    googleAuthUiClient: GoogleAuth
 ) {
     New_AppTheme() {
         Surface(color = MaterialTheme.colorScheme.background) {
@@ -60,7 +63,8 @@ fun TaskApp(
                     taskAppGraph(
                         appState,
                         mainViewModel,
-                        taskEditCreateViewModel
+                        taskEditCreateViewModel,
+                        googleAuthUiClient
                     )
                 }
             }
@@ -91,7 +95,8 @@ fun resources(): Resources {
 fun NavGraphBuilder.taskAppGraph(
     appState: TaskAppState,
     mainViewModel: SharedViewModel,
-    taskEditCreateViewModel: TaskEditCreateViewModel
+    taskEditCreateViewModel: TaskEditCreateViewModel,
+    googleAuthUiClient: GoogleAuth
 ) {
 
     composable(SPLASH_SCREEN) {
@@ -119,14 +124,16 @@ fun NavGraphBuilder.taskAppGraph(
     composable(AUTHENTICATION_SCREEN) {
         AuthenticationScreen(
             openAndPopUp = { route, popUp -> appState.navigateAndPopUp(route, popUp) },
-            navigateToMainScreen = { route -> appState.clearAndNavigate(route) }
+            navigateToMainScreen = { route -> appState.clearAndNavigate(route) },
+            googleAuthUiClient = googleAuthUiClient
         )
     }
 
     composable(LOGIN_SCREEN) {
         LoginScreen(
             openAndPopUp = { route, popUp -> appState.navigateAndPopUp(route, popUp) },
-            navigateToMainScreen = { route -> appState.clearAndNavigate(route) }
+            navigateToMainScreen = { route -> appState.clearAndNavigate(route) },
+            googleAuthUiClient = googleAuthUiClient
         )
     }
 
@@ -140,6 +147,15 @@ fun NavGraphBuilder.taskAppGraph(
         TaskListScreen(
             openScreen = { route -> appState.navigate(route) },
             mainViewModel = mainViewModel,
+            userData = googleAuthUiClient.getSignedInUser()
+        )
+    }
+
+    composable(NAVIGATOR_SCREEN){
+        NavigatorScreen(
+            openScreen = { route -> appState.navigate(route) },
+            mainViewModel = mainViewModel,
+            userData = googleAuthUiClient.getSignedInUser()
         )
     }
 

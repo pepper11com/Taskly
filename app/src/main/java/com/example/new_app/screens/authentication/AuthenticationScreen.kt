@@ -8,13 +8,15 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import com.example.new_app.common.composables.MediumAppBarWithTabs
+import com.example.new_app.model.service.GoogleAuth
 import com.example.new_app.screens.login.LoginScreen
 import com.example.new_app.screens.signup.SignupScreen
 
 @Composable
 fun AuthenticationScreen(
     openAndPopUp: (String, String) -> Unit,
-    navigateToMainScreen: (String) -> Unit
+    navigateToMainScreen: (String) -> Unit,
+    googleAuthUiClient: GoogleAuth
 ) {
     val selectedIndex = remember { mutableStateOf(0) }
     val tabTitles = listOf("Login", "Register")
@@ -36,7 +38,8 @@ fun AuthenticationScreen(
                     0 -> {
                         LoginScreen(
                             openAndPopUp = { _, _ -> selectedIndex.value = 1 },
-                            navigateToMainScreen = navigateToMainScreen
+                            navigateToMainScreen = navigateToMainScreen,
+                            googleAuthUiClient = googleAuthUiClient
                         )
                     }
                     1 -> {

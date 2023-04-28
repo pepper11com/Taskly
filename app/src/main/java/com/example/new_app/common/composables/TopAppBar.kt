@@ -5,9 +5,12 @@ import android.content.Context
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Deselect
@@ -36,8 +39,14 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import coil.compose.rememberAsyncImagePainter
+import coil.compose.rememberImagePainter
+import coil.request.ImageRequest
+import coil.transform.CircleCropTransformation
 import com.example.new_app.SETTINGS_SCREEN
 import com.example.new_app.SharedViewModel
 import com.example.new_app.model.Task
@@ -59,6 +68,7 @@ fun CustomTopAppBar(
     scrollBehavior: TopAppBarScrollBehavior,
     mainViewModel: SharedViewModel,
     mapsVisible: MutableState<Boolean>,
+    userProfilePictureUrl: String? // Add this parameter
 ) {
     val selectedTaskIds by mainViewModel.selectedTaskIds.collectAsState()
 
@@ -99,21 +109,27 @@ fun CustomTopAppBar(
                 }
             }
 
-                IconButton(
-                    onClick = {
-                        mapsVisible.value = !mapsVisible.value
-                    }
-                ) {
-                    Icon(
-                        imageVector = if (mapsVisible.value) Icons.Default.LocationOn else Icons.Default.LocationOff,
-                        contentDescription = "Toggle Map",
-                        tint = Color.White
-                    )
+            IconButton(
+                onClick = {
+                    mapsVisible.value = !mapsVisible.value
                 }
-
+            ) {
+                Icon(
+                    imageVector = if (mapsVisible.value) Icons.Default.LocationOn else Icons.Default.LocationOff,
+                    contentDescription = "Toggle Map",
+                    tint = Color.White
+                )
+            }
 
             DropdownContextMenu(
-                options = listOf("Sort by Date Created (Asc)", "Sort by Date Created (Desc)", "Sort by Title (A-Z)", "Sort by Title (Z-A)", "Sort by Due Date (Asc)", "Sort by Due Date (Desc)"),
+                options = listOf(
+                    "Sort by Date Created (Asc)",
+                    "Sort by Date Created (Desc)",
+                    "Sort by Title (A-Z)",
+                    "Sort by Title (Z-A)",
+                    "Sort by Due Date (Asc)",
+                    "Sort by Due Date (Desc)"
+                ),
                 modifier = Modifier.padding(end = 8.dp),
                 onActionClick = { action ->
                     when (action) {
@@ -129,12 +145,19 @@ fun CustomTopAppBar(
                 trailingIcon = Icons.Default.Done
             )
             if (selectedTaskIds.isEmpty()) {
-                IconButton(onClick = { openScreen(SETTINGS_SCREEN) }) {
-                    Icon(
-                        Icons.Filled.Settings,
-                        contentDescription = "Settings",
-                        tint = Color.White
+                if (userProfilePictureUrl != null) {
+                    UserImage(
+                        userProfilePictureUrl = userProfilePictureUrl,
+                        openScreen = openScreen
                     )
+                } else {
+                    IconButton(onClick = { openScreen(SETTINGS_SCREEN) }) {
+                        Icon(
+                            Icons.Filled.Settings,
+                            contentDescription = "Settings",
+                            tint = Color.White
+                        )
+                    }
                 }
             } else {
                 DropdownContextMenu(
@@ -160,6 +183,35 @@ fun CustomTopAppBar(
     )
 }
 
+@Composable
+fun UserImage(
+    userProfilePictureUrl: String?,
+    openScreen: (String) -> Unit,
+) {
+    userProfilePictureUrl?.let { url ->
+        IconButton(
+            onClick = {
+                openScreen(SETTINGS_SCREEN)
+            }
+        ) {
+            Image(
+                painter = rememberAsyncImagePainter(
+                    ImageRequest.Builder(LocalContext.current).data(data = url)
+                        .apply<ImageRequest.Builder>(block = fun ImageRequest.Builder.() {
+                            crossfade(true)
+                            transformations(CircleCropTransformation())
+                        }).build()
+                ),
+                contentDescription = "User Profile Picture",
+                modifier = Modifier
+                    .size(44.dp)
+                    .padding(start = 8.dp, end = 8.dp)
+                    .clip(CircleShape)
+            )
+        }
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CustomCreateTaskAppBar(
@@ -169,10 +221,10 @@ fun CustomCreateTaskAppBar(
     scrollBehavior: TopAppBarScrollBehavior,
     mainViewModel: SharedViewModel,
     context: Context
-){
+) {
     val notificationResultLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission(),
-        onResult = {isGranted ->
+        onResult = { isGranted ->
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 mainViewModel.onPermissionResult(
                     isGranted = isGranted,
@@ -206,14 +258,18 @@ fun CustomCreateTaskAppBar(
                     onClick = {
 
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                             notificationResultLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                            notificationResultLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
                         }
 
                         viewModel.onDoneClick(
                             context,
                             null,
                             popUpScreen,
-                            onTaskCreated = { newTaskId -> mainViewModel.updateLastAddedTaskId(newTaskId) }
+                            onTaskCreated = { newTaskId ->
+                                mainViewModel.updateLastAddedTaskId(
+                                    newTaskId
+                                )
+                            }
                         )
                     }
                 ) {

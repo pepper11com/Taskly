@@ -1,6 +1,10 @@
 <resources>
     <string name="app_name">Taskly</string>
 
+
+    <!-- Google Sign In -->
+    <string name="web_client_id">848166107235-59m60oj3p44etb1uoceqgdaujs8s17t7.apps.googleusercontent.com</string>
+
     <!-- Common -->
     <string name="email">Email</string>
     <string name="password">Password</string>

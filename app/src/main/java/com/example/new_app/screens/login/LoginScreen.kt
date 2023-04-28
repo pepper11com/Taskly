@@ -1,5 +1,9 @@
 package com.example.new_app.screens.login
 
+import android.app.Activity.RESULT_OK
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.IntentSenderRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
@@ -8,6 +12,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -20,15 +25,35 @@ import com.example.new_app.common.composables.CustomPasswordTextField
 import com.example.new_app.common.composables.CustomTextField
 import com.example.new_app.common.composables.LoadingIndicator
 import com.example.new_app.common.util.Resource
+import com.example.new_app.model.service.GoogleAuth
+import kotlinx.coroutines.launch
 
 @Composable
 fun LoginScreen(
     openAndPopUp: (String, String) -> Unit,
     navigateToMainScreen: (String) -> Unit,
+    googleAuthUiClient: GoogleAuth
 ) {
     val viewModel: LoginViewModel = hiltViewModel()
     val uiState by viewModel.uiState
+    val googleState by viewModel.state.collectAsState()
     val authenticationState by viewModel.authenticationState.collectAsState()
+    val scope = rememberCoroutineScope()
+
+    val launcher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartIntentSenderForResult(),
+        onResult = { result ->
+            if (result.resultCode == RESULT_OK) {
+                scope.launch {
+                    val signInResult = googleAuthUiClient.signInWithIntent(
+                        intent = result.data ?: return@launch
+                    )
+                    viewModel.onGoogleSignInClick(signInResult)
+                    viewModel.resetState()
+                }
+            }
+        }
+    )
 
     Column(
         modifier = Modifier
@@ -65,6 +90,23 @@ fun LoginScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
+        TextButton(
+            onClick = {
+                scope.launch {
+                    val signInIntentSender = googleAuthUiClient.signInWithGoogle()
+                    launcher.launch(
+                        IntentSenderRequest.Builder(
+                            signInIntentSender ?: return@launch
+                        ).build()
+                    )
+                }
+            }
+        ) {
+            Text(
+                "Login with Google",
+                color = MaterialTheme.colorScheme.secondary
+            )
+        }
 
         TextButton(onClick = { openAndPopUp(SIGN_UP_SCREEN, LOGIN_SCREEN) }) {
             Text(
@@ -92,6 +134,7 @@ fun LoginScreen(
         is Resource.Success -> {
             // Handle successful sign-in
             navigateToMainScreen(TASK_LIST_SCREEN)
+            viewModel.resetState()
             viewModel.resetSuccessState()
         }
 

@@ -3,10 +3,7 @@ package com.example.new_app.screens.login
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.new_app.LOGIN_SCREEN
-import com.example.new_app.TASK_LIST_SCREEN
 import com.example.new_app.common.ext.isValidEmail
-import com.example.new_app.common.ext.isValidPassword
 import com.example.new_app.common.snackbar.SnackbarManager
 import com.example.new_app.common.snackbar.SnackbarMessage
 import com.example.new_app.common.util.Resource
@@ -14,6 +11,8 @@ import com.example.new_app.model.service.AccountService
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -25,6 +24,9 @@ class LoginViewModel @Inject constructor(
 
     var uiState = mutableStateOf(LoginUiState())
         private set
+
+    private val _state = MutableStateFlow(GoogleLoginState())
+    val state = _state.asStateFlow()
 
     private val email
         get() = uiState.value.email
@@ -41,6 +43,32 @@ class LoginViewModel @Inject constructor(
     fun onPasswordChange(newValue: String) {
         uiState.value = uiState.value.copy(password = newValue)
     }
+
+//    fun onGoogleSignInClick(result: SignInResult) {
+//        _state.update { it.copy(
+//            isSignInSuccesful = result.data != null,
+//            errorMessage = result.errorMessage
+//        ) }
+//    }
+    suspend fun onGoogleSignInClick(result: SignInResult) {
+        if (result.data != null) {
+            _authenticationState.value = Resource.Success(Unit)
+            snackbarManager.showSnackbarMessage(
+                SnackbarMessage.Text("Sign in successful with Google")
+            )
+        } else {
+            _authenticationState.value = Resource.Error(result.errorMessage ?: "Unknown error")
+            snackbarManager.showSnackbarMessage(
+                SnackbarMessage.Text(result.errorMessage ?: "Unknown error")
+            )
+        }
+    }
+
+
+    fun resetState(){
+        _state.update { GoogleLoginState() }
+    }
+
 
     fun onSignInClick() {
         viewModelScope.launch {

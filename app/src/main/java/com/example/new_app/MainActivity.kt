@@ -26,9 +26,19 @@ import com.google.android.gms.maps.MapsInitializer
 import com.google.android.libraries.places.api.Places
 import dagger.hilt.android.AndroidEntryPoint
 import android.Manifest
+import com.example.new_app.model.service.AccountService
+import com.example.new_app.model.service.GoogleAuth
+import com.google.android.gms.auth.api.identity.Identity
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
+
+    private val googleAuthUiClient by lazy {
+        GoogleAuth(
+            context = applicationContext,
+            oneTapClient = Identity.getSignInClient(applicationContext),
+        )
+    }
 
     private val viewModel: SplashScreenViewModel by viewModels()
     @RequiresApi(Build.VERSION_CODES.O)
@@ -56,7 +66,9 @@ class MainActivity : AppCompatActivity() {
         }
 
         setContent {
-            TaskApp()
+            TaskApp(
+                googleAuthUiClient = googleAuthUiClient,
+            )
         }
     }
 }

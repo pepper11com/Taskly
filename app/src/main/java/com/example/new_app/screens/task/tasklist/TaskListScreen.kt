@@ -9,6 +9,7 @@ import androidx.compose.animation.core.*
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -36,6 +37,7 @@ import kotlinx.coroutines.launch
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.ui.text.font.FontWeight
 import com.example.new_app.model.service.Notification
+import com.example.new_app.screens.login.UserData
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @RequiresApi(Build.VERSION_CODES.O)
@@ -43,52 +45,37 @@ import com.example.new_app.model.service.Notification
 @Composable
 fun TaskListScreen(
     openScreen: (String) -> Unit,
-    mainViewModel: SharedViewModel
+    mainViewModel: SharedViewModel,
+    userData: UserData?,
 ) {
 
     val viewModel: TaskListViewModel = hiltViewModel()
-
     val userId = viewModel.currentUserId
-
     val deleteTasksState by viewModel.deleteTasksState.collectAsState()
-
     val sortType by viewModel.sortType.collectAsState()
-
+    val userProfilePictureUrl = userData?.profilePictureUrl
     val context = LocalContext.current
     val uiState by viewModel.taskListUiState.collectAsState()
     val scope = rememberCoroutineScope()
-
     val showDialog = remember { mutableStateOf(false) }
     val currentTask = remember { mutableStateOf<Task?>(null) }
-
     val selectedTasks = remember { mutableStateListOf<Task>() }
-
     val tabTitles = listOf("Deleted Tasks", "Tasks", "Completed Tasks")
     val selectedIndex = remember { mutableStateOf(1) }
-
 //    val filteredTasks = remember(uiState.tasks, selectedIndex.value) {
 //        getFilteredTasks(uiState.tasks, TaskStatus.values()[selectedIndex.value])
 //    }
-
     val filteredTasks = remember(uiState.tasks, selectedIndex.value, sortType) {
         val filtered =
             getFilteredTasks(uiState.tasks, TaskStatus.values()[selectedIndex.value], sortType)
         sortTasks(filtered, sortType)
     }
-
     val taskSelectionStates = remember { mutableMapOf<String, MutableState<Boolean>>() }
-
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
     val listState = rememberLazyListState()
-
     val lastAddedTaskId by mainViewModel.lastAddedTaskId.observeAsState(null)
     val isScreenVisible = remember { mutableStateOf(true) }
 
-    val expandedFab by remember {
-        derivedStateOf {
-            listState.firstVisibleItemIndex == 0
-        }
-    }
     val mapsVisible = remember { mutableStateOf(true) }
 
     LaunchedEffect(lastAddedTaskId) {
@@ -107,13 +94,12 @@ fun TaskListScreen(
         }
     }
 
-
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         floatingActionButton = {
             ExtendedFloatingActionButton(
                 shape = RoundedCornerShape(16.dp),
-                expanded = expandedFab,
+                expanded = listState.isScrollingUp(),
                 onClick = { viewModel.onAddClick(openScreen, userId) },
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.background,
@@ -139,6 +125,7 @@ fun TaskListScreen(
                     scrollBehavior = scrollBehavior,
                     mainViewModel = mainViewModel,
                     mapsVisible = mapsVisible,
+                    userProfilePictureUrl = userProfilePictureUrl,
                 )
 
                 CustomTabRow(
@@ -249,7 +236,23 @@ fun TaskListScreen(
 
 
 
-
+@Composable
+private fun LazyListState.isScrollingUp(): Boolean {
+    var previousIndex by remember(this) { mutableStateOf(firstVisibleItemIndex) }
+    var previousScrollOffset by remember(this) { mutableStateOf(firstVisibleItemScrollOffset) }
+    return remember(this) {
+        derivedStateOf {
+            if (previousIndex != firstVisibleItemIndex) {
+                previousIndex > firstVisibleItemIndex
+            } else {
+                previousScrollOffset >= firstVisibleItemScrollOffset
+            }.also {
+                previousIndex = firstVisibleItemIndex
+                previousScrollOffset = firstVisibleItemScrollOffset
+            }
+        }
+    }.value
+}
 
 
 
