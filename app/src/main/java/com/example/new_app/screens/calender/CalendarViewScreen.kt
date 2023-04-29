@@ -2,88 +2,544 @@ package com.example.new_app.screens.calender
 
 import android.annotation.SuppressLint
 import android.os.Build
+import android.text.format.DateUtils
+import android.util.Log
 import androidx.annotation.RequiresApi
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyItemScope
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.Divider
+import androidx.compose.material.Icon
+import androidx.compose.material.LocalContentColor
+import androidx.compose.material.darkColors
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.TopAppBarScrollBehavior
+import androidx.compose.material3.contentColorFor
+import androidx.compose.material3.rememberTopAppBarState
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import com.kizitonwose.calendar.compose.WeekCalendar
-import com.kizitonwose.calendar.compose.weekcalendar.rememberWeekCalendarState
-import com.kizitonwose.calendar.core.WeekDay
-import com.kizitonwose.calendar.core.atStartOfMonth
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
+import com.example.new_app.SharedViewModel
+import com.example.new_app.common.composables.CustomTopAppBarSmall
+import com.example.new_app.model.Task
+import com.example.new_app.screens.login.UserData
+import com.example.new_app.screens.task.tasklist.StaticMap
+import com.example.new_app.screens.task.tasklist.TaskListViewModel
+import com.example.new_app.screens.task.tasklist.generateStaticMapUrl
+import com.kizitonwose.calendar.compose.CalendarLayoutInfo
+import com.kizitonwose.calendar.compose.CalendarState
+import com.kizitonwose.calendar.compose.HorizontalCalendar
+import com.kizitonwose.calendar.compose.rememberCalendarState
+import com.kizitonwose.calendar.core.CalendarDay
+import com.kizitonwose.calendar.core.CalendarMonth
+import com.kizitonwose.calendar.core.DayPosition
+import com.kizitonwose.calendar.core.OutDateStyle
 import com.kizitonwose.calendar.core.daysOfWeek
-import com.kizitonwose.calendar.core.firstDayOfWeekFromLocale
+import com.kizitonwose.calendar.core.nextMonth
+import com.kizitonwose.calendar.core.previousMonth
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
 import java.time.DayOfWeek
+import java.time.Instant
 import java.time.LocalDate
+import java.time.Month
 import java.time.YearMonth
+import java.time.ZoneId
 import java.time.format.TextStyle
 import java.util.*
 
+@OptIn(ExperimentalMaterial3Api::class)
 @RequiresApi(Build.VERSION_CODES.O)
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
-fun CalendarViewScreen() {
+fun CalendarViewScreen(
+    viewModel: TaskListViewModel,
+    openScreen: (String) -> Unit,
+    userData: UserData?,
+) {
 
-    val currentDate = remember { LocalDate.now() }
+    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
+    val tasks by viewModel.taskListUiState.collectAsState()
+    val taskList = tasks.tasks
+    val userProfilePictureUrl = userData?.profilePictureUrl
+    val listState = rememberLazyListState()
+
     val currentMonth = remember { YearMonth.now() }
-    val startDate = remember { currentMonth.minusMonths(100).atStartOfMonth() } // Adjust as needed
-    val endDate = remember { currentMonth.plusMonths(100).atEndOfMonth() } // Adjust as needed
-    val firstDayOfWeek = remember { firstDayOfWeekFromLocale() } // Available from the library
-    val daysOfWeek = daysOfWeek()
+    val startMonth = remember { currentMonth.minusMonths(500) }
+    val endMonth = remember { currentMonth.plusMonths(500) }
+    var selection by remember { mutableStateOf<CalendarDay?>(null) }
+    val daysOfWeek = remember { daysOfWeek() }
 
-
-    val state = rememberWeekCalendarState(
-        startDate = startDate,
-        endDate = endDate,
-        firstVisibleWeekDate = currentDate,
-        firstDayOfWeek = daysOfWeek.first()
-
+    val state = rememberCalendarState(
+        startMonth = startMonth,
+        endMonth = endMonth,
+        firstVisibleMonth = currentMonth,
+        firstDayOfWeek = daysOfWeek.first(),
+        outDateStyle = OutDateStyle.EndOfGrid,
     )
 
+    val tasksInSelectedDate = remember {
+        derivedStateOf {
+            val date = selection?.date
+            if (date == null || state.firstVisibleMonth.yearMonth.month != date.month) emptyList() else taskList.filter { task ->
+                task.dueDate.toDate().toLocalDate() == date
+            }
+        }
+    }
 
-//    val daysOfWeek = daysOfWeek(firstDayOfWeek = DayOfWeek.THURSDAY)
+    val coroutineScope = rememberCoroutineScope()
+    val visibleMonth = rememberFirstCompletelyVisibleMonth(state)
+    LaunchedEffect(visibleMonth) {
+        // Clear selection if we scroll to a new month.
+        selection = null
+    }
+
+    Scaffold(
+        topBar = {
+            Column {
+                CustomTopAppBarSmall(
+                    title = "Calendar",
+                    scrollBehavior = scrollBehavior,
+                    userProfilePictureUrl = userProfilePictureUrl,
+                    openScreen = openScreen,
+                )
+
+                SimpleCalendarTitle(
+                    modifier = Modifier
+                        .background(MaterialTheme.colorScheme.background)
+                        .padding(horizontal = 8.dp, vertical = 12.dp),
+                    currentMonth = visibleMonth.yearMonth,
+                    goToPrevious = {
+                        coroutineScope.launch {
+                            state.animateScrollToMonth(state.firstVisibleMonth.yearMonth.previousMonth)
+                        }
+                    },
+                    goToNext = {
+                        coroutineScope.launch {
+                            state.animateScrollToMonth(state.firstVisibleMonth.yearMonth.nextMonth)
+                        }
+                    },
+                )
+            }
+        }
+    ){ paddingValues ->
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .nestedScroll(scrollBehavior.nestedScrollConnection)
+                .background(MaterialTheme.colorScheme.background),
+            state = listState,
+        ) {
+
+            item{
+                val customCalendarColors = MaterialTheme.colorScheme.copy(
+                    background = Color(0xFFEDEDED), // Change this to your desired background color
+                )
+
+                CompositionLocalProvider(LocalContentColor provides customCalendarColors.primaryContainer) {
+                    HorizontalCalendar(
+                        modifier = Modifier.wrapContentWidth(),
+                        state = state,
+                        dayContent = { day ->
+
+                            val tasksOnDate = if (day.position == DayPosition.MonthDate) {
+                                taskList.filter { task ->
+                                    task.dueDate.toDate().toLocalDate() == day.date
+                                }
+                            } else {
+                                emptyList()
+                            }
+
+                            val colors = tasksOnDate.map { task ->
+                                task.color?.let { Color(it) } ?: Color(0xFF4E4E4E)
+                            }.distinct()
+
+                            Day(
+                                day = day,
+                                isSelected = selection == day,
+                                colors = colors,
+                            ) { clicked ->
+                                selection = clicked
+                            }
+
+                        },
+                        monthHeader = {
+                            MonthHeader(
+                                modifier = Modifier.padding(vertical = 8.dp),
+                                daysOfWeek = daysOfWeek,
+                            )
+                        },
+                    )
+
+                    Divider(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 4.dp),
+                        color = Color(0xFF4E4E4E),
+                        thickness = 1.dp
+                    )
 
 
-    Column {
-        WeekCalendar(
-            state = state,
-            dayContent = { Day(it) }
-        )
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        tasksInSelectedDate.value.forEach { task ->
+                            TaskInformation(task)
+                        }
+                    }
+
+                }
+            }
+        }
     }
 }
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun Day(day: WeekDay) {
+private fun Day(
+    day: CalendarDay,
+    isSelected: Boolean = false,
+    colors: List<Color> = emptyList(),
+    onClick: (CalendarDay) -> Unit = {},
+) {
+    Box(
+        modifier = Modifier
+            .aspectRatio(1f)
+            .border(
+                width = if (isSelected) 1.dp else 0.dp,
+                color = if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent,
+                shape = RoundedCornerShape(5.dp),
+            )
+            .padding(1.dp)
+            .background(color = Color(0xFF444444), shape = RoundedCornerShape(5.dp))
+            .clickable(
+                enabled = day.position == DayPosition.MonthDate,
+                onClick = { onClick(day) },
+            ),
+    ) {
+        val textColor = when (day.position) {
+            DayPosition.MonthDate -> Color.White
+            DayPosition.InDate, DayPosition.OutDate -> Color.LightGray
+        }
+        val displayedColors = colors.take(3)
 
-        Column {
-            //show the day of the month
-            Text(text = day.date.dayOfWeek.toString())
 
-            Text(text = day.date.dayOfMonth.toString())
+        Text(
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .zIndex(5f)
+                .padding(top = 3.dp, end = 4.dp),
+            text = day.date.dayOfMonth.toString(),
+            color = textColor,
+            fontSize = 12.sp,
+        )
+        Column(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .padding(bottom = 8.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            for (color in displayedColors) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 4.dp)
+                        .height(5.dp)
+                        .clip(RoundedCornerShape(25.dp))
+                        .background(color),
+                )
+            }
         }
 
-
+        if (colors.size > 3){
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(end = 2.dp, bottom = 2.dp)
+                    .size(16.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.primary)
+            ) {
+                Text(
+                    modifier = Modifier.align(Alignment.Center),
+                    text = "+",
+                    color = Color.White,
+                    fontSize = 10.sp,
+                )
+            }
+        }
+    }
 }
-
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun DaysOfWeekTitle(daysOfWeek: List<DayOfWeek>) {
-    Row(modifier = Modifier.fillMaxWidth()) {
+private fun MonthHeader(
+    modifier: Modifier = Modifier,
+    daysOfWeek: List<DayOfWeek> = emptyList(),
+) {
+    Row(modifier.fillMaxWidth()) {
         for (dayOfWeek in daysOfWeek) {
             Text(
                 modifier = Modifier.weight(1f),
                 textAlign = TextAlign.Center,
-                text = dayOfWeek.getDisplayName(TextStyle.SHORT, Locale.getDefault()),
+                fontSize = 12.sp,
+                color = Color.White,
+                text = dayOfWeek.displayText(uppercase = true),
+                fontWeight = FontWeight.Light,
             )
         }
     }
 }
+
+@Composable
+private fun LazyItemScope.TaskInformation(task: Task) {
+    val taskImage = generateStaticMapUrl(task)
+    val dueDateMillis = task.dueDateToMillis()
+    val dueDateText = if (dueDateMillis != null) {
+        DateUtils.getRelativeTimeSpanString(dueDateMillis, System.currentTimeMillis(), DateUtils.MINUTE_IN_MILLIS)
+    } else {
+        "No due date"
+    }
+
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp),
+        shape = RoundedCornerShape(8.dp),
+        shadowElevation = 2.dp,
+        color = Color(0xFF444444),
+//        color = MaterialTheme.colorScheme.background,
+        border = BorderStroke(2.dp, task.color?.let { Color(it) } ?: Color(0xFF4E4E4E)),
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column {
+                    Text(text = task.title, style = MaterialTheme.typography.headlineMedium)
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(text = task.description, style = MaterialTheme.typography.bodyMedium)
+                }
+
+                StaticMap(
+                    staticMapUrl = taskImage,
+                    modifier = Modifier
+                        .size(100.dp)
+                        .padding(8.dp)
+                        .clip(RoundedCornerShape(4.dp))
+                )
+            }
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column {
+                    Text(text = "Due: $dueDateText", style = MaterialTheme.typography.bodyMedium)
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(text = "Status: ${task.status}", style = MaterialTheme.typography.bodyMedium)
+                }
+            }
+        }
+
+//        Divider(
+//            modifier = Modifier
+//                .fillMaxWidth()
+//                .padding(top = 4.dp),
+//            color = Color.White,
+//            thickness = 1.dp
+//        )
+    }
+}
+
+
+fun String.toDate(): Date? {
+    val dateFormat = SimpleDateFormat("EEE, d MMM yyyy", Locale.ENGLISH)
+    return try {
+        dateFormat.parse(this)
+    } catch (e: Exception) {
+        null
+    }
+}
+
+@RequiresApi(Build.VERSION_CODES.O)
+fun Date?.toLocalDate(): LocalDate? {
+    return this?.toInstant()?.atZone(ZoneId.systemDefault())?.toLocalDate()
+}
+
+
+@RequiresApi(Build.VERSION_CODES.O)
+@Composable
+fun SimpleCalendarTitle(
+    modifier: Modifier,
+    currentMonth: YearMonth,
+    goToPrevious: () -> Unit,
+    goToNext: () -> Unit,
+) {
+    Column {
+        Row(
+            modifier = modifier.height(40.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            CalendarNavigationIcon(
+                icon = Icons.Filled.ArrowBack,
+                contentDescription = "Previous",
+                onClick = goToPrevious,
+            )
+            Text(
+                modifier = Modifier
+                    .weight(1f)
+                    .testTag("MonthTitle"),
+                text = currentMonth.displayText(),
+                fontSize = 22.sp,
+                textAlign = TextAlign.Center,
+                fontWeight = FontWeight.Medium,
+            )
+            CalendarNavigationIcon(
+                icon = Icons.Filled.ArrowForward,
+                contentDescription = "Next",
+                onClick = goToNext,
+            )
+        }
+
+        Divider(
+            Modifier
+                .padding(horizontal = 24.dp),
+
+            color = Color.White,
+            thickness = 1.dp,
+        )
+    }
+}
+
+@Composable
+private fun CalendarNavigationIcon(
+    icon: ImageVector,
+    contentDescription: String,
+    onClick: () -> Unit,
+) = Box(
+    modifier = Modifier
+        .fillMaxHeight()
+        .aspectRatio(1f)
+        .clip(shape = CircleShape)
+        .clickable(role = Role.Button, onClick = onClick),
+) {
+    Icon(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(4.dp)
+            .align(Alignment.Center),
+        imageVector = icon,
+        contentDescription = contentDescription,
+        tint = Color.White,
+    )
+}
+
+@RequiresApi(Build.VERSION_CODES.O)
+fun YearMonth.displayText(short: Boolean = false): String {
+    return "${this.month.displayText(short = short)} ${this.year}"
+}
+
+@RequiresApi(Build.VERSION_CODES.O)
+fun Month.displayText(short: Boolean = true): String {
+    val style = if (short) TextStyle.SHORT else TextStyle.FULL
+    return getDisplayName(style, Locale.ENGLISH)
+}
+
+@RequiresApi(Build.VERSION_CODES.O)
+fun DayOfWeek.displayText(uppercase: Boolean = false): String {
+    return getDisplayName(TextStyle.SHORT, Locale.ENGLISH).let { value ->
+        if (uppercase) value.uppercase(Locale.ENGLISH) else value
+    }
+}
+
+@Composable
+fun rememberFirstCompletelyVisibleMonth(state: CalendarState): CalendarMonth {
+    val visibleMonth = remember(state) { mutableStateOf(state.firstVisibleMonth) }
+    LaunchedEffect(state) {
+        snapshotFlow { state.layoutInfo.completelyVisibleMonths.firstOrNull() }
+            .filterNotNull()
+            .collect { month -> visibleMonth.value = month }
+    }
+    return visibleMonth.value
+}
+
+private val CalendarLayoutInfo.completelyVisibleMonths: List<CalendarMonth>
+    get() {
+        val visibleItemsInfo = this.visibleMonthsInfo.toMutableList()
+        return if (visibleItemsInfo.isEmpty()) {
+            emptyList()
+        } else {
+            val lastItem = visibleItemsInfo.last()
+            val viewportSize = this.viewportEndOffset + this.viewportStartOffset
+            if (lastItem.offset + lastItem.size > viewportSize) {
+                visibleItemsInfo.removeLast()
+            }
+            val firstItem = visibleItemsInfo.firstOrNull()
+            if (firstItem != null && firstItem.offset < this.viewportStartOffset) {
+                visibleItemsInfo.removeFirst()
+            }
+            visibleItemsInfo.map { it.month }
+        }
+    }

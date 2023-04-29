@@ -1,14 +1,9 @@
 package com.example.new_app.model
 
-import android.graphics.Bitmap
-import android.net.Uri
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.graphics.Color
 import com.example.new_app.screens.task.tasklist.TaskStatus
-import com.google.android.gms.maps.model.LatLng
 import com.google.firebase.firestore.DocumentId
 import java.text.SimpleDateFormat
-import java.time.LocalDate
 import java.util.Date
 import java.util.Locale
 
@@ -23,6 +18,8 @@ data class Task(
     val isCompleted: Boolean = false,
     val status: TaskStatus = TaskStatus.ACTIVE,
     val taskDate: Date = Date(),
+
+    var color: Int? = -478827,
 
     var imageUri: String? = null,
     var location: CustomLatLng? = null,

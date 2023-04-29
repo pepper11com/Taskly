@@ -1,10 +1,11 @@
-package com.example.new_app.screens.task.tasklist
+package com.example.new_app.common.sort
 
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import com.example.new_app.SharedViewModel
 import com.example.new_app.model.Task
+import com.example.new_app.screens.task.tasklist.TaskStatus
 import java.lang.StringBuilder
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -17,7 +18,8 @@ enum class TaskSortType {
     TITLE_ASC,
     TITLE_DESC,
     DUE_DATE_ASC,
-    DUE_DATE_DESC
+    DUE_DATE_DESC,
+    COLOR
 }
 
 
@@ -35,6 +37,10 @@ fun sortTasksByDueDate(tasks: List<Task>, ascending: Boolean): List<Task> {
     return if (ascending) sortedTasks else sortedTasks.reversed()
 }
 
+fun sortTasksByColor(tasks: List<Task>, ascending: Boolean): List<Task> {
+    val sortedTasks = tasks.sortedBy { it.color }
+    return if (ascending) sortedTasks else sortedTasks.reversed()
+}
 
 @RequiresApi(Build.VERSION_CODES.O)
 fun getFilteredTasks(tasks: List<Task>, status: TaskStatus, sortType: TaskSortType): List<Task> {
@@ -113,5 +119,6 @@ fun sortTasks(tasks: List<Task>, sortType: TaskSortType): List<Task> {
         TaskSortType.TITLE_DESC -> tasks.sortedByDescending { it.title }
         TaskSortType.DUE_DATE_ASC -> sortTasksByDueDate(tasks, true)
         TaskSortType.DUE_DATE_DESC -> sortTasksByDueDate(tasks, false)
+        TaskSortType.COLOR -> sortTasksByColor(tasks, true)
     }
 }

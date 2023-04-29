@@ -4,14 +4,18 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.*
 import android.os.Build
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.selection.TextSelectionColors
@@ -24,12 +28,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import coil.compose.rememberAsyncImagePainter
@@ -109,6 +116,20 @@ fun CreateTaskScreen(
                     userId,
                     galleryLauncher
                 )
+            }
+
+            item {
+                Divider()
+            }
+
+            item {
+                SectionTitle("Color")
+                task.color?.let {
+                    ColorPicker(
+                        it,
+                        viewModel::onColorChange
+                    )
+                }
             }
 
             item {
@@ -511,4 +532,47 @@ fun TimePickerDialog(
 }
 
 
+@Composable
+fun ColorPicker(
+    selectedColor: Int,
+    onColorSelected: (Int) -> Unit
+) {
+    val colors = listOf(
+        Color(0xFFF8B195),
+        Color(0xFFF67280),
+        Color(0xFFC06C84),
+        Color(0xFF6C5B7B),
+        Color(0xFF355C7D),
+        Color(0xFF99B898),
+        Color(0xFFFECEAB),
+        Color(0xFFFF847C),
+        Color(0xFFE84A5F),
+        Color(0xFF2A363B)
+    )
+
+
+    LazyRow {
+        items(colors.size) { color ->
+            Box(
+                modifier = Modifier
+                    .padding(8.dp)
+                    .clip(CircleShape)
+                    .background(color = colors[color])
+                    .clickable {
+                        onColorSelected(colors[color].toArgb())
+                    }
+                    .size(40.dp)
+            ) {
+                if (selectedColor == colors[color].toArgb()) {
+                    Icon(
+                        imageVector = Icons.Default.Check,
+                        contentDescription = "Selected color",
+                        tint = Color.White,
+                        modifier = Modifier.align(Alignment.Center)
+                    )
+                }
+            }
+        }
+    }
+}
 

@@ -17,9 +17,6 @@ import androidx.compose.material.icons.filled.Deselect
 import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.filled.LocationOff
 import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.filled.Map
-import androidx.compose.material.icons.filled.NearMe
-import androidx.compose.material.icons.filled.NearMeDisabled
 import androidx.compose.material.icons.filled.SelectAll
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Tune
@@ -44,17 +41,16 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import coil.compose.rememberAsyncImagePainter
-import coil.compose.rememberImagePainter
 import coil.request.ImageRequest
 import coil.transform.CircleCropTransformation
 import com.example.new_app.SETTINGS_SCREEN
 import com.example.new_app.SharedViewModel
+import com.example.new_app.common.sort.TaskSortType
+import com.example.new_app.common.sort.onSelectAllTasks
 import com.example.new_app.model.Task
 import com.example.new_app.screens.task.create_edit_tasks.TaskEditCreateViewModel
 import com.example.new_app.screens.task.tasklist.TaskListUiState
 import com.example.new_app.screens.task.tasklist.TaskListViewModel
-import com.example.new_app.screens.task.tasklist.TaskSortType
-import com.example.new_app.screens.task.tasklist.onSelectAllTasks
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -71,6 +67,7 @@ fun CustomTopAppBar(
     userProfilePictureUrl: String? // Add this parameter
 ) {
     val selectedTaskIds by mainViewModel.selectedTaskIds.collectAsState()
+    val currentSortType by viewModel.sortType.collectAsState()
 
     TopAppBar(
         modifier = Modifier.fillMaxWidth(),
@@ -128,7 +125,8 @@ fun CustomTopAppBar(
                     "Sort by Title (A-Z)",
                     "Sort by Title (Z-A)",
                     "Sort by Due Date (Asc)",
-                    "Sort by Due Date (Desc)"
+                    "Sort by Due Date (Desc)",
+                    "Sort by Color"
                 ),
                 modifier = Modifier.padding(end = 8.dp),
                 onActionClick = { action ->
@@ -139,10 +137,12 @@ fun CustomTopAppBar(
                         "Sort by Title (Z-A)" -> viewModel.updateSortType(TaskSortType.TITLE_DESC)
                         "Sort by Due Date (Asc)" -> viewModel.updateSortType(TaskSortType.DUE_DATE_ASC)
                         "Sort by Due Date (Desc)" -> viewModel.updateSortType(TaskSortType.DUE_DATE_DESC)
+                        "Sort by Color" -> viewModel.updateSortType(TaskSortType.COLOR)
                     }
                 },
                 imageVector = Icons.Default.Tune,
-                trailingIcon = Icons.Default.Done
+                trailingIcon = Icons.Default.Done,
+                activeSortType = currentSortType
             )
             if (selectedTaskIds.isEmpty()) {
                 if (userProfilePictureUrl != null) {
@@ -160,8 +160,7 @@ fun CustomTopAppBar(
                     }
                 }
             } else {
-                DropdownContextMenu(
-                    options = listOf("Delete All Selected"),
+                DeleteSelectedContextMenu(
                     modifier = Modifier.padding(end = 8.dp),
                     onActionClick = { action ->
                         when (action) {
@@ -173,6 +172,46 @@ fun CustomTopAppBar(
                     }
                 )
             }
+        },
+        title = {
+            Text(
+                text = title,
+                color = Color.White,
+            )
+        }
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun CustomTopAppBarSmall(
+    title: String,
+    openScreen: (String) -> Unit,
+    scrollBehavior: TopAppBarScrollBehavior,
+    userProfilePictureUrl: String?
+) {
+    TopAppBar(
+        modifier = Modifier.fillMaxWidth(),
+        scrollBehavior = scrollBehavior,
+        colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = MaterialTheme.colorScheme.background,
+        ),
+        actions = {
+                if (userProfilePictureUrl != null) {
+                    UserImage(
+                        userProfilePictureUrl = userProfilePictureUrl,
+                        openScreen = openScreen
+                    )
+                } else {
+                    IconButton(onClick = { openScreen(SETTINGS_SCREEN) }) {
+                        Icon(
+                            Icons.Filled.Settings,
+                            contentDescription = "Settings",
+                            tint = Color.White
+                        )
+                    }
+                }
+
         },
         title = {
             Text(

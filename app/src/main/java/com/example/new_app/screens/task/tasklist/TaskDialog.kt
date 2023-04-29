@@ -34,6 +34,7 @@ import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
 import com.example.new_app.R
 import com.example.new_app.common.composables.CustomCopyTrueTextField
+import com.example.new_app.common.sort.getDueDateAndTime
 import com.example.new_app.model.Task
 import com.google.android.gms.maps.MapView
 
@@ -196,7 +197,9 @@ fun ShowDialogWithTaskDetailsAndDelete(
                         modifier = Modifier.fillMaxWidth()
                     )
                     Spacer(modifier = Modifier.height(8.dp))
-                    Divider()
+                    Divider(
+                        color = task.color?.let { Color(it) } ?: Color(0xFF666666),
+                    )
                     Spacer(modifier = Modifier.height(8.dp))
 
 
@@ -240,7 +243,9 @@ fun ShowDialogWithTaskDetailsAndDelete(
                     )
 
                     Spacer(modifier = Modifier.height(8.dp))
-                    Divider()
+                    Divider(
+                        color = task.color?.let { Color(it) } ?: Color(0xFF666666),
+                    )
                     Spacer(modifier = Modifier.height(8.dp))
 
                     Row(

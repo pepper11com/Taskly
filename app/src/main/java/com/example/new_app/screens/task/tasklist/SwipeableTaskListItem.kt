@@ -40,21 +40,28 @@ import com.example.new_app.R
 import com.example.new_app.model.Task
 import kotlin.math.roundToInt
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.FractionalThreshold
 import androidx.compose.material.SwipeableState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.swipeable
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.unit.Dp
 import com.example.new_app.SharedViewModel
+import com.example.new_app.common.sort.getDueDateAndTime
 import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterialApi::class)
@@ -162,6 +169,8 @@ fun TaskListItem(
     val flashState = rememberSaveable { mutableStateOf(isFlashing) }
     val taskIsSelected = mainViewModel.selectedTaskIds.collectAsState().value.contains(task.id)
 
+    val taskColor = task.color?.let { Color(it) }
+
     val flashColor = animateColorAsState(
         targetValue = if (flashState.value) Color(0xFFCCCCCC) else Color(0xFF444444),
         animationSpec = tween(durationMillis = 5000)
@@ -221,7 +230,8 @@ fun TaskListItem(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(8.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 Image(
                     painter = painter,
@@ -247,6 +257,19 @@ fun TaskListItem(
                         color = Color.White
                     )
                 }
+
+                taskColor?.let {
+                    Modifier
+                        .padding(8.dp)
+                        .clip(CircleShape)
+                        .background(color = it)
+                        .size(30.dp)
+                }?.let {
+                    Box (
+                        modifier = it
+                    )
+                }
+
                 if (TaskStatus.ACTIVE != task.status) {
                     Checkbox(
                         checked = taskIsSelected,

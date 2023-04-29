@@ -85,6 +85,9 @@ class TaskEditCreateViewModel @Inject constructor(
         task.value = task.value.copy(locationName = newValue)
     }
 
+    fun onColorChange(newColor: Int) {
+        task.value = task.value.copy(color = newColor)
+    }
     fun onLocationReset() {
         marker?.remove()
         task.value = task.value.copy(location = null)

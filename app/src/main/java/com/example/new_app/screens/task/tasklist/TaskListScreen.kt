@@ -36,6 +36,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.ui.text.font.FontWeight
+import com.example.new_app.common.sort.getFilteredTasks
+import com.example.new_app.common.sort.sortTasks
 import com.example.new_app.model.service.Notification
 import com.example.new_app.screens.login.UserData
 
@@ -47,9 +49,11 @@ fun TaskListScreen(
     openScreen: (String) -> Unit,
     mainViewModel: SharedViewModel,
     userData: UserData?,
+    viewModel: TaskListViewModel = hiltViewModel()
 ) {
+// todo test this
 
-    val viewModel: TaskListViewModel = hiltViewModel()
+//    val viewModel: TaskListViewModel = hiltViewModel()
     val userId = viewModel.currentUserId
     val deleteTasksState by viewModel.deleteTasksState.collectAsState()
     val sortType by viewModel.sortType.collectAsState()
