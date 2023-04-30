@@ -55,6 +55,8 @@ class MainActivity : AppCompatActivity() {
 
         //todo - we got an navigation bug againnnnn when logging out :))))))))))
 
+        //todo - test image deletion again!
+
         Places.initialize(applicationContext, MAPS_API_KEY)
         MapsInitializer.initialize(applicationContext)
 

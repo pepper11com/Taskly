@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.new_app.LOGIN_SCREEN
+import com.example.new_app.NAVIGATOR_SCREEN
 import com.example.new_app.SIGN_UP_SCREEN
 import com.example.new_app.TASK_LIST_SCREEN
 import com.example.new_app.common.composables.CustomButton
@@ -36,7 +37,6 @@ fun LoginScreen(
 ) {
     val viewModel: LoginViewModel = hiltViewModel()
     val uiState by viewModel.uiState
-    val googleState by viewModel.state.collectAsState()
     val authenticationState by viewModel.authenticationState.collectAsState()
     val scope = rememberCoroutineScope()
 
@@ -49,7 +49,6 @@ fun LoginScreen(
                         intent = result.data ?: return@launch
                     )
                     viewModel.onGoogleSignInClick(signInResult)
-                    viewModel.resetState()
                 }
             }
         }
@@ -133,8 +132,7 @@ fun LoginScreen(
 
         is Resource.Success -> {
             // Handle successful sign-in
-            navigateToMainScreen(TASK_LIST_SCREEN)
-            viewModel.resetState()
+            navigateToMainScreen(NAVIGATOR_SCREEN)
             viewModel.resetSuccessState()
         }
 

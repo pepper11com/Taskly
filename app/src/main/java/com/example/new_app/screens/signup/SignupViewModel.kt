@@ -3,16 +3,18 @@ package com.example.new_app.screens.signup
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.new_app.SETTINGS_SCREEN
+import com.example.new_app.NAVIGATOR_SCREEN
 import com.example.new_app.SIGN_UP_SCREEN
 import com.example.new_app.TASK_LIST_SCREEN
 import com.example.new_app.common.ext.isValidEmail
 import com.example.new_app.common.ext.isValidPassword
 import com.example.new_app.common.snackbar.SnackbarManager
-import com.example.new_app.common.snackbar.SnackbarMessage
+import com.example.new_app.common.util.Resource
 import com.example.new_app.model.service.AccountService
 import com.example.new_app.model.service.FirebaseService
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 @HiltViewModel
@@ -21,11 +23,12 @@ class SignupViewModel @Inject constructor(
     private val firebaseService: FirebaseService
 ) : ViewModel() {
 
-//    private val accountService = AccountService()
-//    private val firebaseService = FirebaseService()
-
     var uiState = mutableStateOf(SignupUiState())
         private set
+
+    private val _authenticationState = MutableStateFlow<Resource<Unit>>(Resource.Empty())
+    val authenticationState: StateFlow<Resource<Unit>> get() = _authenticationState
+
 
     private val email
         get() = uiState.value.email
@@ -46,33 +49,40 @@ class SignupViewModel @Inject constructor(
         uiState.value = uiState.value.copy(confirmPassword = newValue)
     }
 
-    fun onSignUpClick(openAndPopUp: (String, String) -> Unit) {
+    fun onSignUpClick() {
         viewModelScope.launch {
+            _authenticationState.value = Resource.Loading()
+
             if (!email.isValidEmail()) {
-                SnackbarManager.showSnackbarMessage(SnackbarMessage.Text("Invalid email"))
+                _authenticationState.value = Resource.Error("Invalid email")
+                SnackbarManager.showMessage("Invalid email")
                 return@launch
             }
-
             if (!password.isValidPassword()) {
-                SnackbarManager.showSnackbarMessage(SnackbarMessage.Text("Invalid password"))
+                _authenticationState.value = Resource.Error("Invalid password")
+                SnackbarManager.showMessage("Invalid password")
                 return@launch
             }
-
             if (password != confirmPassword) {
-                SnackbarManager.showSnackbarMessage(SnackbarMessage.Text("Passwords don't match"))
+                _authenticationState.value = Resource.Error("Passwords don't match")
+                SnackbarManager.showMessage("Passwords don't match")
                 return@launch
             }
 
-            uiState.value = uiState.value.copy(isLoading = true)
             try {
                 accountService.createAccount(email, password)
-                uiState.value = uiState.value.copy(isLoading = false, error = null)
-                openAndPopUp(TASK_LIST_SCREEN, SIGN_UP_SCREEN)
+                _authenticationState.value = Resource.Success(Unit)
             } catch (e: Exception) {
-                uiState.value = uiState.value.copy(isLoading = false, error = e.message)
-                SnackbarManager.showSnackbarMessage(SnackbarMessage.Text(e.message ?: "Error signing up"))
+                _authenticationState.value = Resource.Error(e.message ?: "Error signing up")
+                SnackbarManager.showMessage(e.message ?: "Error signing up")
+            } finally {
+                _authenticationState.value = Resource.Empty()
             }
         }
+    }
+
+    fun resetSuccessState() {
+        _authenticationState.value = Resource.Empty()
     }
 
 }

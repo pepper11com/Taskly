@@ -261,17 +261,17 @@ fun CustomCreateTaskAppBar(
     mainViewModel: SharedViewModel,
     context: Context
 ) {
-    val notificationResultLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission(),
-        onResult = { isGranted ->
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                mainViewModel.onPermissionResult(
-                    isGranted = isGranted,
-                    permission = Manifest.permission.POST_NOTIFICATIONS
-                )
-            }
-        }
-    )
+//    val notificationResultLauncher = rememberLauncherForActivityResult(
+//        contract = ActivityResultContracts.RequestPermission(),
+//        onResult = { isGranted ->
+//            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+//                mainViewModel.onPermissionResult(
+//                    isGranted = isGranted,
+//                    permission = Manifest.permission.POST_NOTIFICATIONS
+//                )
+//            }
+//        }
+//    )
 
     Column {
         MediumTopAppBar(
@@ -296,9 +296,9 @@ fun CustomCreateTaskAppBar(
 
                     onClick = {
 
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                            notificationResultLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-                        }
+//                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+//                            notificationResultLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+//                        }
 
                         viewModel.onDoneClick(
                             context,

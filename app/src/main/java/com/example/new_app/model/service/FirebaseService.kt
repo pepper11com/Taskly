@@ -48,7 +48,6 @@ class FirebaseService @Inject constructor(
             currentCollection(uid).document(taskId).get().await().toObject()
         }
 
-
     suspend fun save(task: Task): Resource<String> {
         return try {
             val taskId = firebaseAuth.currentUser?.uid?.let { uid ->
@@ -89,7 +88,6 @@ class FirebaseService @Inject constructor(
         }
     }
 
-
     suspend fun deleteAllForUser(userId: String) {
         val matchingTasks = currentCollection(userId).get().await()
         matchingTasks.map { it.reference.delete().asDeferred() }.awaitAll()
@@ -108,7 +106,6 @@ class FirebaseService @Inject constructor(
             Resource.Error(e.message ?: "Unknown error")
         }
     }
-
 
     suspend fun deleteTasks(tasks: List<Task>): Resource<Unit> {
         return try {
@@ -137,9 +134,6 @@ class FirebaseService @Inject constructor(
         }
     }
 
-
-
-
     suspend fun uploadImage(uri: Uri, path: String): String {
         val storageRef = firebaseStorage.reference.child(path)
         storageRef.putFile(uri).await()
@@ -150,8 +144,6 @@ class FirebaseService @Inject constructor(
         val storageRef = firebaseStorage.reference.child(path)
         storageRef.delete().await()
     }
-
-
 
     companion object {
         private const val USER_COLLECTION = "users"

@@ -3,41 +3,59 @@ package com.example.new_app.screens.signup
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.new_app.LOGIN_SCREEN
+import com.example.new_app.NAVIGATOR_SCREEN
 import com.example.new_app.SIGN_UP_SCREEN
 import com.example.new_app.common.composables.CustomButton
 import com.example.new_app.common.composables.CustomPasswordTextField
 import com.example.new_app.common.composables.CustomTextField
+import com.example.new_app.common.composables.LoadingIndicator
+import com.example.new_app.common.util.Resource
 
 @Composable
 fun SignupScreen(
-    openAndPopUp: (String, String) -> Unit
+    openAndPopUp: (String, String) -> Unit,
+    viewModel: SignupViewModel = hiltViewModel()
 ) {
-    val viewModel: SignupViewModel = hiltViewModel()
-    val uiState by viewModel.uiState
 
-  Column {
-      SignupContent(
-          uiState = uiState,
-          viewModel = viewModel,
-          onSignupClick = {
-              viewModel.onSignUpClick { route, popUp ->
-                  openAndPopUp(
-                      route,
-                      popUp
-                  )
-              }
-          },
-          onBackToLoginClick = {
-              openAndPopUp(LOGIN_SCREEN, SIGN_UP_SCREEN)
-          }
-      )
-  }
+    val uiState by viewModel.uiState
+    val authenticationState by viewModel.authenticationState.collectAsState()
+
+    Column {
+        SignupContent(
+            uiState = uiState,
+            viewModel = viewModel,
+            onSignupClick = {
+                viewModel.onSignUpClick()
+            },
+            onBackToLoginClick = {
+                openAndPopUp(LOGIN_SCREEN, SIGN_UP_SCREEN)
+            }
+        )
+        when (authenticationState) {
+            is Resource.Success -> {
+                openAndPopUp(NAVIGATOR_SCREEN, SIGN_UP_SCREEN)
+                viewModel.resetSuccessState()
+            }
+
+            is Resource.Error -> {
+                openAndPopUp(LOGIN_SCREEN, SIGN_UP_SCREEN)
+            }
+
+            is Resource.Loading -> {
+                LoadingIndicator()
+            }
+
+            else -> {
+            }
+        }
+    }
 
 }
 

@@ -25,9 +25,6 @@ class LoginViewModel @Inject constructor(
     var uiState = mutableStateOf(LoginUiState())
         private set
 
-    private val _state = MutableStateFlow(GoogleLoginState())
-    val state = _state.asStateFlow()
-
     private val email
         get() = uiState.value.email
     private val password
@@ -44,69 +41,44 @@ class LoginViewModel @Inject constructor(
         uiState.value = uiState.value.copy(password = newValue)
     }
 
-//    fun onGoogleSignInClick(result: SignInResult) {
-//        _state.update { it.copy(
-//            isSignInSuccesful = result.data != null,
-//            errorMessage = result.errorMessage
-//        ) }
-//    }
-    suspend fun onGoogleSignInClick(result: SignInResult) {
+    fun onGoogleSignInClick(result: SignInResult) {
+        _authenticationState.value = Resource.Loading()
         if (result.data != null) {
             _authenticationState.value = Resource.Success(Unit)
-            snackbarManager.showSnackbarMessage(
-                SnackbarMessage.Text("Sign in successful with Google")
-            )
+            SnackbarManager.showMessage("Sign in successful with Google")
         } else {
             _authenticationState.value = Resource.Error(result.errorMessage ?: "Unknown error")
-            snackbarManager.showSnackbarMessage(
-                SnackbarMessage.Text(result.errorMessage ?: "Unknown error")
-            )
+            SnackbarManager.showMessage(result.errorMessage ?: "Unknown error")
         }
     }
-
-
-    fun resetState(){
-        _state.update { GoogleLoginState() }
-    }
-
 
     fun onSignInClick() {
         viewModelScope.launch {
             _authenticationState.value = Resource.Loading()
-            when (val result = accountService.authenticate(email, password)) {
-                is Resource.Success -> {
-                    _authenticationState.value = result.data?.let { Resource.Success(it) }!!
-                    // TODO - Handle successful sign-in
-//                    openAndPopUp(TASK_LIST_SCREEN, LOGIN_SCREEN)
+            if (email.isEmpty() || password.isEmpty()) {
+                val emptyFieldsMessage = when {
+                    email.isEmpty() && password.isEmpty() -> "Email and password are empty"
+                    email.isEmpty() -> "Email is empty"
+                    else -> "Password is empty"
                 }
-                is Resource.Error -> {
-                    if (password.isEmpty() && email.isEmpty()){
-                        _authenticationState.value = Resource.Error("Email and password are empty")
-                        snackbarManager.showSnackbarMessage(
-                            SnackbarMessage.Text("Email and password are empty")
-                        )
-
-
-                    } else if(password.isEmpty()) {
-                        _authenticationState.value = Resource.Error("Password is empty")
-                        snackbarManager.showSnackbarMessage(
-                            SnackbarMessage.Text("Password is empty")
-                        )
+                _authenticationState.value = Resource.Error(emptyFieldsMessage)
+                SnackbarManager.showMessage(emptyFieldsMessage)
+            } else {
+                when (val result = accountService.authenticate(email, password)) {
+                    is Resource.Success -> {
+                        _authenticationState.value = Resource.Success(Unit)
+                        SnackbarManager.showMessage("Sign in successful")
                     }
-                    else if (email.isEmpty()){
-                        _authenticationState.value = Resource.Error("Email is empty")
-                        snackbarManager.showSnackbarMessage(
-                            SnackbarMessage.Text("Email is empty")
-                        )
-                    } else {
+
+                    is Resource.Error -> {
                         _authenticationState.value = Resource.Error(result.message)
-                        snackbarManager.showSnackbarMessage(
-                            SnackbarMessage.Text(result.message ?: "Unknown error")
-                        )
+                        SnackbarManager.showMessage(result.message ?: "Unknown error")
                     }
-                }
-                else -> {
-                    _authenticationState.value = Resource.Empty()
+
+                    else -> {
+                        _authenticationState.value = Resource.Error("Unknown error")
+                        SnackbarManager.showMessage("Unknown error, please try again")
+                    }
                 }
             }
         }
@@ -117,22 +89,17 @@ class LoginViewModel @Inject constructor(
             _authenticationState.value = Resource.Loading()
             if (!email.isValidEmail()) {
                 _authenticationState.value = Resource.Error("Invalid email")
-                snackbarManager.showSnackbarMessage(SnackbarMessage.Text("Invalid email"))
+                SnackbarManager.showMessage("Invalid email")
                 return@launch
             }
-
 
             try {
                 accountService.sendRecoveryEmail(email)
                 _authenticationState.value = Resource.Success(Unit)
-                snackbarManager.showSnackbarMessage(SnackbarMessage.Text("Password reset email sent"))
+                SnackbarManager.showMessage("Password reset email sent")
             } catch (e: Exception) {
                 _authenticationState.value = Resource.Error(e.message ?: "Unknown error")
-                snackbarManager.showSnackbarMessage(
-                    SnackbarMessage.Text(
-                        e.message ?: "Unknown error"
-                    )
-                )
+                SnackbarManager.showMessage(e.message ?: "Unknown error")
             } finally {
                 _authenticationState.value = Resource.Empty()
             }

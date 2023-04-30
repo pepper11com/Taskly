@@ -20,7 +20,8 @@ import javax.inject.Singleton
 @Singleton
 class AccountService @Inject constructor(
     private val firebaseAuth: FirebaseAuth,
-    private val firebaseFirestore: FirebaseFirestore
+    private val firebaseFirestore: FirebaseFirestore,
+    private val googleAuth: GoogleAuth
 ) {
 
     val currentUserId: String
@@ -48,7 +49,6 @@ class AccountService @Inject constructor(
         }
     }
 
-
     suspend fun sendRecoveryEmail(email: String) {
         firebaseAuth.sendPasswordResetEmail(email).await()
     }
@@ -64,13 +64,21 @@ class AccountService @Inject constructor(
 
     suspend fun signOut(): Resource<Unit> {
         return try {
-            if (firebaseAuth.currentUser!!.isAnonymous) {
-                firebaseAuth.currentUser!!.delete()
+            val signedInUser = googleAuth.getSignedInUser()
+            if (signedInUser != null) {
+                // User signed in with Google
+                googleAuth.signOutFromGoogle()
+            } else {
+                // User signed in with email and password
+                if (firebaseAuth.currentUser!!.isAnonymous) {
+                    firebaseAuth.currentUser!!.delete()
+                }
+                firebaseAuth.signOut()
             }
-            firebaseAuth.signOut()
             Resource.Success(Unit)
         } catch (e: Exception) {
             Resource.Error(e.message)
         }
     }
+
 }

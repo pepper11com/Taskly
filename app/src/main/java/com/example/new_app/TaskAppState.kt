@@ -1,11 +1,10 @@
 package com.example.new_app
 
 import android.content.res.Resources
-import androidx.compose.material.ScaffoldState
 import androidx.compose.material3.SnackbarHostState
 import androidx.navigation.NavHostController
 import com.example.new_app.common.snackbar.SnackbarManager
-import com.example.new_app.model.service.AccountService
+import com.example.new_app.common.snackbar.SnackbarMessage.Companion.toMessage
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
@@ -21,7 +20,10 @@ class TaskAppState(
         coroutineScope.launch {
             snackbarManager.snackbarMessages.filterNotNull().collect { snackbarMessage ->
                 val text = snackbarMessage.toMessage(resources)
-                snackbarState.showSnackbar(text)
+                snackbarState.showSnackbar(
+                    text,
+                    withDismissAction = true,
+                )
             }
         }
     }

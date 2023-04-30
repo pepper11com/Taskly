@@ -14,7 +14,6 @@ import androidx.lifecycle.viewModelScope
 import coil.ImageLoader
 import coil.request.ImageRequest
 import com.example.new_app.common.snackbar.SnackbarManager
-import com.example.new_app.common.snackbar.SnackbarMessage
 import com.example.new_app.common.util.Resource
 import com.example.new_app.model.CustomLatLng
 import com.example.new_app.model.Task
@@ -204,16 +203,18 @@ class TaskEditCreateViewModel @Inject constructor(
                         }
                         is Resource.Error -> {
                             _taskEditCreateState.value = Resource.Error(saveResult.message ?: "Unknown error")
-                            snackbarManager.showSnackbarMessage(
-                                SnackbarMessage.Text(saveResult.message ?: "Unknown error")
-                            )
+//                            snackbarManager.showSnackbarMessage(
+//                                SnackbarMessage.Text(saveResult.message ?: "Unknown error")
+//                            )
+                            SnackbarManager.showMessage(saveResult.message ?: "Unknown error")
                             return@launch
                         }
                         else -> {
                             _taskEditCreateState.value = Resource.Error("Unknown error")
-                            snackbarManager.showSnackbarMessage(
-                                SnackbarMessage.Text("Unknown error")
-                            )
+//                            snackbarManager.showSnackbarMessage(
+//                                SnackbarMessage.Text("Unknown error")
+//                            )
+                            SnackbarManager.showMessage("Unknown error")
                             return@launch
                         }
                     }
@@ -246,16 +247,18 @@ class TaskEditCreateViewModel @Inject constructor(
                             }
                             is Resource.Error -> {
                                 _taskEditCreateState.value = Resource.Error(updateResult.message ?: "Unknown error")
-                                snackbarManager.showSnackbarMessage(
-                                    SnackbarMessage.Text(updateResult.message ?: "Unknown error")
-                                )
+//                                snackbarManager.showSnackbarMessage(
+//                                    SnackbarMessage.Text(updateResult.message ?: "Unknown error")
+//                                )
+                                SnackbarManager.showMessage(updateResult.message ?: "Unknown error")
                                 return@launch
                             }
                             else -> {
                                 _taskEditCreateState.value = Resource.Error("Unknown error")
-                                snackbarManager.showSnackbarMessage(
-                                    SnackbarMessage.Text("Unknown error")
-                                )
+//                                snackbarManager.showSnackbarMessage(
+//                                    SnackbarMessage.Text("Unknown error")
+//                                )
+                                SnackbarManager.showMessage("Unknown error")
                                 return@launch
                             }
                         }
@@ -272,31 +275,35 @@ class TaskEditCreateViewModel @Inject constructor(
                             }
                             is Resource.Error -> {
                                 _taskEditCreateState.value = Resource.Error(updateResult.message ?: "Unknown error")
-                                snackbarManager.showSnackbarMessage(
-                                    SnackbarMessage.Text(updateResult.message ?: "Unknown error")
-                                )
+//                                snackbarManager.showSnackbarMessage(
+//                                    SnackbarMessage.Text(updateResult.message ?: "Unknown error")
+//                                )
+                                SnackbarManager.showMessage(updateResult.message ?: "Unknown error")
                                 return@launch
                             }
                             else -> {
                                 _taskEditCreateState.value = Resource.Error("Unknown error")
-                                snackbarManager.showSnackbarMessage(
-                                    SnackbarMessage.Text("Unknown error")
-                                )
+//                                snackbarManager.showSnackbarMessage(
+//                                    SnackbarMessage.Text("Unknown error")
+//                                )
+                                SnackbarManager.showMessage("Unknown error")
                                 return@launch
                             }
                         }
                     }
                 }
                 _taskEditCreateState.value = Resource.Success(Unit)
-                snackbarManager.showSnackbarMessage(
-                    SnackbarMessage.Text("Task successfully saved")
-                )
+//                snackbarManager.showSnackbarMessage(
+//                    SnackbarMessage.Text("Task successfully saved")
+//                )
+                SnackbarManager.showMessage("Task successfully saved")
                 popUpScreen()
             } catch (e: Exception) {
                 _taskEditCreateState.value = Resource.Error(e.message ?: "Unknown error")
-                snackbarManager.showSnackbarMessage(
-                    SnackbarMessage.Text(e.message ?: "Unknown error")
-                )
+//                snackbarManager.showSnackbarMessage(
+//                    SnackbarMessage.Text(e.message ?: "Unknown error")
+//                )
+                SnackbarManager.showMessage("Unknown error")
             } finally {
                 _taskEditCreateState.value = Resource.Empty()
             }
