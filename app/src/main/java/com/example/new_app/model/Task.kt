@@ -21,6 +21,8 @@ data class Task(
 
     var color: Int? = -478827,
 
+    var alertMessageTimer : Long = 0,
+
     var imageUri: String? = null,
     var location: CustomLatLng? = null,
     var locationName: String? = null,

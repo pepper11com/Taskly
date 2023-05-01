@@ -57,6 +57,8 @@ class MainActivity : AppCompatActivity() {
 
         //todo - test image deletion again!
 
+        //todo - be able to change the calender view
+
         Places.initialize(applicationContext, MAPS_API_KEY)
         MapsInitializer.initialize(applicationContext)
 

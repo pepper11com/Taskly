@@ -28,11 +28,12 @@ class Notification (
 ){
     val channelID: String = "FCM100"
     val channelName: String = "Task Notification"
+    val groupKey = "com.example.taskly.NOTIFICATION_GROUP"
     val notificationManager = context.applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
     lateinit var notificationChannel: NotificationChannel
     lateinit var notificationBuilder: NotificationCompat.Builder
 
-    fun fireNotification(imageUrl: String?){
+    fun fireNotification(imageUrl: String?, notificationId: Int){
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
             notificationChannel = NotificationChannel(channelID, channelName, NotificationManager.IMPORTANCE_HIGH)
             notificationManager.createNotificationChannel(notificationChannel)
@@ -51,16 +52,17 @@ class Notification (
 
         notificationBuilder = NotificationCompat.Builder(context, channelID)
             .setContentTitle(title)
-            .addAction(android.R.drawable.ic_dialog_info, "Open", pendingIntent)
+            .addAction(R.drawable.ic_launcher, "Open", pendingIntent)
             .setContentText(message)
-            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setSmallIcon(R.drawable.ic_launcher)
             .setLargeIcon(bitmap)
             .setAutoCancel(true)
             .setStyle(bigPictureStyle)
             .setColor(iconColor)
+            .setGroup(groupKey)
             .setContentIntent(pendingIntent)
 
-        notificationManager.notify(100, notificationBuilder.build())
+        notificationManager.notify(notificationId, notificationBuilder.build())
     }
 
     private fun downloadImage(url: String): Bitmap? {
@@ -88,30 +90,40 @@ class TaskReminderWorker(context: Context, workerParams: WorkerParameters) : Wor
         val message = inputData.getString("message") ?: "A task is due!"
         val imageUrl = inputData.getString("imageUrl")
 
+        val notificationId = inputData.getInt("notificationId", 100)
+
         val notification = Notification(applicationContext, title, message)
-        notification.fireNotification(imageUrl)
+        notification.fireNotification(imageUrl, notificationId)
 
         return Result.success()
     }
 }
 
-fun scheduleTaskReminder(taskId: String, title: String, message: String, dueDateMillis: Long, imageUrl: String?, context: Context) {
+//fun scheduleTaskReminder(taskId: String, title: String, message: String, dueDateMillis: Long, imageUrl: String?, context: Context) {
+fun scheduleTaskReminder(taskId: String, title: String, message: String, dueDateMillis: Long, imageUrl: String?, alertTime: Long?, notificationId: Int, context: Context) {
 
     val data = if (imageUrl != null){
         Data.Builder()
             .putString("title", title)
             .putString("message", message)
             .putString("imageUrl", imageUrl)
+            .putInt("notificationId", notificationId)
             .build()
     } else {
         Data.Builder()
             .putString("title", title)
             .putString("message", message)
+            .putInt("notificationId", notificationId)
             .build()
     }
 
     val oneHourInMillis = TimeUnit.HOURS.toMillis(1)
-    val timeUntilDueDate = dueDateMillis - System.currentTimeMillis() - oneHourInMillis
+
+    val timeUntilDueDate: Long = if (alertTime != null) {
+        dueDateMillis - System.currentTimeMillis() - alertTime
+    } else {
+        dueDateMillis - System.currentTimeMillis() - oneHourInMillis
+    }
 
     // If the task is due within an hour, show the notification instantly
     val initialDelay = if (timeUntilDueDate <= oneHourInMillis) 0L else timeUntilDueDate

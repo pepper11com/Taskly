@@ -15,5 +15,17 @@
     </style>
 
 
+    <style name="CustomDatePickerTheme" parent="ThemeOverlay.MaterialComponents.MaterialCalendar">
+        <item name="colorPrimary">@color/bright_orange</item>
+    </style>
+
+    <style name="CustomTimePickerTheme" parent="ThemeOverlay.MaterialComponents.TimePicker">
+        <item name="colorPrimary">@color/bright_orange</item>
+        <item name="clockFaceBackgroundColor">@color/dark_grey</item>
+
+        <item name="colorSurface">@color/dark_grey</item>
+        <item name="colorOnSurface">@color/medium_grey</item>
+    </style>
+
 
 </resources>

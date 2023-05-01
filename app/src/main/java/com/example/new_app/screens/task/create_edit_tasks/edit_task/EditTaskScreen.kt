@@ -147,8 +147,8 @@ private fun CardEditors(
     onDateChange: (Long) -> Unit,
     onTimeChange: (Int, Int) -> Unit
 ) {
+    val activity = LocalContext.current as AppCompatActivity
     val showDatePicker = remember { mutableStateOf(false) }
-    val showTimePicker = remember { mutableStateOf(false) }
 
     RegularCardEditor(
         R.string.date,
@@ -159,14 +159,9 @@ private fun CardEditors(
         showDatePicker.value = true
     }
 
-    com.example.new_app.screens.task.create_edit_tasks.createtask.ShowDate(
+    ShowDate(
         onDateChange = onDateChange,
         openDialog = showDatePicker
-    )
-
-    com.example.new_app.screens.task.create_edit_tasks.createtask.ShowTimePicker(
-        onTimeChange = onTimeChange,
-        openDialog = showTimePicker
     )
 
     RegularCardEditor(
@@ -175,7 +170,10 @@ private fun CardEditors(
         task.dueTime,
         Modifier.padding(top = 16.dp)
     ) {
-        showTimePicker.value = true
+        showTimePicker(
+            activity,
+            onTimeChange
+        )
     }
 }
 
@@ -254,98 +252,16 @@ fun ShowDate(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun ShowTimePicker(
-    onTimeChange: (Int, Int) -> Unit,
-    openDialog: MutableState<Boolean>
-) {
-    val timePickerState = rememberTimePickerState()
+private fun showTimePicker(activity: AppCompatActivity?, onTimeChange: (Int, Int) -> Unit) {
+    val picker = MaterialTimePicker.Builder()
+        .setTimeFormat(TimeFormat.CLOCK_24H)
+        .setTheme(R.style.CustomTimePickerTheme)
+        .setInputMode(MaterialTimePicker.INPUT_MODE_CLOCK)
+        .build()
 
-    val content = @Composable {
-        TimePicker(
-            state = timePickerState,
-            modifier = Modifier,
-            colors = TimePickerDefaults.colors(
-                clockDialSelectedContentColor = Color.White,
-                clockDialUnselectedContentColor = Color.White,
-                containerColor = Color.White,
-                timeSelectorSelectedContainerColor = Color.White.copy(alpha = 0.5f),
-                timeSelectorSelectedContentColor = Color.White,
-            ),
-            layoutType = TimePickerDefaults.layoutType()
-        )
-    }
-
-    if (openDialog.value) {
-        TimePickerDialog(
-            onCancel = {
-                openDialog.value = false
-            },
-            onConfirm = {
-                val selectedHour = timePickerState.hour
-                val selectedMinute = timePickerState.minute
-                onTimeChange(selectedHour, selectedMinute)
-                openDialog.value = false
-            },
-            content = content
-        )
-    }
-}
-
-@Composable
-fun TimePickerDialog(
-    title: String = "Select Time",
-    onCancel: () -> Unit,
-    onConfirm: () -> Unit,
-    toggle: @Composable () -> Unit = {},
-    content: @Composable () -> Unit,
-) {
-    Dialog(
-        onDismissRequest = onCancel,
-        properties = DialogProperties(
-            usePlatformDefaultWidth = false
-        ),
-    ) {
-        Surface(
-            shape = MaterialTheme.shapes.extraLarge,
-            tonalElevation = 6.dp,
-            modifier = Modifier
-                .width(IntrinsicSize.Min)
-                .height(IntrinsicSize.Min)
-                .background(
-                    shape = MaterialTheme.shapes.extraLarge,
-                    color = MaterialTheme.colorScheme.surface
-                ),
-        ) {
-            toggle()
-            Column(
-                modifier = Modifier.padding(24.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 20.dp),
-                    text = title,
-                    style = MaterialTheme.typography.labelMedium
-                )
-                content()
-                Row(
-                    modifier = Modifier
-                        .height(40.dp)
-                        .fillMaxWidth()
-                ) {
-                    Spacer(modifier = Modifier.weight(1f))
-                    TextButton(
-                        onClick = onCancel
-                    ) { Text("Cancel") }
-                    TextButton(
-                        onClick = onConfirm
-                    ) { Text("OK") }
-                }
-            }
-        }
+    activity?.let {
+        picker.show(it.supportFragmentManager, picker.toString())
+        picker.addOnPositiveButtonClickListener { onTimeChange(picker.hour, picker.minute) }
     }
 }
 

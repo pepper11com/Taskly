@@ -9,6 +9,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
+import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -16,6 +17,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.selection.TextSelectionColors
@@ -34,6 +37,7 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -54,6 +58,9 @@ import com.example.new_app.common.util.Resource
 import com.example.new_app.model.Task
 import com.example.new_app.model.service.Notification
 import com.example.new_app.screens.task.create_edit_tasks.TaskEditCreateViewModel
+import com.example.new_app.theme.DarkGrey
+import com.google.android.material.timepicker.MaterialTimePicker
+import com.google.android.material.timepicker.TimeFormat
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -144,7 +151,7 @@ fun CreateTaskScreen(
                     onValueChange = viewModel::onTitleChange,
                     label = "Title",
                     modifier = Modifier.fillMaxWidth(),
-                    colors= OutlinedTextFieldDefaults.colors(
+                    colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = Color.White.copy(alpha = 0.7f),
                         unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = ContentAlpha.disabled),
                         focusedLabelColor = Color.White.copy(alpha = 0.7f),
@@ -163,7 +170,7 @@ fun CreateTaskScreen(
                     hintText = "Description",
                     textStyle = MaterialTheme.typography.bodyLarge,
                     maxLines = 4,
-                    colors= OutlinedTextFieldDefaults.colors(
+                    colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = Color.White.copy(alpha = 0.7f),
                         unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = ContentAlpha.disabled),
                         focusedLabelColor = Color.White.copy(alpha = 0.7f),
@@ -180,7 +187,7 @@ fun CreateTaskScreen(
             item {
                 Divider(
                     modifier = Modifier
-                        .padding(top = 18.dp,)
+                        .padding(top = 18.dp)
                 )
             }
 
@@ -196,7 +203,8 @@ fun CreateTaskScreen(
                 CardEditors(
                     task,
                     viewModel::onDateChange,
-                    viewModel::onTimeChange
+                    viewModel::onTimeChange,
+                    viewModel = viewModel
                 )
             }
         }
@@ -246,7 +254,7 @@ fun ShowLocation(
             modifier = Modifier
                 .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
-        ){
+        ) {
             RegularCardEditor(
                 title = R.string.location,
                 icon = Icons.Filled.EditLocation,
@@ -298,10 +306,13 @@ fun ShowLocation(
 private fun CardEditors(
     task: Task,
     onDateChange: (Long) -> Unit,
-    onTimeChange: (Int, Int) -> Unit
+    onTimeChange: (Int, Int) -> Unit,
+    viewModel: TaskEditCreateViewModel
 ) {
+    val activity = LocalContext.current as AppCompatActivity
+
     val showDatePicker = remember { mutableStateOf(false) }
-    val showTimePicker = remember { mutableStateOf(false) }
+    val showAlertTimePicker = remember { mutableStateOf(false) }
 
     RegularCardEditor(
         R.string.date,
@@ -311,15 +322,9 @@ private fun CardEditors(
     ) {
         showDatePicker.value = true
     }
-
     ShowDate(
         onDateChange = onDateChange,
         openDialog = showDatePicker
-    )
-
-    ShowTimePicker(
-        onTimeChange = onTimeChange,
-        openDialog = showTimePicker
     )
 
     RegularCardEditor(
@@ -328,9 +333,84 @@ private fun CardEditors(
         task.dueTime,
         Modifier.padding(top = 16.dp)
     ) {
-        showTimePicker.value = true
+        showTimePicker(activity, onTimeChange)
+    }
+
+    RegularCardEditor(
+        R.string.alert_time,
+        Icons.Filled.Alarm,
+        viewModel.alertTimeDisplay.value,
+        Modifier.padding(top = 16.dp)
+    ) {
+        showAlertTimePicker.value = true
+    }
+    ShowAlertTimePicker(
+        showAlertTimePicker,
+        viewModel
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ShowAlertTimePicker(
+    showAlertTimePicker: MutableState<Boolean>,
+    viewModel: TaskEditCreateViewModel
+) {
+    val radioOptions = listOf(
+        "5 minutes in advance", "10 minutes in advance", "15 minutes in advance",
+        "30 minutes in advance", "1 hour in advance", "1 day in advance"
+    )
+
+    val (selectedOption, onOptionSelected) = remember { mutableStateOf(radioOptions[4]) }
+
+    if (showAlertTimePicker.value) {
+        AlertDialog(
+            modifier = Modifier
+                .fillMaxWidth(),
+            onDismissRequest = {
+                showAlertTimePicker.value = false
+            },
+        ) {
+            Surface(
+                color = DarkGrey,
+                shape = RoundedCornerShape(16.dp)
+            ) {
+                Column(
+                    Modifier.selectableGroup()
+                ) {
+                    radioOptions.forEach { text ->
+                        Row(
+                            Modifier
+                                .fillMaxWidth()
+                                .selectable(
+                                    selected = (text == selectedOption),
+                                    onClick = {
+                                        onOptionSelected(text)
+                                        viewModel.onAlertOptionChange(text)
+                                        showAlertTimePicker.value = false
+                                    },
+                                    role = Role.RadioButton
+                                )
+                                .padding(horizontal = 16.dp, vertical = 16.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            RadioButton(
+                                selected = (text == selectedOption),
+                                onClick = null
+                            )
+                            Text(
+                                text = text,
+                                style = MaterialTheme.typography.bodyLarge,
+                                modifier = Modifier.padding(start = 16.dp)
+                            )
+                        }
+                    }
+                }
+            }
+        }
     }
 }
+
 
 @Composable
 fun PickImageFromGallery(
@@ -426,111 +506,17 @@ fun ShowDate(
                 ) {
                     Text("Cancel")
                 }
-            }
+            },
+            colors = DatePickerDefaults.colors(
+                containerColor = DarkGrey,
+            )
         ) {
             DatePicker(
-                state = datePickerState
+                state = datePickerState,
             )
         }
     }
 }
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun ShowTimePicker(
-    onTimeChange: (Int, Int) -> Unit,
-    openDialog: MutableState<Boolean>
-) {
-    val timePickerState = rememberTimePickerState()
-
-    val content = @Composable {
-        TimePicker(
-            state = timePickerState,
-            modifier = Modifier,
-            colors = TimePickerDefaults.colors(
-                clockDialSelectedContentColor = Color.White,
-                clockDialUnselectedContentColor = Color.White,
-                containerColor = Color.White,
-                timeSelectorSelectedContainerColor = Color.White.copy(alpha = 0.5f),
-                timeSelectorSelectedContentColor = Color.White,
-            ),
-            layoutType = TimePickerDefaults.layoutType()
-        )
-    }
-
-    if (openDialog.value) {
-        TimePickerDialog(
-            onCancel = {
-                openDialog.value = false
-            },
-            onConfirm = {
-                val selectedHour = timePickerState.hour
-                val selectedMinute = timePickerState.minute
-                onTimeChange(selectedHour, selectedMinute)
-                openDialog.value = false
-            },
-            content = content
-        )
-    }
-}
-
-
-@Composable
-fun TimePickerDialog(
-    title: String = "Select Time",
-    onCancel: () -> Unit,
-    onConfirm: () -> Unit,
-    toggle: @Composable () -> Unit = {},
-    content: @Composable () -> Unit,
-) {
-    Dialog(
-        onDismissRequest = onCancel,
-        properties = DialogProperties(
-            usePlatformDefaultWidth = false
-        ),
-    ) {
-        Surface(
-            shape = MaterialTheme.shapes.extraLarge,
-            tonalElevation = 6.dp,
-            modifier = Modifier
-                .width(IntrinsicSize.Min)
-                .height(IntrinsicSize.Min)
-                .background(
-                    shape = MaterialTheme.shapes.extraLarge,
-                    color = MaterialTheme.colorScheme.surface
-                ),
-        ) {
-            toggle()
-            Column(
-                modifier = Modifier.padding(24.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 20.dp),
-                    text = title,
-                    style = MaterialTheme.typography.labelMedium
-                )
-                content()
-                Row(
-                    modifier = Modifier
-                        .height(40.dp)
-                        .fillMaxWidth()
-                ) {
-                    Spacer(modifier = Modifier.weight(1f))
-                    TextButton(
-                        onClick = onCancel
-                    ) { Text("Cancel") }
-                    TextButton(
-                        onClick = onConfirm
-                    ) { Text("OK") }
-                }
-            }
-        }
-    }
-}
-
 
 @Composable
 fun ColorPicker(
@@ -573,6 +559,18 @@ fun ColorPicker(
                 }
             }
         }
+    }
+}
+private fun showTimePicker(activity: AppCompatActivity?, onTimeChange: (Int, Int) -> Unit) {
+    val picker = MaterialTimePicker.Builder()
+        .setTimeFormat(TimeFormat.CLOCK_24H)
+        .setTheme(R.style.CustomTimePickerTheme)
+        .setInputMode(MaterialTimePicker.INPUT_MODE_CLOCK)
+        .build()
+
+    activity?.let {
+        picker.show(it.supportFragmentManager, picker.toString())
+        picker.addOnPositiveButtonClickListener { onTimeChange(picker.hour, picker.minute) }
     }
 }
 

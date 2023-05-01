@@ -5,11 +5,9 @@ import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
 import android.net.Uri
 import android.os.Build
-import android.util.Log
 import androidx.annotation.RequiresApi
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import coil.ImageLoader
 import coil.request.ImageRequest
@@ -20,7 +18,6 @@ import com.example.new_app.model.Task
 import com.example.new_app.model.service.AccountService
 import com.example.new_app.model.service.FirebaseService
 import com.example.new_app.model.service.scheduleTaskReminder
-import com.example.new_app.screens.TaskAppViewModel
 import com.example.new_app.screens.task.tasklist.generateStaticMapUrl
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
@@ -34,6 +31,7 @@ import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
 import java.text.SimpleDateFormat
+import java.time.LocalDateTime
 import java.time.ZoneId
 import java.util.*
 import javax.inject.Inject
@@ -44,13 +42,13 @@ class TaskEditCreateViewModel @Inject constructor(
     private val accountService: AccountService,
     private val storage: FirebaseStorage,
     private val snackbarManager: SnackbarManager
-) : TaskAppViewModel() {
+) : ViewModel() {
 
     private val dateFormat = "EEE, d MMM yyyy"
+    val alertTimeDisplay = mutableStateOf("1 hour in advance")
 
     val task = mutableStateOf(Task())
     val imageUri = mutableStateOf<String?>(null)
-    var bitmap by mutableStateOf<Bitmap?>(null)
     var marker: Marker? = null
 
     private val _taskEditCreateState = MutableStateFlow<Resource<Unit>>(Resource.Empty())
@@ -66,6 +64,11 @@ class TaskEditCreateViewModel @Inject constructor(
                 }
             }
         }
+    }
+
+    fun onAlertOptionChange(option: String) {
+        alertTimeDisplay.value = option
+        task.value = task.value.copy(alertMessageTimer = alertTimeToMillis(option))
     }
 
     fun onTitleChange(newValue: String) {
@@ -93,7 +96,6 @@ class TaskEditCreateViewModel @Inject constructor(
         task.value = task.value.copy(locationName = null)
         locationDisplay.value = ""
     }
-
 
     @RequiresApi(Build.VERSION_CODES.O)
     fun onDateChange(newValue: Long) {
@@ -141,7 +143,6 @@ class TaskEditCreateViewModel @Inject constructor(
                     }
                 }
             }
-
             Uri.fromFile(compressedFile)
         }
     }
@@ -195,25 +196,19 @@ class TaskEditCreateViewModel @Inject constructor(
 
                             onTaskCreated(savedTaskId!!)
                             task.value.dueDateToMillis()?.let { dueDateMillis ->
-                                scheduleTaskReminder(savedTaskId, "${task.value.title} at: ${task.value.dueTime}", task.value.locationName ?: task.value.description, dueDateMillis, imageUrl, context)
+                                val notificationId = generateUniqueNotificationId()
+                                scheduleTaskReminder(savedTaskId, "${task.value.title} at: ${task.value.dueTime}", task.value.locationName ?: task.value.description, dueDateMillis, imageUrl, task.value.alertMessageTimer, notificationId, context)
                             }
 
-                            Log.d("TaskEditCreateViewModel", "Task created successfully with id: ----  $savedTaskId  -------")
                             resetTask()
                         }
                         is Resource.Error -> {
                             _taskEditCreateState.value = Resource.Error(saveResult.message ?: "Unknown error")
-//                            snackbarManager.showSnackbarMessage(
-//                                SnackbarMessage.Text(saveResult.message ?: "Unknown error")
-//                            )
                             SnackbarManager.showMessage(saveResult.message ?: "Unknown error")
                             return@launch
                         }
                         else -> {
                             _taskEditCreateState.value = Resource.Error("Unknown error")
-//                            snackbarManager.showSnackbarMessage(
-//                                SnackbarMessage.Text("Unknown error")
-//                            )
                             SnackbarManager.showMessage("Unknown error")
                             return@launch
                         }
@@ -232,32 +227,23 @@ class TaskEditCreateViewModel @Inject constructor(
                         when (val updateResult = firebaseService.updateTask(updatedTask)) {
                             is Resource.Success -> {
                                 onTaskCreated(taskId)
-                                Log.d("TaskEditCreateViewModel", "Task EDITED successfully with id: ----  $taskId  -------")
-
                                 var imageUrl: String? = null
                                 if (task.value.location?.latitude != null && task.value.location?.longitude != null) {
                                     imageUrl = generateStaticMapUrl(task.value)
                                 }
-
                                 task.value.dueDateToMillis()?.let { dueDateMillis ->
-                                    scheduleTaskReminder(taskId, "${task.value.title} at: ${task.value.dueTime}", task.value.locationName ?: task.value.description, dueDateMillis, imageUrl, context)
+                                    val notificationId = generateUniqueNotificationId()
+                                    scheduleTaskReminder(taskId, "${task.value.title} at: ${task.value.dueTime}", task.value.locationName ?: task.value.description, dueDateMillis, imageUrl, task.value.alertMessageTimer, notificationId, context)
                                 }
-
                                 resetTask()
                             }
                             is Resource.Error -> {
                                 _taskEditCreateState.value = Resource.Error(updateResult.message ?: "Unknown error")
-//                                snackbarManager.showSnackbarMessage(
-//                                    SnackbarMessage.Text(updateResult.message ?: "Unknown error")
-//                                )
                                 SnackbarManager.showMessage(updateResult.message ?: "Unknown error")
                                 return@launch
                             }
                             else -> {
                                 _taskEditCreateState.value = Resource.Error("Unknown error")
-//                                snackbarManager.showSnackbarMessage(
-//                                    SnackbarMessage.Text("Unknown error")
-//                                )
                                 SnackbarManager.showMessage("Unknown error")
                                 return@launch
                             }
@@ -270,22 +256,17 @@ class TaskEditCreateViewModel @Inject constructor(
                                     imageUrl = generateStaticMapUrl(task.value)
                                 }
                                 task.value.dueDateToMillis()?.let { dueDateMillis ->
-                                    scheduleTaskReminder(taskId, "${task.value.title} at: ${task.value.dueTime}", task.value.locationName ?: task.value.description, dueDateMillis, imageUrl, context)
+                                    val notificationId = generateUniqueNotificationId()
+                                    scheduleTaskReminder(taskId, "${task.value.title} at: ${task.value.dueTime}", task.value.locationName ?: task.value.description, dueDateMillis, imageUrl, task.value.alertMessageTimer, notificationId, context)
                                 }
                             }
                             is Resource.Error -> {
                                 _taskEditCreateState.value = Resource.Error(updateResult.message ?: "Unknown error")
-//                                snackbarManager.showSnackbarMessage(
-//                                    SnackbarMessage.Text(updateResult.message ?: "Unknown error")
-//                                )
                                 SnackbarManager.showMessage(updateResult.message ?: "Unknown error")
                                 return@launch
                             }
                             else -> {
                                 _taskEditCreateState.value = Resource.Error("Unknown error")
-//                                snackbarManager.showSnackbarMessage(
-//                                    SnackbarMessage.Text("Unknown error")
-//                                )
                                 SnackbarManager.showMessage("Unknown error")
                                 return@launch
                             }
@@ -293,16 +274,10 @@ class TaskEditCreateViewModel @Inject constructor(
                     }
                 }
                 _taskEditCreateState.value = Resource.Success(Unit)
-//                snackbarManager.showSnackbarMessage(
-//                    SnackbarMessage.Text("Task successfully saved")
-//                )
                 SnackbarManager.showMessage("Task successfully saved")
                 popUpScreen()
             } catch (e: Exception) {
                 _taskEditCreateState.value = Resource.Error(e.message ?: "Unknown error")
-//                snackbarManager.showSnackbarMessage(
-//                    SnackbarMessage.Text(e.message ?: "Unknown error")
-//                )
                 SnackbarManager.showMessage("Unknown error")
             } finally {
                 _taskEditCreateState.value = Resource.Empty()
@@ -326,10 +301,28 @@ class TaskEditCreateViewModel @Inject constructor(
     fun resetTask() {
         task.value = Task()
         imageUri.value = null
+        alertTimeDisplay.value = "1 hour in advance"
         onLocationReset()
     }
 
     private fun Int.toClockPattern(): String {
         return if (this < 10) "0$this" else "$this"
     }
+
+    private fun alertTimeToMillis(option: String): Long {
+        return when (option) {
+            "5 minutes in advance" -> 5 * 60 * 1000L
+            "10 minutes in advance" -> 10 * 60 * 1000L
+            "15 minutes in advance" -> 15 * 60 * 1000L
+            "30 minutes in advance" -> 30 * 60 * 1000L
+            "1 hour in advance" -> 60 * 60 * 1000L
+            "1 day in advance" -> 24 * 60 * 60 * 1000L
+            else -> 0L
+        }
+    }
+
+    private fun generateUniqueNotificationId(): Int {
+        return LocalDateTime.now().hashCode()
+    }
+
 }
