@@ -24,10 +24,10 @@ import com.example.new_app.model.Task
 fun CustomTabRow(
     selectedIndex: MutableState<Int>,
     tabTitles: List<String>,
-    selectedTasks: MutableList<Task>,
+    selectedTasks: MutableList<Task> = mutableListOf(),
     rowColor: Color = MaterialTheme.colorScheme.secondary,
     mainViewModel: SharedViewModel = SharedViewModel(),
-){
+) {
     val indicator = @Composable { tabPositions: List<TabPosition> ->
         HomeCategoryTabIndicator(
             Modifier.tabIndicatorOffset(tabPositions[selectedIndex.value]),
@@ -55,12 +55,12 @@ fun CustomTabRow(
                 selected = index == selectedIndex.value,
                 onClick = {
                     if (index != selectedIndex.value) {
+                        //todo test test test
                         selectedIndex.value = index
-                        //TODO - test this new commented out code
-//                        if (index == 1) {
+                        mainViewModel.clearSelectedTaskIds()
+                        if (selectedTasks.isNotEmpty()){
                             selectedTasks.clear()
-                            mainViewModel.clearSelectedTaskIds()
-//                        }
+                        }
                     }
                 },
                 selectedContentColor = rowColor,

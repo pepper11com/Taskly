@@ -80,7 +80,7 @@ fun SwipeableTaskListItem(
     onTaskSwipedBackToActive: (Task) -> Unit,
     isFlashing: Boolean = false,
     mainViewModel: SharedViewModel,
-    mapsVisible: MutableState<Boolean>
+    mapsVisible: Boolean
 ) {
     //width of the swipeable item
     val screenWidth = LocalConfiguration.current.screenWidthDp.dp
@@ -142,7 +142,7 @@ fun SwipeableTaskListItem(
             onSelectedTasksChange = onSelectedTasksChange,
             isFlashing = isFlashing,
             mainViewModel = mainViewModel,
-            mapVisible = mapsVisible.value
+            mapVisible = mapsVisible
         )
     }
 }

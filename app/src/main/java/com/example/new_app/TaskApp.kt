@@ -44,7 +44,6 @@ import com.google.accompanist.permissions.shouldShowRationale
 import kotlinx.coroutines.CoroutineScope
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
-@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun TaskApp(
     mainViewModel: SharedViewModel = hiltViewModel(),
@@ -136,7 +135,6 @@ fun resources(): Resources {
     return LocalContext.current.resources
 }
 
-@RequiresApi(Build.VERSION_CODES.O)
 fun NavGraphBuilder.taskAppGraph(
     appState: TaskAppState,
     mainViewModel: SharedViewModel,

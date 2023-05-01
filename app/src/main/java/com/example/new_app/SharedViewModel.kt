@@ -17,16 +17,12 @@ class SharedViewModel : ViewModel() {
     private val _selectedTaskIds = MutableStateFlow<Set<String>>(emptySet())
     val selectedTaskIds: StateFlow<Set<String>> = _selectedTaskIds.asStateFlow()
 
-//    val visiblePermissionDialog = mutableStateListOf<String>()
-//
-//    fun onPermissionResult(
-//        permission: String,
-//        isGranted: Boolean,
-//    ){
-//        if(!isGranted){
-//            visiblePermissionDialog.add(0, permission)
-//        }
-//    }
+    private val _mapsVisible = MutableLiveData<Boolean>(true)
+    val mapsVisible: LiveData<Boolean> = _mapsVisible
+
+    fun toggleMapsVisible() {
+        _mapsVisible.value = _mapsVisible.value?.not()
+    }
 
     fun updateLastAddedTaskId(newTaskId: String?) {
         _lastAddedTaskId.value = newTaskId

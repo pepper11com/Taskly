@@ -42,7 +42,6 @@ import com.example.new_app.model.service.Notification
 import com.example.new_app.screens.login.UserData
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
-@RequiresApi(Build.VERSION_CODES.O)
 @SuppressLint("UnusedMaterialScaffoldPaddingParameter")
 @Composable
 fun TaskListScreen(
@@ -51,13 +50,12 @@ fun TaskListScreen(
     userData: UserData?,
     viewModel: TaskListViewModel = hiltViewModel()
 ) {
-// todo test this
 
-//    val viewModel: TaskListViewModel = hiltViewModel()
     val userId = viewModel.currentUserId
     val deleteTasksState by viewModel.deleteTasksState.collectAsState()
     val sortType by viewModel.sortType.collectAsState()
     val userProfilePictureUrl = userData?.profilePictureUrl
+    val userGoogleName = userData?.username
     val context = LocalContext.current
     val uiState by viewModel.taskListUiState.collectAsState()
     val scope = rememberCoroutineScope()
@@ -66,9 +64,6 @@ fun TaskListScreen(
     val selectedTasks = remember { mutableStateListOf<Task>() }
     val tabTitles = listOf("Deleted Tasks", "Tasks", "Completed Tasks")
     val selectedIndex = remember { mutableStateOf(1) }
-//    val filteredTasks = remember(uiState.tasks, selectedIndex.value) {
-//        getFilteredTasks(uiState.tasks, TaskStatus.values()[selectedIndex.value])
-//    }
     val filteredTasks = remember(uiState.tasks, selectedIndex.value, sortType) {
         val filtered =
             getFilteredTasks(uiState.tasks, TaskStatus.values()[selectedIndex.value], sortType)
@@ -79,8 +74,7 @@ fun TaskListScreen(
     val listState = rememberLazyListState()
     val lastAddedTaskId by mainViewModel.lastAddedTaskId.observeAsState(null)
     val isScreenVisible = remember { mutableStateOf(true) }
-
-    val mapsVisible = remember { mutableStateOf(true) }
+    val mapsVisible by mainViewModel.mapsVisible.observeAsState(initial = true)
 
     LaunchedEffect(lastAddedTaskId) {
         if (lastAddedTaskId != null && isScreenVisible.value) {
@@ -130,6 +124,7 @@ fun TaskListScreen(
                     mainViewModel = mainViewModel,
                     mapsVisible = mapsVisible,
                     userProfilePictureUrl = userProfilePictureUrl,
+                    userGoogleName = userGoogleName,
                 )
 
                 CustomTabRow(

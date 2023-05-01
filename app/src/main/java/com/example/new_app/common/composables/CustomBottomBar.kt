@@ -14,6 +14,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.example.new_app.screens.screen_switcher.BottomNavigationItem
+import com.example.new_app.theme.MediumGrey
+import com.google.maps.android.compose.widgets.DarkGray
 
 
 val bottomNavigationItems = listOf(
@@ -57,8 +59,8 @@ fun BottomNavigationBar(
                 alwaysShowLabel = false,
                 colors = NavigationBarItemDefaults.colors(
                     selectedIconColor = Color.Black,
-                    indicatorColor = Color(0xFFBDBDBD),
-                    unselectedIconColor = Color(0xFFBDBDBD),
+                    indicatorColor = MediumGrey,
+                    unselectedIconColor = MediumGrey,
                 )
             )
         }

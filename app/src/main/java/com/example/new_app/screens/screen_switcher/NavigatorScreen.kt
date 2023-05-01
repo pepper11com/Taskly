@@ -24,13 +24,13 @@ import com.example.new_app.common.composables.BottomNavigationBar
 import com.example.new_app.common.composables.MediumAppBarWithTabs
 import com.example.new_app.model.service.GoogleAuth
 import com.example.new_app.screens.calender.CalendarViewScreen
+import com.example.new_app.screens.calender_screens.CalenderScreens
 import com.example.new_app.screens.login.LoginScreen
 import com.example.new_app.screens.login.UserData
 import com.example.new_app.screens.signup.SignupScreen
 import com.example.new_app.screens.task.tasklist.TaskListScreen
 import com.example.new_app.screens.task.tasklist.TaskListViewModel
 
-@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun NavigatorScreen(
     openScreen: (String) -> Unit,
@@ -59,10 +59,10 @@ fun NavigatorScreen(
                 }
 
                 1 -> {
-                    CalendarViewScreen(
-                        viewModel = viewModel,
+                    CalenderScreens(
                         openScreen = openScreen,
                         userData = userData,
+                        viewModel = viewModel
                     )
                 }
             }

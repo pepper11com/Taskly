@@ -99,16 +99,15 @@ import java.time.format.TextStyle
 import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
-@RequiresApi(Build.VERSION_CODES.O)
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun CalendarViewScreen(
     viewModel: TaskListViewModel,
     openScreen: (String) -> Unit,
     userData: UserData?,
+    scrollBehavior: TopAppBarScrollBehavior,
 ) {
 
-    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
     val tasks by viewModel.taskListUiState.collectAsState()
     val taskList = tasks.tasks
     val userProfilePictureUrl = userData?.profilePictureUrl
@@ -140,110 +139,85 @@ fun CalendarViewScreen(
     val coroutineScope = rememberCoroutineScope()
     val visibleMonth = rememberFirstCompletelyVisibleMonth(state)
     LaunchedEffect(visibleMonth) {
-        // Clear selection if we scroll to a new month.
+        // Clears selection if we scroll to a new month.
         selection = null
     }
 
-    Scaffold(
-        topBar = {
-            Column {
-                CustomTopAppBarSmall(
-                    title = "Calendar",
-                    scrollBehavior = scrollBehavior,
-                    userProfilePictureUrl = userProfilePictureUrl,
-                    openScreen = openScreen,
-                )
+    Column {
 
-                SimpleCalendarTitle(
-                    modifier = Modifier
-                        .background(MaterialTheme.colorScheme.background)
-                        .padding(horizontal = 8.dp, vertical = 12.dp),
-                    currentMonth = visibleMonth.yearMonth,
-                    goToPrevious = {
-                        coroutineScope.launch {
-                            state.animateScrollToMonth(state.firstVisibleMonth.yearMonth.previousMonth)
-                        }
-                    },
-                    goToNext = {
-                        coroutineScope.launch {
-                            state.animateScrollToMonth(state.firstVisibleMonth.yearMonth.nextMonth)
-                        }
-                    },
-                )
-            }
-        }
-    ){ paddingValues ->
-        LazyColumn(
+        val customCalendarColors = MaterialTheme.colorScheme.copy(
+            background = Color(0xFFEDEDED),
+        )
+        SimpleCalendarTitle(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .nestedScroll(scrollBehavior.nestedScrollConnection)
-                .background(MaterialTheme.colorScheme.background),
-            state = listState,
-        ) {
+                .background(MaterialTheme.colorScheme.background)
+                .padding(horizontal = 8.dp, vertical = 12.dp),
+            currentMonth = visibleMonth.yearMonth,
+            goToPrevious = {
+                coroutineScope.launch {
+                    state.animateScrollToMonth(state.firstVisibleMonth.yearMonth.previousMonth)
+                }
+            },
+            goToNext = {
+                coroutineScope.launch {
+                    state.animateScrollToMonth(state.firstVisibleMonth.yearMonth.nextMonth)
+                }
+            },
+        )
 
-            item{
-                val customCalendarColors = MaterialTheme.colorScheme.copy(
-                    background = Color(0xFFEDEDED), // Change this to your desired background color
-                )
+        CompositionLocalProvider(LocalContentColor provides customCalendarColors.primaryContainer) {
+            HorizontalCalendar(
+                modifier = Modifier.wrapContentWidth(),
+                state = state,
+                dayContent = { day ->
 
-                CompositionLocalProvider(LocalContentColor provides customCalendarColors.primaryContainer) {
-                    HorizontalCalendar(
-                        modifier = Modifier.wrapContentWidth(),
-                        state = state,
-                        dayContent = { day ->
-
-                            val tasksOnDate = if (day.position == DayPosition.MonthDate) {
-                                taskList.filter { task ->
-                                    task.dueDate.toDate().toLocalDate() == day.date
-                                }
-                            } else {
-                                emptyList()
-                            }
-
-                            val colors = tasksOnDate.map { task ->
-                                task.color?.let { Color(it) } ?: Color(0xFF4E4E4E)
-                            }.distinct()
-
-                            Day(
-                                day = day,
-                                isSelected = selection == day,
-                                colors = colors,
-                            ) { clicked ->
-                                selection = clicked
-                            }
-
-                        },
-                        monthHeader = {
-                            MonthHeader(
-                                modifier = Modifier.padding(vertical = 8.dp),
-                                daysOfWeek = daysOfWeek,
-                            )
-                        },
-                    )
-
-                    Divider(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 4.dp),
-                        color = Color(0xFF4E4E4E),
-                        thickness = 1.dp
-                    )
-
-
-                    Column(modifier = Modifier.fillMaxWidth()) {
-                        tasksInSelectedDate.value.forEach { task ->
-                            TaskInformation(task)
+                    val tasksOnDate = if (day.position == DayPosition.MonthDate) {
+                        taskList.filter { task ->
+                            task.dueDate.toDate().toLocalDate() == day.date
                         }
+                    } else {
+                        emptyList()
                     }
 
+                    val colors = tasksOnDate.map { task ->
+                        task.color?.let { Color(it) } ?: Color(0xFF4E4E4E)
+                    }.distinct()
+
+                    Day(
+                        day = day,
+                        isSelected = selection == day,
+                        colors = colors,
+                    ) { clicked ->
+                        selection = clicked
+                    }
+
+                },
+                monthHeader = {
+                    MonthHeader(
+                        modifier = Modifier.padding(vertical = 8.dp),
+                        daysOfWeek = daysOfWeek,
+                    )
+                },
+            )
+
+            Divider(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 4.dp),
+                color = Color(0xFF4E4E4E),
+                thickness = 1.dp
+            )
+
+            Column(modifier = Modifier.fillMaxWidth()) {
+                tasksInSelectedDate.value.forEach { task ->
+                    TaskInformation(task)
                 }
             }
         }
     }
+
 }
 
-@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 private fun Day(
     day: CalendarDay,
@@ -301,7 +275,7 @@ private fun Day(
             }
         }
 
-        if (colors.size > 3){
+        if (colors.size > 3) {
             Box(
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
@@ -321,7 +295,6 @@ private fun Day(
     }
 }
 
-@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 private fun MonthHeader(
     modifier: Modifier = Modifier,
@@ -342,11 +315,15 @@ private fun MonthHeader(
 }
 
 @Composable
-private fun LazyItemScope.TaskInformation(task: Task) {
+private fun TaskInformation(task: Task) {
     val taskImage = generateStaticMapUrl(task)
     val dueDateMillis = task.dueDateToMillis()
     val dueDateText = if (dueDateMillis != null) {
-        DateUtils.getRelativeTimeSpanString(dueDateMillis, System.currentTimeMillis(), DateUtils.MINUTE_IN_MILLIS)
+        DateUtils.getRelativeTimeSpanString(
+            dueDateMillis,
+            System.currentTimeMillis(),
+            DateUtils.MINUTE_IN_MILLIS
+        )
     } else {
         "No due date"
     }
@@ -358,7 +335,6 @@ private fun LazyItemScope.TaskInformation(task: Task) {
         shape = RoundedCornerShape(8.dp),
         shadowElevation = 2.dp,
         color = Color(0xFF444444),
-//        color = MaterialTheme.colorScheme.background,
         border = BorderStroke(2.dp, task.color?.let { Color(it) } ?: Color(0xFF4E4E4E)),
     ) {
         Column(
@@ -398,18 +374,13 @@ private fun LazyItemScope.TaskInformation(task: Task) {
                 Column {
                     Text(text = "Due: $dueDateText", style = MaterialTheme.typography.bodyMedium)
                     Spacer(modifier = Modifier.height(4.dp))
-                    Text(text = "Status: ${task.status}", style = MaterialTheme.typography.bodyMedium)
+                    Text(
+                        text = "Status: ${task.status}",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
                 }
             }
         }
-
-//        Divider(
-//            modifier = Modifier
-//                .fillMaxWidth()
-//                .padding(top = 4.dp),
-//            color = Color.White,
-//            thickness = 1.dp
-//        )
     }
 }
 
@@ -423,13 +394,11 @@ fun String.toDate(): Date? {
     }
 }
 
-@RequiresApi(Build.VERSION_CODES.O)
 fun Date?.toLocalDate(): LocalDate? {
     return this?.toInstant()?.atZone(ZoneId.systemDefault())?.toLocalDate()
 }
 
 
-@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun SimpleCalendarTitle(
     modifier: Modifier,
@@ -496,18 +465,15 @@ private fun CalendarNavigationIcon(
     )
 }
 
-@RequiresApi(Build.VERSION_CODES.O)
 fun YearMonth.displayText(short: Boolean = false): String {
     return "${this.month.displayText(short = short)} ${this.year}"
 }
 
-@RequiresApi(Build.VERSION_CODES.O)
 fun Month.displayText(short: Boolean = true): String {
     val style = if (short) TextStyle.SHORT else TextStyle.FULL
     return getDisplayName(style, Locale.ENGLISH)
 }
 
-@RequiresApi(Build.VERSION_CODES.O)
 fun DayOfWeek.displayText(uppercase: Boolean = false): String {
     return getDisplayName(TextStyle.SHORT, Locale.ENGLISH).let { value ->
         if (uppercase) value.uppercase(Locale.ENGLISH) else value
