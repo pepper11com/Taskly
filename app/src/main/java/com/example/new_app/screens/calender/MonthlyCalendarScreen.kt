@@ -83,14 +83,11 @@ import java.time.ZoneId
 import java.time.format.TextStyle
 import java.util.*
 
-@OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun CalendarViewScreen(
     viewModel: TaskListViewModel,
     openScreen: (String) -> Unit,
-    userData: UserData?,
-    scrollBehavior: TopAppBarScrollBehavior,
 ) {
     val tasks by viewModel.taskListUiState.collectAsState()
     val taskList = tasks.tasks
@@ -163,7 +160,7 @@ fun CalendarViewScreen(
 
                     val colors = tasksOnDate.map { task ->
                         task.color?.let { Color(it) } ?: Color(0xFF4E4E4E)
-                    }.distinct()
+                    }
 
                     Day(
                         day = day,

@@ -18,11 +18,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import com.example.new_app.common.composables.CustomTabRow
 import com.example.new_app.common.composables.CustomTopAppBarCalendar
-import com.example.new_app.common.composables.CustomTopAppBarSmall
 import com.example.new_app.screens.calender.CalendarViewScreen
 import com.example.new_app.screens.calender.WeeklyCalendarViewScreen
 import com.example.new_app.screens.login.UserData
-import com.example.new_app.screens.signup.SignupScreen
 import com.example.new_app.screens.task.tasklist.TaskListViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -34,7 +32,7 @@ fun CalenderScreens(
 ) {
 
     val selectedIndex = remember { mutableStateOf(0) }
-    val tabTitles = listOf("Month Calendar", "Week Calendar")
+    val tabTitles = listOf("Week Calendar", "Month Calendar")
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
     val userProfilePictureUrl = userData?.profilePictureUrl
     val userGoogleName = userData?.username
@@ -44,7 +42,7 @@ fun CalenderScreens(
         topBar = {
             Column {
                 CustomTopAppBarCalendar(
-                    title = if (selectedIndex.value == 0) "Month Calendar" else "Week Calendar",
+                    title = if (selectedIndex.value == 0) "Week Calendar" else "Month Calendar",
                     scrollBehavior = scrollBehavior,
                     userProfilePictureUrl = userProfilePictureUrl,
                     openScreen = openScreen,
@@ -70,17 +68,14 @@ fun CalenderScreens(
 
                 when (selectedIndex.value) {
                     0 -> {
-                        CalendarViewScreen(
+                        WeeklyCalendarViewScreen(
                             viewModel = viewModel,
                             openScreen = openScreen,
-                            userData = userData,
-                            scrollBehavior = scrollBehavior
                         )
                     }
 
                     1 -> {
-                        //TODO Week Calendar
-                        WeeklyCalendarViewScreen(
+                        CalendarViewScreen(
                             viewModel = viewModel,
                             openScreen = openScreen,
                         )
