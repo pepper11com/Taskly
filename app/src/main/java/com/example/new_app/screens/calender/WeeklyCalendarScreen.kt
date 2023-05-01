@@ -1,7 +1,12 @@
 package com.example.new_app.screens.calender
 
+import android.content.Context
+import android.os.VibrationEffect
+import android.os.Vibrator
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -9,17 +14,13 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -32,6 +33,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -39,6 +41,7 @@ import androidx.compose.ui.unit.sp
 import com.example.new_app.common.helpers.getWeekPageTitle
 import com.example.new_app.common.helpers.rememberFirstVisibleWeekAfterScroll
 import com.example.new_app.model.Task
+import com.example.new_app.screens.task.tasklist.ShowDialogWithTaskDetailsAndDelete
 import com.example.new_app.screens.task.tasklist.TaskListViewModel
 import com.kizitonwose.calendar.compose.WeekCalendar
 import com.kizitonwose.calendar.compose.weekcalendar.rememberWeekCalendarState
@@ -53,7 +56,7 @@ fun WeeklyCalendarViewScreen(
 ) {
     val tasks by viewModel.taskListUiState.collectAsState()
     val taskList = tasks.tasks
-
+    val context = LocalContext.current
     val currentDate = remember { LocalDate.now() }
     val startDate = remember { currentDate.minusDays(500) }
     val endDate = remember { currentDate.plusDays(500) }
@@ -106,18 +109,37 @@ fun WeeklyCalendarViewScreen(
 
         HourlyTaskView(
             selectedDate = selection,
-            taskList = taskList
+            taskList = taskList,
+            viewModel = viewModel,
+            context = context
         )
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun HourlyTaskView(selectedDate: LocalDate, taskList: List<Task>) {
+fun HourlyTaskView(
+    selectedDate: LocalDate,
+    taskList: List<Task>,
+    viewModel: TaskListViewModel,
+    context: Context
+) {
+    val selectedTask = remember { mutableStateOf<Task?>(null) }
+    val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
     val tasksForSelectedDate = taskList.filter {
         val taskDate = LocalDate.parse(it.dueDate, dueDateFormat)
         taskDate == selectedDate
     }
     val padding = 8.dp
+
+    if (selectedTask.value != null) {
+        ShowDialogWithTaskDetailsAndDelete(
+            context = context,
+            task = selectedTask.value!!,
+            viewModel = viewModel,
+            onDismiss = { selectedTask.value = null }
+        )
+    }
 
     if (tasksForSelectedDate.isEmpty()) {
         Box(
@@ -133,31 +155,56 @@ fun HourlyTaskView(selectedDate: LocalDate, taskList: List<Task>) {
             )
         }
     } else {
-        val minHour = tasksForSelectedDate.minOfOrNull { it.dueTime.split(":")[0].toIntOrNull() ?: 0 }
-        val maxHour = tasksForSelectedDate.maxOfOrNull { it.dueTime.split(":")[0].toIntOrNull() ?: 0 }
-        val hoursToShow = (minHour ?: 0)..(maxHour ?: 23)
-
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.background)
         ) {
-            hoursToShow.forEach { hour ->
+            val taskHours = tasksForSelectedDate.mapNotNull { it.dueTime.split(":")[0].toIntOrNull() }.toSet().sorted()
+            var lastDisplayedHour = -1
+
+            taskHours.forEach { taskHour ->
+                val startTime = if (lastDisplayedHour == -1) 0 else lastDisplayedHour + 1
+
+                if (startTime != taskHour) {
+                    Text(
+                        text = String.format("%02d:00 - %02d:00", startTime, taskHour - 1),
+                        color = Color.White.copy(alpha = 0.3f),
+                        fontSize = 24.sp,
+                        modifier = Modifier
+                            .padding(top = padding / 2, bottom = padding / 2, start = padding, end = padding)
+                    )
+                }
+
                 Text(
-                    text = String.format("%02d:00", hour),
+                    text = String.format("%02d:00", taskHour),
                     color = Color.White,
                     fontSize = 24.sp,
                     modifier = Modifier
                         .padding(top = padding / 2, bottom = padding / 2, start = padding, end = padding)
                 )
+
                 val tasksForThisHour = tasksForSelectedDate.filter {
-                    val taskHour = it.dueTime.split(":")[0].toIntOrNull() ?: 0
-                    taskHour == hour
+                    val currentTaskHour = it.dueTime.split(":")[0].toIntOrNull() ?: 0
+                    currentTaskHour == taskHour
                 }
+
                 tasksForThisHour.forEach { task ->
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
+                            .combinedClickable(
+                                onClick = {},
+                                onLongClick = {
+                                    selectedTask.value = task
+                                    vibrator.vibrate(
+                                        VibrationEffect.createOneShot(
+                                            25,
+                                            VibrationEffect.DEFAULT_AMPLITUDE
+                                        )
+                                    )
+                                },
+                            )
                             .padding(top = padding / 2, bottom = padding / 2, start = padding, end = padding),
                         shape = RoundedCornerShape(8.dp),
                         elevation = CardDefaults.cardElevation(
@@ -203,6 +250,18 @@ fun HourlyTaskView(selectedDate: LocalDate, taskList: List<Task>) {
                         }
                     }
                 }
+
+                lastDisplayedHour = taskHour
+            }
+
+            if (lastDisplayedHour < 23) {
+                Text(
+                    text = String.format("%02d:00 - 23:00", lastDisplayedHour + 1),
+                    color = Color.White.copy(alpha = 0.3f),
+                    fontSize = 24.sp,
+                    modifier = Modifier
+                        .padding(top = padding / 2, bottom = padding / 2, start = padding, end = padding)
+                )
             }
         }
     }

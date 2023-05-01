@@ -1,11 +1,16 @@
 package com.example.new_app.screens.calender
 
 import android.annotation.SuppressLint
+import android.content.Context
+import android.os.VibrationEffect
+import android.os.Vibrator
 import android.text.format.DateUtils
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -31,6 +36,8 @@ import androidx.compose.material.LocalContentColor
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -49,6 +56,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
@@ -58,6 +66,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import com.example.new_app.model.Task
 import com.example.new_app.screens.login.UserData
+import com.example.new_app.screens.task.tasklist.ShowDialogWithTaskDetailsAndDelete
 import com.example.new_app.screens.task.tasklist.StaticMap
 import com.example.new_app.screens.task.tasklist.TaskListViewModel
 import com.example.new_app.screens.task.tasklist.generateStaticMapUrl
@@ -91,6 +100,7 @@ fun CalendarViewScreen(
 ) {
     val tasks by viewModel.taskListUiState.collectAsState()
     val taskList = tasks.tasks
+    val context = LocalContext.current
 
     val currentMonth = remember { YearMonth.now() }
     val startMonth = remember { currentMonth.minusMonths(500) }
@@ -106,7 +116,7 @@ fun CalendarViewScreen(
         outDateStyle = OutDateStyle.EndOfGrid,
     )
 
-    val tasksInSelectedDate = remember {
+    val tasksInSelectedDate = remember(taskList, selection, state.firstVisibleMonth.yearMonth) {
         derivedStateOf {
             val date = selection?.date
             if (date == null || state.firstVisibleMonth.yearMonth.month != date.month) emptyList() else taskList.filter { task ->
@@ -189,7 +199,11 @@ fun CalendarViewScreen(
 
             Column(modifier = Modifier.fillMaxWidth()) {
                 tasksInSelectedDate.value.forEach { task ->
-                    TaskInformation(task)
+                    TaskInformation(
+                        task,
+                        viewModel,
+                        context
+                    )
                 }
             }
         }
@@ -293,8 +307,25 @@ private fun MonthHeader(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun TaskInformation(task: Task) {
+private fun TaskInformation(
+    task: Task,
+    viewModel: TaskListViewModel,
+    context: Context
+) {
+    val selectedTask = remember { mutableStateOf<Task?>(null) }
+    val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+
+    if (selectedTask.value != null) {
+        ShowDialogWithTaskDetailsAndDelete(
+            context = context,
+            task = selectedTask.value!!,
+            viewModel = viewModel,
+            onDismiss = { selectedTask.value = null }
+        )
+    }
+
     val taskImage = generateStaticMapUrl(task)
     val dueDateMillis = task.dueDateToMillis()
     val dueDateText = if (dueDateMillis != null) {
@@ -306,15 +337,30 @@ private fun TaskInformation(task: Task) {
     } else {
         "No due date"
     }
-
-    Surface(
+    Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(8.dp),
-        shape = RoundedCornerShape(8.dp),
-        shadowElevation = 2.dp,
-        color = Color(0xFF444444),
+            .padding(8.dp)
+            .combinedClickable(
+                onClick = {},
+                onLongClick = {
+                    selectedTask.value = task
+                    vibrator.vibrate(
+                        VibrationEffect.createOneShot(
+                            25,
+                            VibrationEffect.DEFAULT_AMPLITUDE
+                        )
+                    )
+                },
+            ),
+        colors = CardDefaults.cardColors(
+            containerColor = Color(0xFF444444)
+        ),
         border = BorderStroke(2.dp, task.color?.let { Color(it) } ?: Color(0xFF4E4E4E)),
+        shape = RoundedCornerShape(8.dp),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = 2.dp,
+        )
     ) {
         Column(
             modifier = Modifier

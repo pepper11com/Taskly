@@ -212,16 +212,12 @@ fun TaskListItem(
                 onClick = onClick,
                 onLongClick = {
                     onLongPress()
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                        vibrator.vibrate(
-                            VibrationEffect.createOneShot(
-                                25,
-                                VibrationEffect.DEFAULT_AMPLITUDE
-                            )
+                    vibrator.vibrate(
+                        VibrationEffect.createOneShot(
+                            25,
+                            VibrationEffect.DEFAULT_AMPLITUDE
                         )
-                    } else {
-                        vibrator.vibrate(25)
-                    }
+                    )
                 },
             )
     ) {

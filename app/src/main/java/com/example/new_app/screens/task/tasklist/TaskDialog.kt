@@ -38,7 +38,6 @@ import com.example.new_app.common.sort.getDueDateAndTime
 import com.example.new_app.model.Task
 import com.google.android.gms.maps.MapView
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ShowDialogWithTaskDetailsAndDelete(
     context: Context,
