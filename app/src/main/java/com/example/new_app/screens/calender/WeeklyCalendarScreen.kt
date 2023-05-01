@@ -126,74 +126,89 @@ fun HourlyTaskView(selectedDate: LocalDate, taskList: List<Task>) {
         val taskDate = LocalDate.parse(it.dueDate, dueDateFormat)
         taskDate == selectedDate
     }
-
     val padding = 8.dp
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-    ) {
-        (0..23).forEach { hour ->
+    if (tasksForSelectedDate.isEmpty()) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
             Text(
-                text = String.format("%02d:00", hour),
-                color = Color.White,
-                fontSize = 24.sp,
                 modifier = Modifier
-                    .padding(top = padding / 2, bottom = padding / 2, start = padding, end = padding)
+                    .padding(padding),
+                text = "You have no tasks yet for this day",
+                fontSize = 24.sp,
+                color = Color.White
             )
+        }
+    } else {
+        val minHour = tasksForSelectedDate.minOfOrNull { it.dueTime.split(":")[0].toIntOrNull() ?: 0 }
+        val maxHour = tasksForSelectedDate.maxOfOrNull { it.dueTime.split(":")[0].toIntOrNull() ?: 0 }
+        val hoursToShow = (minHour ?: 0)..(maxHour ?: 23)
 
-            val tasksForThisHour = tasksForSelectedDate.filter {
-                val taskHour = it.dueTime.split(":")[0].toIntOrNull() ?: 0
-                taskHour == hour
-            }
-
-            tasksForThisHour.forEach { task ->
-
-                Card(
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+        ) {
+            hoursToShow.forEach { hour ->
+                Text(
+                    text = String.format("%02d:00", hour),
+                    color = Color.White,
+                    fontSize = 24.sp,
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = padding / 2, bottom = padding / 2, start = padding, end = padding),
-                    shape = RoundedCornerShape(8.dp),
-                    elevation = CardDefaults.cardElevation(
-                        defaultElevation = 5.dp,
-                    ),
-                    colors =  CardDefaults.cardColors(
-                        containerColor = Color(task.color ?: -478827),
-                        contentColor = Color.Black,
-                    ),
-                ) {
-                    Column(
+                        .padding(top = padding / 2, bottom = padding / 2, start = padding, end = padding)
+                )
+                val tasksForThisHour = tasksForSelectedDate.filter {
+                    val taskHour = it.dueTime.split(":")[0].toIntOrNull() ?: 0
+                    taskHour == hour
+                }
+                tasksForThisHour.forEach { task ->
+                    Card(
                         modifier = Modifier
-                            .padding(padding)
+                            .fillMaxWidth()
+                            .padding(top = padding / 2, bottom = padding / 2, start = padding, end = padding),
+                        shape = RoundedCornerShape(8.dp),
+                        elevation = CardDefaults.cardElevation(
+                            defaultElevation = 5.dp,
+                        ),
+                        colors = CardDefaults.cardColors(
+                            containerColor = Color(task.color ?: -478827),
+                            contentColor = Color.Black,
+                        ),
                     ) {
-                        Text(
-                            text = task.title,
-                            fontSize = 16.sp,
-                            color = Color.Black,
-                            fontWeight = FontWeight.Bold
-                        )
-
-                        Text(
-                            text = "Due: ${task.dueDate} ${task.dueTime}",
-                            fontSize = 12.sp,
-                            color = Color.Black,
-                        )
-
-                        task.description.takeIf { it.isNotBlank() }?.let {
+                        Column(
+                            modifier = Modifier
+                                .padding(padding)
+                        ) {
                             Text(
-                                text = "Description: $it",
+                                text = task.title,
+                                fontSize = 16.sp,
+                                color = Color.Black,
+                                fontWeight = FontWeight.Bold
+                            )
+
+                            Text(
+                                text = "Due: ${task.dueDate} ${task.dueTime}",
                                 fontSize = 12.sp,
                                 color = Color.Black,
                             )
-                        }
 
-                        task.locationName?.takeIf { it.isNotBlank() }?.let {
-                            Text(
-                                text = "Location: $it",
-                                fontSize = 12.sp,
-                                color = Color.Black,
-                            )
+                            task.description.takeIf { it.isNotBlank() }?.let {
+                                Text(
+                                    text = "Description: $it",
+                                    fontSize = 12.sp,
+                                    color = Color.Black,
+                                )
+                            }
+
+                            task.locationName?.takeIf { it.isNotBlank() }?.let {
+                                Text(
+                                    text = "Location: $it",
+                                    fontSize = 12.sp,
+                                    color = Color.Black,
+                                )
+                            }
                         }
                     }
                 }
@@ -201,8 +216,6 @@ fun HourlyTaskView(selectedDate: LocalDate, taskList: List<Task>) {
         }
     }
 }
-
-
 
 
 private val dateFormatter = DateTimeFormatter.ofPattern("dd")
