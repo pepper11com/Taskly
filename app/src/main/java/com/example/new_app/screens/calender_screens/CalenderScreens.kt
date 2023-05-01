@@ -20,6 +20,7 @@ import com.example.new_app.common.composables.CustomTabRow
 import com.example.new_app.common.composables.CustomTopAppBarCalendar
 import com.example.new_app.common.composables.CustomTopAppBarSmall
 import com.example.new_app.screens.calender.CalendarViewScreen
+import com.example.new_app.screens.calender.WeeklyCalendarViewScreen
 import com.example.new_app.screens.login.UserData
 import com.example.new_app.screens.signup.SignupScreen
 import com.example.new_app.screens.task.tasklist.TaskListViewModel
@@ -79,13 +80,10 @@ fun CalenderScreens(
 
                     1 -> {
                         //TODO Week Calendar
-                        CalendarViewScreen(
+                        WeeklyCalendarViewScreen(
                             viewModel = viewModel,
                             openScreen = openScreen,
-                            userData = userData,
-                            scrollBehavior = scrollBehavior
                         )
-
                     }
                 }
             }

@@ -1,10 +1,7 @@
 package com.example.new_app.screens.calender
 
 import android.annotation.SuppressLint
-import android.os.Build
 import android.text.format.DateUtils
-import android.util.Log
-import androidx.annotation.RequiresApi
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -25,27 +22,19 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentWidth
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyItemScope
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Divider
 import androidx.compose.material.Icon
 import androidx.compose.material.LocalContentColor
-import androidx.compose.material.darkColors
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
-import androidx.compose.material3.contentColorFor
-import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -60,7 +49,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
@@ -68,8 +56,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
-import com.example.new_app.SharedViewModel
-import com.example.new_app.common.composables.CustomTopAppBarSmall
 import com.example.new_app.model.Task
 import com.example.new_app.screens.login.UserData
 import com.example.new_app.screens.task.tasklist.StaticMap
@@ -90,7 +76,6 @@ import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.time.DayOfWeek
-import java.time.Instant
 import java.time.LocalDate
 import java.time.Month
 import java.time.YearMonth
@@ -107,11 +92,8 @@ fun CalendarViewScreen(
     userData: UserData?,
     scrollBehavior: TopAppBarScrollBehavior,
 ) {
-
     val tasks by viewModel.taskListUiState.collectAsState()
     val taskList = tasks.tasks
-    val userProfilePictureUrl = userData?.profilePictureUrl
-    val listState = rememberLazyListState()
 
     val currentMonth = remember { YearMonth.now() }
     val startMonth = remember { currentMonth.minusMonths(500) }
@@ -424,6 +406,7 @@ fun SimpleCalendarTitle(
                 fontSize = 22.sp,
                 textAlign = TextAlign.Center,
                 fontWeight = FontWeight.Medium,
+                color = Color.White,
             )
             CalendarNavigationIcon(
                 icon = Icons.Filled.ArrowForward,
