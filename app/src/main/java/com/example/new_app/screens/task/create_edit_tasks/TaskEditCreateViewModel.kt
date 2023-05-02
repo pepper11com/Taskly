@@ -4,8 +4,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
 import android.net.Uri
-import android.os.Build
-import androidx.annotation.RequiresApi
+import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -33,15 +32,15 @@ import java.io.FileOutputStream
 import java.text.SimpleDateFormat
 import java.time.LocalDateTime
 import java.time.ZoneId
-import java.util.*
+import java.util.Calendar
+import java.util.Locale
+import java.util.TimeZone
 import javax.inject.Inject
 
 @HiltViewModel
 class TaskEditCreateViewModel @Inject constructor(
     private val firebaseService: FirebaseService,
     private val accountService: AccountService,
-    private val storage: FirebaseStorage,
-    private val snackbarManager: SnackbarManager
 ) : ViewModel() {
 
     private val dateFormat = "EEE, d MMM yyyy"
@@ -61,6 +60,16 @@ class TaskEditCreateViewModel @Inject constructor(
             taskId?.let {
                 if (taskId.isNotEmpty()) {
                     task.value = firebaseService.getTask(taskId) ?: Task()
+
+                    task.value.let {
+                        locationDisplay.value = it.locationName.toString()
+                    }
+
+                    task.value.let {
+                        imageUri.value = it.imageUri
+                    }
+
+                    alertTimeToText(task.value.alertMessageTimer)
                 }
             }
         }
@@ -90,6 +99,7 @@ class TaskEditCreateViewModel @Inject constructor(
     fun onColorChange(newColor: Int) {
         task.value = task.value.copy(color = newColor)
     }
+
     fun onLocationReset() {
         marker?.remove()
         task.value = task.value.copy(location = null)
@@ -97,7 +107,6 @@ class TaskEditCreateViewModel @Inject constructor(
         locationDisplay.value = ""
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     fun onDateChange(newValue: Long) {
         val calendar = Calendar.getInstance(TimeZone.getTimeZone(ZoneId.systemDefault()))
         calendar.timeInMillis = newValue
@@ -126,17 +135,19 @@ class TaskEditCreateViewModel @Inject constructor(
             val result = (imageLoader.execute(request).drawable as? BitmapDrawable)?.bitmap
             val compressedFile = File.createTempFile("compressed", ".jpg", context.cacheDir)
 
-            when (result?.byteCount!!){
+            when (result?.byteCount!!) {
                 in 0..5000000 -> {
                     FileOutputStream(compressedFile).use { fileOutputStream ->
                         result.compress(Bitmap.CompressFormat.JPEG, 75, fileOutputStream)
                     }
                 }
+
                 in 5000001..10000000 -> {
                     FileOutputStream(compressedFile).use { fileOutputStream ->
                         result.compress(Bitmap.CompressFormat.JPEG, 50, fileOutputStream)
                     }
                 }
+
                 else -> {
                     FileOutputStream(compressedFile).use { fileOutputStream ->
                         result.compress(Bitmap.CompressFormat.JPEG, 25, fileOutputStream)
@@ -147,135 +158,193 @@ class TaskEditCreateViewModel @Inject constructor(
         }
     }
 
-    private suspend fun uploadImageAndSaveTask(newTask: Task, taskId: String, userId: String, imageUri: Uri, context: Context): Task {
+    private suspend fun uploadImageAndSaveTask(
+        newTask: Task,
+        taskId: String,
+        userId: String,
+        imageUri: Uri,
+        context: Context
+    ): Task {
         val path = "task_images/$userId/$taskId"
         val compressedImageUri = compressImage(context, imageUri)
         val imageUrl = firebaseService.uploadImage(compressedImageUri, path)
         return newTask.copy(imageUri = imageUrl)
     }
 
+    private suspend fun createNewTask(
+        context: Context,
+        popUpScreen: () -> Unit,
+        onTaskCreated: (String) -> Unit
+    ) {
+        val newTask = task.value.copy(
+            createdBy = accountService.currentUserId,
+            assignedTo = listOf(accountService.currentUserId),
+            isCompleted = false
+        )
+        // Save the task first to get the task ID
+        when (val saveResult = firebaseService.save(newTask)) {
+            is Resource.Success -> {
+                popUpScreen()
 
-    fun onDoneClick(context: Context, taskId: String?, popUpScreen: () -> Unit, onTaskCreated: (String) -> Unit) {
-        viewModelScope.launch {
-            _taskEditCreateState.value = Resource.Loading()
-            try {
-                if (taskId == null) {
-                    val newTask = task.value.copy(
-                        createdBy = accountService.currentUserId,
-                        assignedTo = listOf(accountService.currentUserId),
-                        isCompleted = false
-                    )
-
-                    // Save the task first to get the task ID
-                    when (val saveResult = firebaseService.save(newTask)) {
-                        is Resource.Success -> {
-                            val savedTaskId = saveResult.data
-
-                            // Check if there is an image to upload
-                            if (imageUri.value != null) {
-                                val imageUri = Uri.parse(imageUri.value)
-                                val updatedTask = savedTaskId?.let {
-                                    uploadImageAndSaveTask(
-                                        newTask.copy(id = savedTaskId),
-                                        it,
-                                        accountService.currentUserId,
-                                        imageUri,
-                                        context
-                                    )
-                                }
-
-                                // Update the task with the new imageUri
-                                if (updatedTask != null) {
-                                    firebaseService.updateTask(updatedTask)
-                                }
-                            }
-                            var imageUrl: String? = null
-                            if (task.value.location?.latitude != null && task.value.location?.longitude != null) {
-                                imageUrl = generateStaticMapUrl(task.value)
-                            }
-
-                            onTaskCreated(savedTaskId!!)
-                            task.value.dueDateToMillis()?.let { dueDateMillis ->
-                                val notificationId = generateUniqueNotificationId()
-                                scheduleTaskReminder(savedTaskId, "${task.value.title} at: ${task.value.dueTime}", task.value.locationName ?: task.value.description, dueDateMillis, imageUrl, task.value.alertMessageTimer, notificationId, context)
-                            }
-
-                            resetTask()
-                        }
-                        is Resource.Error -> {
-                            _taskEditCreateState.value = Resource.Error(saveResult.message ?: "Unknown error")
-                            SnackbarManager.showMessage(saveResult.message ?: "Unknown error")
-                            return@launch
-                        }
-                        else -> {
-                            _taskEditCreateState.value = Resource.Error("Unknown error")
-                            SnackbarManager.showMessage("Unknown error")
-                            return@launch
-                        }
-                    }
-
-                } else {
-                    if (imageUri.value != null) {
-                        val imageUri = Uri.parse(imageUri.value)
-                        val updatedTask = uploadImageAndSaveTask(
-                            task.value,
-                            taskId,
+                val savedTaskId = saveResult.data
+                // Check if there is an image to upload
+                if (imageUri.value != null) {
+                    val imageUri = Uri.parse(imageUri.value)
+                    val updatedTask = savedTaskId?.let {
+                        uploadImageAndSaveTask(
+                            newTask.copy(id = savedTaskId),
+                            it,
                             accountService.currentUserId,
                             imageUri,
                             context
                         )
-                        when (val updateResult = firebaseService.updateTask(updatedTask)) {
-                            is Resource.Success -> {
-                                onTaskCreated(taskId)
-                                var imageUrl: String? = null
-                                if (task.value.location?.latitude != null && task.value.location?.longitude != null) {
-                                    imageUrl = generateStaticMapUrl(task.value)
-                                }
-                                task.value.dueDateToMillis()?.let { dueDateMillis ->
-                                    val notificationId = generateUniqueNotificationId()
-                                    scheduleTaskReminder(taskId, "${task.value.title} at: ${task.value.dueTime}", task.value.locationName ?: task.value.description, dueDateMillis, imageUrl, task.value.alertMessageTimer, notificationId, context)
-                                }
-                                resetTask()
-                            }
-                            is Resource.Error -> {
-                                _taskEditCreateState.value = Resource.Error(updateResult.message ?: "Unknown error")
-                                SnackbarManager.showMessage(updateResult.message ?: "Unknown error")
-                                return@launch
-                            }
-                            else -> {
-                                _taskEditCreateState.value = Resource.Error("Unknown error")
-                                SnackbarManager.showMessage("Unknown error")
-                                return@launch
-                            }
-                        }
-                    } else {
-                        when (val updateResult = firebaseService.updateTask(task.value)) {
-                            is Resource.Success -> {
-                                var imageUrl: String? = null
-                                if (task.value.location?.latitude != null && task.value.location?.longitude != null) {
-                                    imageUrl = generateStaticMapUrl(task.value)
-                                }
-                                task.value.dueDateToMillis()?.let { dueDateMillis ->
-                                    val notificationId = generateUniqueNotificationId()
-                                    scheduleTaskReminder(taskId, "${task.value.title} at: ${task.value.dueTime}", task.value.locationName ?: task.value.description, dueDateMillis, imageUrl, task.value.alertMessageTimer, notificationId, context)
-                                }
-                            }
-                            is Resource.Error -> {
-                                _taskEditCreateState.value = Resource.Error(updateResult.message ?: "Unknown error")
-                                SnackbarManager.showMessage(updateResult.message ?: "Unknown error")
-                                return@launch
-                            }
-                            else -> {
-                                _taskEditCreateState.value = Resource.Error("Unknown error")
-                                SnackbarManager.showMessage("Unknown error")
-                                return@launch
-                            }
-                        }
                     }
+
+                    // Update the task with the new imageUri
+                    if (updatedTask != null) {
+                        firebaseService.updateTask(updatedTask)
+                    }
+                }
+                var imageUrl: String? = null
+                if (task.value.location?.latitude != null && task.value.location?.longitude != null) {
+                    imageUrl = generateStaticMapUrl(task.value)
+                }
+
+                onTaskCreated(savedTaskId!!)
+                task.value.dueDateToMillis()?.let { dueDateMillis ->
+                    val notificationId = generateUniqueNotificationId()
+                    scheduleTaskReminder(
+                        savedTaskId,
+                        "${task.value.title} at: ${task.value.dueTime}",
+                        task.value.locationName ?: task.value.description,
+                        dueDateMillis,
+                        imageUrl,
+                        task.value.alertMessageTimer,
+                        notificationId,
+                        context
+                    )
+                }
+
+                resetTask()
+            }
+
+            is Resource.Error -> {
+                _taskEditCreateState.value = Resource.Error(saveResult.message ?: "Unknown error")
+                SnackbarManager.showMessage(saveResult.message ?: "Unknown error")
+            }
+
+            else -> {
+                _taskEditCreateState.value = Resource.Error("Unknown error")
+                SnackbarManager.showMessage("Unknown error")
+            }
+        }
+    }
+
+    private suspend fun editExistingTask(
+        context: Context,
+        taskId: String,
+        popUpScreen: () -> Unit,
+        onTaskCreated: (String) -> Unit
+    ) {
+        // Move the code for editing an existing task from the onDoneClick function here
+        if (imageUri.value != null) {
+            val imageUri = Uri.parse(imageUri.value)
+            val updatedTask = uploadImageAndSaveTask(
+                task.value,
+                taskId,
+                accountService.currentUserId,
+                imageUri,
+                context
+            )
+            when (val updateResult = firebaseService.updateTask(updatedTask)) {
+                is Resource.Success -> {
+                    popUpScreen()
+                    onTaskCreated(taskId)
+                    var imageUrl: String? = null
+                    if (task.value.location?.latitude != null && task.value.location?.longitude != null) {
+                        imageUrl = generateStaticMapUrl(task.value)
+                    }
+                    task.value.dueDateToMillis()?.let { dueDateMillis ->
+                        val notificationId = generateUniqueNotificationId()
+                        scheduleTaskReminder(
+                            taskId,
+                            "${task.value.title} at: ${task.value.dueTime}",
+                            task.value.locationName ?: task.value.description,
+                            dueDateMillis,
+                            imageUrl,
+                            task.value.alertMessageTimer,
+                            notificationId,
+                            context
+                        )
+                    }
+                    resetTask()
+                }
+
+                is Resource.Error -> {
+                    _taskEditCreateState.value =
+                        Resource.Error(updateResult.message ?: "Unknown error")
+                    SnackbarManager.showMessage(updateResult.message ?: "Unknown error")
+                }
+
+                else -> {
+                    _taskEditCreateState.value = Resource.Error("Unknown error")
+                    SnackbarManager.showMessage("Unknown error")
+                }
+            }
+        } else {
+            when (val updateResult = firebaseService.updateTask(task.value)) {
+                is Resource.Success -> {
+                    popUpScreen()
+                    var imageUrl: String? = null
+                    if (task.value.location?.latitude != null && task.value.location?.longitude != null) {
+                        imageUrl = generateStaticMapUrl(task.value)
+                    }
+                    task.value.dueDateToMillis()?.let { dueDateMillis ->
+                        val notificationId = generateUniqueNotificationId()
+                        scheduleTaskReminder(
+                            taskId,
+                            "${task.value.title} at: ${task.value.dueTime}",
+                            task.value.locationName ?: task.value.description,
+                            dueDateMillis,
+                            imageUrl,
+                            task.value.alertMessageTimer,
+                            notificationId,
+                            context
+                        )
+                    }
+                    resetTask()
+                }
+
+                is Resource.Error -> {
+                    _taskEditCreateState.value =
+                        Resource.Error(updateResult.message ?: "Unknown error")
+                    SnackbarManager.showMessage(updateResult.message ?: "Unknown error")
+                }
+
+                else -> {
+                    _taskEditCreateState.value = Resource.Error("Unknown error")
+                    SnackbarManager.showMessage("Unknown error")
+                }
+            }
+        }
+    }
+
+    fun onDoneClick(
+        context: Context,
+        taskId: String?,
+        popUpScreen: () -> Unit,
+        onTaskCreated: (String) -> Unit
+    ) {
+        viewModelScope.launch {
+            _taskEditCreateState.value = Resource.Loading()
+            try {
+                if (taskId == null) {
+                    createNewTask(context, popUpScreen, onTaskCreated)
+                } else {
+                    editExistingTask(context, taskId, popUpScreen, onTaskCreated)
                 }
                 _taskEditCreateState.value = Resource.Success(Unit)
                 SnackbarManager.showMessage("Task successfully saved")
-                popUpScreen()
             } catch (e: Exception) {
                 _taskEditCreateState.value = Resource.Error(e.message ?: "Unknown error")
                 SnackbarManager.showMessage("Unknown error")
@@ -285,11 +354,28 @@ class TaskEditCreateViewModel @Inject constructor(
         }
     }
 
-
+//    fun onDeleteImageClick() {
+//        viewModelScope.launch {
+//            task.value.imageUri?.let { imageUrl ->
+//                val path = imageUrl.substringAfter("task_images/")
+//                firebaseService.deleteImage(path)
+//                task.value = task.value.copy(imageUri = null)
+//                imageUri.value = null
+//            }
+//            imageUri.value = null
+//        }
+//    }
     fun onDeleteImageClick() {
         viewModelScope.launch {
             task.value.imageUri?.let { imageUrl ->
-                val path = imageUrl.substringAfter("task_images/")
+                val path = imageUrl
+                    .substringAfter("example-f27a3.appspot.com/o/")
+                    .substringBefore("?")
+                    .replace("%2F", "/")
+
+                Log.d("onDeleteImageClick", "imageUrl: $imageUrl")
+                Log.d("onDeleteImageClick", "path: $path")
+
                 firebaseService.deleteImage(path)
                 task.value = task.value.copy(imageUri = null)
                 imageUri.value = null
@@ -316,10 +402,27 @@ class TaskEditCreateViewModel @Inject constructor(
             "15 minutes in advance" -> 15 * 60 * 1000L
             "30 minutes in advance" -> 30 * 60 * 1000L
             "1 hour in advance" -> 60 * 60 * 1000L
+            "2 hours in advance" -> 2 * 60 * 60 * 1000L
+            "3 hours in advance" -> 3 * 60 * 60 * 1000L
             "1 day in advance" -> 24 * 60 * 60 * 1000L
             else -> 0L
         }
     }
+
+    private fun alertTimeToText(option: Long) {
+        when (option) {
+            5 * 60 * 1000L -> alertTimeDisplay.value = "5 minutes in advance"
+            10 * 60 * 1000L -> alertTimeDisplay.value = "10 minutes in advance"
+            15 * 60 * 1000L -> alertTimeDisplay.value = "15 minutes in advance"
+            30 * 60 * 1000L -> alertTimeDisplay.value = "30 minutes in advance"
+            60 * 60 * 1000L -> alertTimeDisplay.value = "1 hour in advance"
+            2 * 60 * 60 * 1000L -> alertTimeDisplay.value = "2 hours in advance"
+            3 * 60 * 60 * 1000L -> alertTimeDisplay.value = "3 hours in advance"
+            24 * 60 * 60 * 1000L -> alertTimeDisplay.value = "1 day in advance"
+            else -> alertTimeDisplay.value = "Not set"
+        }
+    }
+
 
     private fun generateUniqueNotificationId(): Int {
         return LocalDateTime.now().hashCode()

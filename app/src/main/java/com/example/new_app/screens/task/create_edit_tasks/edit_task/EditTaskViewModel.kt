@@ -1,13 +1,5 @@
 package com.example.new_app.screens.task.create_edit_tasks.edit_task
 
-import android.content.Context
-import android.graphics.Bitmap
-import android.net.Uri
-import android.os.Build
-import androidx.annotation.RequiresApi
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.new_app.model.Task
@@ -20,6 +12,7 @@ import java.text.SimpleDateFormat
 import java.time.ZoneId
 import java.util.*
 import javax.inject.Inject
+
 @HiltViewModel
 class EditTaskViewModel @Inject constructor(
     private val firebaseService: FirebaseService,
@@ -28,13 +21,7 @@ class EditTaskViewModel @Inject constructor(
 
     private val dateFormat = "EEE, d MMM yyyy"
 
-//    private val firebaseService: FirebaseService = FirebaseService()
-//    private val accountService: AccountService = AccountService()
-
-    val task = MutableStateFlow(Task()) // Replace Task() with your Task data class constructor
-
-    var bitmap by mutableStateOf<Bitmap?>(null)
-
+    val task = MutableStateFlow(Task())
 
     suspend fun initialize(taskId: String) {
         val loadedTask = firebaseService.getTask(taskId)
@@ -51,7 +38,6 @@ class EditTaskViewModel @Inject constructor(
         task.value = task.value.copy(description = newDescription)
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     fun onDateChange(newValue: Long) {
         val calendar = Calendar.getInstance(TimeZone.getTimeZone(ZoneId.systemDefault()))
         calendar.timeInMillis = newValue
@@ -63,7 +49,6 @@ class EditTaskViewModel @Inject constructor(
         val newDueTime = "${hour.toClockPattern()}:${minute.toClockPattern()}"
         task.value = task.value.copy(dueTime = newDueTime)
     }
-
 
 
     fun onDoneClick(popUpScreen: () -> Unit) {

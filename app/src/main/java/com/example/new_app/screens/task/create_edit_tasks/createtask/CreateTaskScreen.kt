@@ -1,70 +1,47 @@
 package com.example.new_app.screens.task.create_edit_tasks.createtask
 
 import android.annotation.SuppressLint
-import android.content.Context
 import android.graphics.*
-import android.os.Build
-import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.annotation.RequiresApi
-import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.selection.TextSelectionColors
-import androidx.compose.material.ContentAlpha
-import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
 import coil.compose.rememberAsyncImagePainter
 import coil.request.CachePolicy
 import coil.request.ImageRequest
-import com.example.new_app.R
 import com.example.new_app.SharedViewModel
 import com.example.new_app.TASK_MAP_SCREEN
+import com.example.new_app.common.composables.CardEditors
+import com.example.new_app.common.composables.ColorPicker
 import com.example.new_app.common.composables.CustomCreateTaskAppBar
 import com.example.new_app.common.composables.CustomMultiLineTextfield
 import com.example.new_app.common.composables.CustomTextField
 import com.example.new_app.common.composables.LoadingIndicator
-import com.example.new_app.common.composables.RegularCardEditor
+import com.example.new_app.common.composables.PickImageFromGallery
+import com.example.new_app.common.composables.SectionTitle
+import com.example.new_app.common.composables.ShowLocation
+import com.example.new_app.common.composables.customTextFieldColors
 import com.example.new_app.common.util.Resource
-import com.example.new_app.model.Task
-import com.example.new_app.model.service.Notification
 import com.example.new_app.screens.task.create_edit_tasks.TaskEditCreateViewModel
 import com.example.new_app.theme.DarkGrey
-import com.google.android.material.timepicker.MaterialTimePicker
-import com.google.android.material.timepicker.TimeFormat
 
 
 @OptIn(ExperimentalMaterial3Api::class)
-@RequiresApi(Build.VERSION_CODES.O)
 @SuppressLint("UnusedMaterialScaffoldPaddingParameter")
 @Composable
 fun CreateTaskScreen(
@@ -151,16 +128,7 @@ fun CreateTaskScreen(
                     onValueChange = viewModel::onTitleChange,
                     label = "Title",
                     modifier = Modifier.fillMaxWidth(),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = Color.White.copy(alpha = 0.7f),
-                        unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = ContentAlpha.disabled),
-                        focusedLabelColor = Color.White.copy(alpha = 0.7f),
-                        cursorColor = Color.White.copy(alpha = 0.7f),
-                        selectionColors = TextSelectionColors(
-                            Color(0xFF444444),
-                            Color(0xFF444444).copy(alpha = 0.5f),
-                        )
-                    )
+                    colors = customTextFieldColors(),
                 )
 
                 CustomMultiLineTextfield(
@@ -170,16 +138,7 @@ fun CreateTaskScreen(
                     hintText = "Description",
                     textStyle = MaterialTheme.typography.bodyLarge,
                     maxLines = 4,
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = Color.White.copy(alpha = 0.7f),
-                        unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = ContentAlpha.disabled),
-                        focusedLabelColor = Color.White.copy(alpha = 0.7f),
-                        cursorColor = Color.White.copy(alpha = 0.7f),
-                        selectionColors = TextSelectionColors(
-                            Color(0xFF444444),
-                            Color(0xFF444444).copy(alpha = 0.5f),
-                        )
-                    )
+                    colors = customTextFieldColors()
                 )
             }
 
@@ -193,7 +152,7 @@ fun CreateTaskScreen(
 
             item {
                 // Date and Time Section
-                SectionTitle("Location, Date & Time")
+                SectionTitle("Location, Date, Time & Notification")
                 ShowLocation(
                     viewModel.locationDisplay,
                     onEditClick = { openScreen(TASK_MAP_SCREEN) },
@@ -230,347 +189,7 @@ fun CreateTaskScreen(
     }
 }
 
-@Composable
-fun SectionTitle(title: String) {
-    Text(
-        text = title,
-        style = MaterialTheme.typography.titleLarge,
-        fontWeight = FontWeight.Bold,
-        modifier = Modifier.padding(vertical = 8.dp),
-        color = Color.White
-    )
-}
-
-@Composable
-fun ShowLocation(
-    locationDisplay: MutableState<String>,
-    onEditClick: () -> Unit,
-    onLocationReset: () -> Unit
-) {
-    val content = locationDisplay.value
-
-    if (content.isNotBlank()) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            RegularCardEditor(
-                title = R.string.location,
-                icon = Icons.Filled.EditLocation,
-                content = content,
-                modifier = Modifier
-                    .padding(top = 16.dp)
-                    .weight(1f),
-                onEditClick = onEditClick,
-                location = true
-            )
-
-            Spacer(modifier = Modifier.width(8.dp))
-
-            Button(
-                onClick = onLocationReset,
-                modifier = Modifier
-                    .align(Alignment.CenterVertically)
-                    .padding(top = 16.dp)
-                    .size(56.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF444444),
-                    contentColor = Color.White
-                ),
-                shape = RoundedCornerShape(4.dp),
-                elevation = ButtonDefaults.buttonElevation(
-                    defaultElevation = 5.dp,
-                    pressedElevation = 5.dp,
-                    disabledElevation = 5.dp
-                ),
-                contentPadding = PaddingValues(0.dp),
-            ) {
-                Icon(Icons.Filled.Delete, contentDescription = "Delete Location")
-            }
-        }
-
-    } else {
-        RegularCardEditor(
-            title = R.string.location,
-            icon = Icons.Filled.EditLocation,
-            content = stringResource(R.string.no_location_selected),
-            modifier = Modifier.padding(top = 16.dp),
-            onEditClick = onEditClick
-        )
-    }
-}
 
 
-@Composable
-private fun CardEditors(
-    task: Task,
-    onDateChange: (Long) -> Unit,
-    onTimeChange: (Int, Int) -> Unit,
-    viewModel: TaskEditCreateViewModel
-) {
-    val activity = LocalContext.current as AppCompatActivity
 
-    val showDatePicker = remember { mutableStateOf(false) }
-    val showAlertTimePicker = remember { mutableStateOf(false) }
-
-    RegularCardEditor(
-        R.string.date,
-        Icons.Filled.DateRange,
-        task.dueDate,
-        Modifier.padding(top = 16.dp)
-    ) {
-        showDatePicker.value = true
-    }
-    ShowDate(
-        onDateChange = onDateChange,
-        openDialog = showDatePicker
-    )
-
-    RegularCardEditor(
-        R.string.time,
-        Icons.Filled.Timer,
-        task.dueTime,
-        Modifier.padding(top = 16.dp)
-    ) {
-        showTimePicker(activity, onTimeChange)
-    }
-
-    RegularCardEditor(
-        R.string.alert_time,
-        Icons.Filled.Alarm,
-        viewModel.alertTimeDisplay.value,
-        Modifier.padding(top = 16.dp)
-    ) {
-        showAlertTimePicker.value = true
-    }
-    ShowAlertTimePicker(
-        showAlertTimePicker,
-        viewModel
-    )
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun ShowAlertTimePicker(
-    showAlertTimePicker: MutableState<Boolean>,
-    viewModel: TaskEditCreateViewModel
-) {
-    val radioOptions = listOf(
-        "5 minutes in advance", "10 minutes in advance", "15 minutes in advance",
-        "30 minutes in advance", "1 hour in advance", "1 day in advance"
-    )
-
-    val (selectedOption, onOptionSelected) = remember { mutableStateOf(radioOptions[4]) }
-
-    if (showAlertTimePicker.value) {
-        AlertDialog(
-            modifier = Modifier
-                .fillMaxWidth(),
-            onDismissRequest = {
-                showAlertTimePicker.value = false
-            },
-        ) {
-            Surface(
-                color = DarkGrey,
-                shape = RoundedCornerShape(16.dp)
-            ) {
-                Column(
-                    Modifier.selectableGroup()
-                ) {
-                    radioOptions.forEach { text ->
-                        Row(
-                            Modifier
-                                .fillMaxWidth()
-                                .selectable(
-                                    selected = (text == selectedOption),
-                                    onClick = {
-                                        onOptionSelected(text)
-                                        viewModel.onAlertOptionChange(text)
-                                        showAlertTimePicker.value = false
-                                    },
-                                    role = Role.RadioButton
-                                )
-                                .padding(horizontal = 16.dp, vertical = 16.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            RadioButton(
-                                selected = (text == selectedOption),
-                                onClick = null
-                            )
-                            Text(
-                                text = text,
-                                style = MaterialTheme.typography.bodyLarge,
-                                modifier = Modifier.padding(start = 16.dp)
-                            )
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-
-@Composable
-fun PickImageFromGallery(
-    context: Context,
-    viewModel: TaskEditCreateViewModel,
-    task: Task,
-    userId: String,
-    galleryLauncher: ActivityResultLauncher<String>
-) {
-    val updatedTask by rememberUpdatedState(task)
-
-    Row(
-        modifier = Modifier.padding(vertical = 16.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        val imageUrl = viewModel.imageUri.value
-
-        if (imageUrl != null) {
-            AsyncImage(
-                url = imageUrl,
-                modifier = Modifier
-                    .size(100.dp)
-                    .clip(CircleShape),
-                contentDescription = "Task Image"
-            )
-            Spacer(modifier = Modifier.width(16.dp))
-            IconButton(onClick = viewModel::onDeleteImageClick) {
-                Icon(Icons.Filled.Delete, contentDescription = "Delete Image")
-            }
-        } else {
-            IconButton(onClick = {
-                galleryLauncher.launch("image/*")
-            }) {
-                Icon(Icons.Filled.AddAPhoto, contentDescription = "Pick Image from Gallery")
-            }
-        }
-    }
-}
-
-
-@Composable
-fun AsyncImage(url: String, modifier: Modifier = Modifier, contentDescription: String? = null) {
-
-    val painter = rememberAsyncImagePainter(
-        ImageRequest.Builder(LocalContext.current)
-            .data(
-                data = url
-            )
-            .apply(block = fun ImageRequest.Builder.() {
-                memoryCachePolicy(CachePolicy.ENABLED)
-            }).build()
-    )
-
-    Image(
-        painter = painter,
-        contentDescription = contentDescription,
-        contentScale = ContentScale.Crop,
-        modifier = modifier
-    )
-}
-
-
-@SuppressLint("UnrememberedMutableState")
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun ShowDate(
-    onDateChange: (Long) -> Unit,
-    openDialog: MutableState<Boolean>
-) {
-    if (openDialog.value) {
-        val datePickerState = rememberDatePickerState()
-        val confirmEnabled = derivedStateOf { datePickerState.selectedDateMillis != null }
-        DatePickerDialog(
-            onDismissRequest = {
-                openDialog.value = false
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        onDateChange(datePickerState.selectedDateMillis!!)
-                        openDialog.value = false
-                    },
-                    enabled = confirmEnabled.value
-                ) {
-                    Text("OK")
-                }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = {
-                        openDialog.value = false
-                    }
-                ) {
-                    Text("Cancel")
-                }
-            },
-            colors = DatePickerDefaults.colors(
-                containerColor = DarkGrey,
-            )
-        ) {
-            DatePicker(
-                state = datePickerState,
-            )
-        }
-    }
-}
-
-@Composable
-fun ColorPicker(
-    selectedColor: Int,
-    onColorSelected: (Int) -> Unit
-) {
-    val colors = listOf(
-        Color(0xFFF8B195),
-        Color(0xFFF67280),
-        Color(0xFFC06C84),
-        Color(0xFF6C5B7B),
-        Color(0xFF355C7D),
-        Color(0xFF99B898),
-        Color(0xFFFECEAB),
-        Color(0xFFFF847C),
-        Color(0xFFE84A5F),
-        Color(0xFF2A363B)
-    )
-
-
-    LazyRow {
-        items(colors.size) { color ->
-            Box(
-                modifier = Modifier
-                    .padding(8.dp)
-                    .clip(CircleShape)
-                    .background(color = colors[color])
-                    .clickable {
-                        onColorSelected(colors[color].toArgb())
-                    }
-                    .size(40.dp)
-            ) {
-                if (selectedColor == colors[color].toArgb()) {
-                    Icon(
-                        imageVector = Icons.Default.Check,
-                        contentDescription = "Selected color",
-                        tint = Color.White,
-                        modifier = Modifier.align(Alignment.Center)
-                    )
-                }
-            }
-        }
-    }
-}
-private fun showTimePicker(activity: AppCompatActivity?, onTimeChange: (Int, Int) -> Unit) {
-    val picker = MaterialTimePicker.Builder()
-        .setTimeFormat(TimeFormat.CLOCK_24H)
-        .setTheme(R.style.CustomTimePickerTheme)
-        .setInputMode(MaterialTimePicker.INPUT_MODE_CLOCK)
-        .build()
-
-    activity?.let {
-        picker.show(it.supportFragmentManager, picker.toString())
-        picker.addOnPositiveButtonClickListener { onTimeChange(picker.hour, picker.minute) }
-    }
-}
 

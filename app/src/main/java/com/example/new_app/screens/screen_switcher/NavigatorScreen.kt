@@ -12,6 +12,7 @@ import com.example.new_app.SharedViewModel
 import com.example.new_app.common.composables.BottomNavigationBar
 import com.example.new_app.screens.calender_screens.CalenderScreens
 import com.example.new_app.screens.login.UserData
+import com.example.new_app.screens.task.create_edit_tasks.TaskEditCreateViewModel
 import com.example.new_app.screens.task.tasklist.TaskListScreen
 import com.example.new_app.screens.task.tasklist.TaskListViewModel
 
@@ -20,6 +21,7 @@ fun NavigatorScreen(
     openScreen: (String) -> Unit,
     mainViewModel: SharedViewModel,
     userData: UserData?,
+    taskEditCreateViewModel: TaskEditCreateViewModel,
 ) {
     val selectedIndex = remember { mutableStateOf(0) }
     val viewModel: TaskListViewModel = hiltViewModel()
@@ -38,7 +40,8 @@ fun NavigatorScreen(
                         openScreen = openScreen,
                         mainViewModel = mainViewModel,
                         userData = userData,
-                        viewModel = viewModel
+                        viewModel = viewModel,
+                        taskEditCreateViewModel = taskEditCreateViewModel
                     )
                 }
 

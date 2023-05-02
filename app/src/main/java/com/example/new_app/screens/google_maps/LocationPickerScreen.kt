@@ -28,6 +28,7 @@ import com.google.android.gms.maps.model.LatLng
 fun LocationPickerScreen(
     openAndPopUp: (String, String) -> Unit,
     openScreen: (String) -> Unit,
+    popUpScreen: () -> Unit,
     viewModel: TaskEditCreateViewModel
 ) {
     val searchInput = remember { mutableStateOf("") }
@@ -42,7 +43,8 @@ fun LocationPickerScreen(
                 navigationIcon = {
                     IconButton(
                         onClick = {
-                            openAndPopUp(CREATE_TASK_SCREEN, TASK_MAP_SCREEN)
+                            popUpScreen()
+//                            openAndPopUp(CREATE_TASK_SCREEN, TASK_MAP_SCREEN)
                             viewModel.onLocationReset()
                             viewModel.locationDisplay.value = ""
                         }
@@ -53,7 +55,8 @@ fun LocationPickerScreen(
                 actions = {
                     IconButton(
                         onClick = {
-                            openAndPopUp(CREATE_TASK_SCREEN, TASK_MAP_SCREEN)
+                            popUpScreen()
+//                            openAndPopUp(CREATE_TASK_SCREEN, TASK_MAP_SCREEN)
                         },
                         enabled = searchInput.value.isNotEmpty()
                     ) {

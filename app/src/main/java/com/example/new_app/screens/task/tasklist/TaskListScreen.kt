@@ -39,7 +39,9 @@ import androidx.compose.ui.text.font.FontWeight
 import com.example.new_app.common.sort.getFilteredTasks
 import com.example.new_app.common.sort.sortTasks
 import com.example.new_app.model.service.Notification
+import com.example.new_app.screens.login.LoginViewModel
 import com.example.new_app.screens.login.UserData
+import com.example.new_app.screens.task.create_edit_tasks.TaskEditCreateViewModel
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @SuppressLint("UnusedMaterialScaffoldPaddingParameter")
@@ -48,8 +50,13 @@ fun TaskListScreen(
     openScreen: (String) -> Unit,
     mainViewModel: SharedViewModel,
     userData: UserData?,
+    taskEditCreateViewModel: TaskEditCreateViewModel,
     viewModel: TaskListViewModel = hiltViewModel()
 ) {
+
+    LaunchedEffect(Unit){
+        mainViewModel.resetInitEdit()
+    }
 
     val userId = viewModel.currentUserId
     val deleteTasksState by viewModel.deleteTasksState.collectAsState()
@@ -98,7 +105,10 @@ fun TaskListScreen(
             ExtendedFloatingActionButton(
                 shape = RoundedCornerShape(16.dp),
                 expanded = listState.isScrollingUp(),
-                onClick = { viewModel.onAddClick(openScreen, userId) },
+                onClick = {
+                    taskEditCreateViewModel.resetTask()
+                    viewModel.onAddClick(openScreen, userId)
+                },
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.background,
                 modifier = Modifier.padding(16.dp),

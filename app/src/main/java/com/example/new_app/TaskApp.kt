@@ -190,7 +190,8 @@ fun NavGraphBuilder.taskAppGraph(
         TaskListScreen(
             openScreen = { route -> appState.navigate(route) },
             mainViewModel = mainViewModel,
-            userData = googleAuthUiClient.getSignedInUser()
+            userData = googleAuthUiClient.getSignedInUser(),
+            taskEditCreateViewModel = taskEditCreateViewModel
         )
     }
 
@@ -198,7 +199,8 @@ fun NavGraphBuilder.taskAppGraph(
         NavigatorScreen(
             openScreen = { route -> appState.navigate(route) },
             mainViewModel = mainViewModel,
-            userData = googleAuthUiClient.getSignedInUser()
+            userData = googleAuthUiClient.getSignedInUser(),
+            taskEditCreateViewModel = taskEditCreateViewModel
         )
     }
 
@@ -206,7 +208,8 @@ fun NavGraphBuilder.taskAppGraph(
         LocationPickerScreen(
             openAndPopUp = { route, popUp -> appState.navigateAndPopUp(route, popUp) },
             openScreen = { route -> appState.navigate(route) },
-            viewModel = taskEditCreateViewModel
+            viewModel = taskEditCreateViewModel,
+            popUpScreen = { appState.popUp() },
         )
     }
 
@@ -218,7 +221,9 @@ fun NavGraphBuilder.taskAppGraph(
             popUpScreen = { appState.popUp() },
             taskId = it.arguments?.getString(TASK_ID) ?: TASK_DEFAULT_ID,
             userId = it.arguments?.getString("userId") ?: "",
-            mainViewModel = mainViewModel
+            mainViewModel = mainViewModel,
+            openScreen = { route -> appState.navigate(route) },
+            viewModel = taskEditCreateViewModel
         )
     }
 

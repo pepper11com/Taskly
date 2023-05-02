@@ -1,6 +1,5 @@
 package com.example.new_app.model
 
-import androidx.compose.ui.graphics.Color
 import com.example.new_app.screens.task.tasklist.TaskStatus
 import com.google.firebase.firestore.DocumentId
 import java.text.SimpleDateFormat
@@ -21,7 +20,7 @@ data class Task(
 
     var color: Int? = -478827,
 
-    var alertMessageTimer : Long = 0,
+    var alertMessageTimer : Long = 3600000,
 
     var imageUri: String? = null,
     var location: CustomLatLng? = null,

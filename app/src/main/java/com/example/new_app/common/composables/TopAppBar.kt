@@ -31,6 +31,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -54,6 +55,8 @@ import com.example.new_app.model.Task
 import com.example.new_app.screens.task.create_edit_tasks.TaskEditCreateViewModel
 import com.example.new_app.screens.task.tasklist.TaskListUiState
 import com.example.new_app.screens.task.tasklist.TaskListViewModel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.time.LocalDateTime
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -386,17 +389,6 @@ fun CustomCreateTaskAppBar(
     mainViewModel: SharedViewModel,
     context: Context
 ) {
-//    val notificationResultLauncher = rememberLauncherForActivityResult(
-//        contract = ActivityResultContracts.RequestPermission(),
-//        onResult = { isGranted ->
-//            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-//                mainViewModel.onPermissionResult(
-//                    isGranted = isGranted,
-//                    permission = Manifest.permission.POST_NOTIFICATIONS
-//                )
-//            }
-//        }
-//    )
 
     Column {
         MediumTopAppBar(
@@ -418,13 +410,7 @@ fun CustomCreateTaskAppBar(
             actions = {
                 IconButton(
                     enabled = task.title.isNotBlank() && task.description.isNotBlank(),
-
                     onClick = {
-
-//                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-//                            notificationResultLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-//                        }
-
                         viewModel.onDoneClick(
                             context,
                             null,
@@ -435,6 +421,65 @@ fun CustomCreateTaskAppBar(
                                 )
                             }
                         )
+                    }
+                ) {
+                    Icon(
+                        Icons.Filled.Done,
+                        contentDescription = "Done",
+                        tint = if (task.title.isNotBlank() && task.description.isNotBlank())
+                            MaterialTheme.colorScheme.primary else Color.White.copy(alpha = 0.5f)
+                    )
+                }
+            }
+        )
+
+        Divider(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp, vertical = 8.dp),
+            color = Color.White.copy(alpha = 0.5f),
+            thickness = 1.dp
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun CustomEditTaskAppBar(
+    task: Task,
+    viewModel: TaskEditCreateViewModel,
+    popUpScreen: () -> Unit,
+    scrollBehavior: TopAppBarScrollBehavior,
+    mainViewModel: SharedViewModel,
+    context: Context,
+    taskId: String
+) {
+
+    Column {
+        MediumTopAppBar(
+            scrollBehavior = scrollBehavior,
+            colors = TopAppBarDefaults.topAppBarColors(
+                containerColor = MaterialTheme.colorScheme.background,
+            ),
+            title = { Text("Edit Task", color = Color.White) },
+            navigationIcon = {
+                IconButton(
+                    onClick = {
+                        popUpScreen()
+                        mainViewModel.resetInitEdit()
+                    }
+                ) {
+                    Icon(Icons.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
+                }
+            },
+            actions = {
+                IconButton(
+                    enabled = task.title.isNotBlank() && task.description.isNotBlank(),
+                    onClick = {
+                        viewModel.onDoneClick(context, taskId, popUpScreen,
+                            onTaskCreated = { newTaskId -> mainViewModel.updateLastAddedTaskId(newTaskId) }
+                        )
+                        mainViewModel.resetInitEdit()
                     }
                 ) {
                     Icon(

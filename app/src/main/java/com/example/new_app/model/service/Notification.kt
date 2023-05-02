@@ -47,7 +47,6 @@ class Notification (
 
         val bigPictureStyle = NotificationCompat.BigPictureStyle()
             .bigPicture(bitmap)
-
         val iconColor = ContextCompat.getColor(context, R.color.bright_orange)
 
         notificationBuilder = NotificationCompat.Builder(context, channelID)
@@ -84,7 +83,6 @@ class Notification (
 }
 
 class TaskReminderWorker(context: Context, workerParams: WorkerParameters) : Worker(context, workerParams) {
-
     override fun doWork(): Result {
         val title = inputData.getString("title") ?: "Task Reminder"
         val message = inputData.getString("message") ?: "A task is due!"
@@ -99,10 +97,9 @@ class TaskReminderWorker(context: Context, workerParams: WorkerParameters) : Wor
     }
 }
 
-//fun scheduleTaskReminder(taskId: String, title: String, message: String, dueDateMillis: Long, imageUrl: String?, context: Context) {
-fun scheduleTaskReminder(taskId: String, title: String, message: String, dueDateMillis: Long, imageUrl: String?, alertTime: Long?, notificationId: Int, context: Context) {
+fun scheduleTaskReminder(taskId: String, title: String, message: String, dueDateMillis: Long, imageUrl: String?, alertMessageTimer: Long?, notificationId: Int, context: Context) {
 
-    val data = if (imageUrl != null){
+    val data = if (imageUrl != null) {
         Data.Builder()
             .putString("title", title)
             .putString("message", message)
@@ -119,14 +116,11 @@ fun scheduleTaskReminder(taskId: String, title: String, message: String, dueDate
 
     val oneHourInMillis = TimeUnit.HOURS.toMillis(1)
 
-    val timeUntilDueDate: Long = if (alertTime != null) {
-        dueDateMillis - System.currentTimeMillis() - alertTime
+    val initialDelay = if (alertMessageTimer != null) {
+        dueDateMillis - System.currentTimeMillis() - alertMessageTimer
     } else {
         dueDateMillis - System.currentTimeMillis() - oneHourInMillis
     }
-
-    // If the task is due within an hour, show the notification instantly
-    val initialDelay = if (timeUntilDueDate <= oneHourInMillis) 0L else timeUntilDueDate
 
     val reminderRequest = OneTimeWorkRequest.Builder(TaskReminderWorker::class.java)
         .setInitialDelay(initialDelay, TimeUnit.MILLISECONDS)
@@ -135,3 +129,4 @@ fun scheduleTaskReminder(taskId: String, title: String, message: String, dueDate
 
     WorkManager.getInstance(context).enqueueUniqueWork(taskId, ExistingWorkPolicy.REPLACE, reminderRequest)
 }
+

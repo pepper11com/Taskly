@@ -4,6 +4,7 @@ import android.content.Context
 import android.os.VibrationEffect
 import android.os.Vibrator
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
@@ -11,6 +12,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -33,11 +35,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.capitalize
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.new_app.R
 import com.example.new_app.common.helpers.getWeekPageTitle
 import com.example.new_app.common.helpers.rememberFirstVisibleWeekAfterScroll
 import com.example.new_app.model.Task
@@ -95,10 +101,13 @@ fun WeeklyCalendarViewScreen(
             modifier = Modifier.background(color = Color(0xFF444444)),
             state = state,
             dayContent = { day ->
+
                 val hasActiveTasks = taskList.any {
+                    if (it.dueDate.isBlank()) return@any false
                     val taskDate = LocalDate.parse(it.dueDate, dueDateFormat)
                     taskDate == day.date
                 }
+
                 Day(day.date, isSelected = selection == day.date, hasActiveTasks = hasActiveTasks) { clicked ->
                     if (selection != clicked) {
                         selection = clicked
@@ -106,6 +115,8 @@ fun WeeklyCalendarViewScreen(
                 }
             },
         )
+
+        Spacer(modifier = Modifier.height(8.dp))
 
         HourlyTaskView(
             selectedDate = selection,
@@ -126,10 +137,14 @@ fun HourlyTaskView(
 ) {
     val selectedTask = remember { mutableStateOf<Task?>(null) }
     val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+
     val tasksForSelectedDate = taskList.filter {
+        if (it.dueDate.isBlank() || it.dueTime.isBlank()) return@filter false
         val taskDate = LocalDate.parse(it.dueDate, dueDateFormat)
         taskDate == selectedDate
     }
+
+
     val padding = 8.dp
 
     if (selectedTask.value != null) {
@@ -146,13 +161,29 @@ fun HourlyTaskView(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
-            Text(
+            Column(
                 modifier = Modifier
-                    .padding(padding),
-                text = "You have no tasks yet for this day",
-                fontSize = 24.sp,
-                color = Color.White
-            )
+                    .fillMaxWidth()
+                    .padding(top = 16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    modifier = Modifier
+                        .padding(padding),
+                    text = "You have no tasks yet for this day",
+                    fontSize = 24.sp,
+                    color = Color.White.copy(alpha = 0.3f)
+                )
+                Image(
+                    modifier = Modifier
+                        .size(150.dp)
+                        .padding(padding),
+                    painter = painterResource(id = R.drawable.removebg_preview),
+                    contentDescription = "No tasks",
+                    colorFilter = ColorFilter.tint(Color.White.copy(alpha = 0.3f))
+                )
+            }
         }
     } else {
         Column(
@@ -205,7 +236,12 @@ fun HourlyTaskView(
                                     )
                                 },
                             )
-                            .padding(top = padding / 2, bottom = padding / 2, start = padding, end = padding),
+                            .padding(
+                                top = padding / 2,
+                                bottom = padding / 2,
+                                start = padding,
+                                end = padding
+                            ),
                         shape = RoundedCornerShape(8.dp),
                         elevation = CardDefaults.cardElevation(
                             defaultElevation = 5.dp,
@@ -237,8 +273,19 @@ fun HourlyTaskView(
                                     text = "Description: $it",
                                     fontSize = 12.sp,
                                     color = Color.Black,
+                                    lineHeight = 16.sp
                                 )
                             }
+
+                                Text(
+                                    text = "Status: ${task.status.toString().lowercase()
+                                        .replaceFirstChar {
+                                            if (it.isLowerCase()) it.titlecase(Locale.ROOT) else it.toString()
+                                        }}",
+                                    fontSize = 12.sp,
+                                    color = Color.Black,
+                                )
+
 
                             task.locationName?.takeIf { it.isNotBlank() }?.let {
                                 Text(
@@ -310,7 +357,8 @@ private fun Day(date: LocalDate, isSelected: Boolean, hasActiveTasks: Boolean, o
         }
         if (hasActiveTasks) {
             Box(
-                modifier = Modifier.padding(6.dp)
+                modifier = Modifier
+                    .padding(6.dp)
                     .size(5.dp)
                     .clip(CircleShape)
                     .align(Alignment.TopEnd)

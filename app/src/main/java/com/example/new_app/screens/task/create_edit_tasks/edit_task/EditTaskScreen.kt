@@ -1,55 +1,33 @@
 package com.example.new_app.screens.task.create_edit_tasks.edit_task
 
 import android.annotation.SuppressLint
-import android.app.Activity
-import android.content.Context
-import android.content.Intent
 import android.graphics.*
-import android.net.Uri
-import android.os.Build
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.annotation.RequiresApi
-import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.DateRange
-import androidx.compose.material.icons.filled.Done
-import androidx.compose.material.icons.filled.Timer
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.graphics.asAndroidBitmap
-import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
-import androidx.hilt.navigation.compose.hiltViewModel
-import com.example.new_app.R
 import com.example.new_app.SharedViewModel
+import com.example.new_app.TASK_MAP_SCREEN
+import com.example.new_app.common.composables.CardEditors
+import com.example.new_app.common.composables.ColorPicker
+import com.example.new_app.common.composables.CustomEditTaskAppBar
+import com.example.new_app.common.composables.CustomMultiLineTextfield
 import com.example.new_app.common.composables.CustomTextField
-import com.example.new_app.common.composables.RegularCardEditor
-import com.example.new_app.model.Task
+import com.example.new_app.common.composables.LoadingIndicator
+import com.example.new_app.common.composables.PickImageFromGallery
+import com.example.new_app.common.composables.SectionTitle
+import com.example.new_app.common.composables.ShowLocation
+import com.example.new_app.common.composables.customTextFieldColors
+import com.example.new_app.common.util.Resource
 import com.example.new_app.screens.task.create_edit_tasks.TaskEditCreateViewModel
-import com.example.new_app.screens.task.create_edit_tasks.createtask.AsyncImage
-import com.google.android.material.datepicker.MaterialDatePicker
-import com.google.android.material.timepicker.MaterialTimePicker
-import com.google.android.material.timepicker.TimeFormat
-import java.io.File
-import java.io.FileInputStream
 
-
-@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("UnusedMaterialScaffoldPaddingParameter")
 @Composable
@@ -58,211 +36,149 @@ fun EditTaskScreen(
     taskId: String,
     userId: String,
     mainViewModel: SharedViewModel,
+    openScreen: (String) -> Unit,
+    viewModel: TaskEditCreateViewModel
 ) {
-    val viewModel: TaskEditCreateViewModel = hiltViewModel()
+
     val task by viewModel.task
     val context = LocalContext.current
+    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+    val newTaskState by viewModel.taskEditCreateState.collectAsState()
 
+    val galleryLauncher =
+        rememberLauncherForActivityResult(contract = ActivityResultContracts.GetContent()) { uri ->
+            uri?.let {
+                viewModel.onImageChange(it)
+            }
+        }
+    val init = mainViewModel.initEdit.value
     LaunchedEffect(Unit) {
-        viewModel.initialize(taskId)
+        if (init == true){
+            Log.d("EditTaskScreen", "LaunchedEffect: INIT")
+            viewModel.initialize(taskId)
+            mainViewModel.toggleInitEdit()
+        }
     }
+
+    // Task(id=6y04BhDo0yJaK9EwlSdz, title=kladdddd, description=klad,
+    // createdBy=ZnqD1qmsKhZoIvR5m3GjpoSviEG3, dueDate=Tue, 2 May 2023, dueTime=16:52, assignedTo=[ZnqD1qmsKhZoIvR5m3GjpoSviEG3],
+    // isCompleted=false, status=ACTIVE, taskDate=Tue May 02 15:46:12 GMT+02:00 2023, color=-9675909, alertMessageTimer=3600000,
+    // imageUri=null, location=CustomLatLng(latitude=56.284643, longitude=9.435532), locationName=8620 Kjellerup, Denemarken)
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                ),
-                title = { Text("Edit Task", color = MaterialTheme.colorScheme.background) },
-                navigationIcon = {
-                    IconButton(onClick = popUpScreen) {
-                        Icon(Icons.Filled.ArrowBack, contentDescription = "Back", tint = MaterialTheme.colorScheme.background)
-                    }
-                },
-                actions = {
-                    IconButton(
-                        enabled = task.title.isNotBlank() && task.description.isNotBlank(),
-
-                        onClick = {
-                            viewModel.onDoneClick(context, taskId, popUpScreen,
-                                onTaskCreated = { newTaskId -> mainViewModel.updateLastAddedTaskId(newTaskId) }
-                            )
-                        }
-                    ) {
-                        Icon(
-                            Icons.Filled.Done,
-                            contentDescription = "Done",
-                            tint = if (task.title.isNotBlank() && task.description.isNotBlank())
-                                Color.Black else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
-                        )
-                    }
-                }
+            CustomEditTaskAppBar(
+                popUpScreen = popUpScreen,
+                task = task,
+                viewModel = viewModel,
+                taskId = taskId,
+                mainViewModel = mainViewModel,
+                context = context,
+                scrollBehavior = scrollBehavior,
             )
         }
     ) { innerPadding ->
-
-        Column(
+        LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
+                .nestedScroll(scrollBehavior.nestedScrollConnection)
                 .padding(innerPadding)
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
 
-            PickImageFromGallery(
-                LocalContext.current,
-                viewModel,
-                task,
-                userId
-            )
+            item {
+                SectionTitle("Image")
+                PickImageFromGallery(
+                    LocalContext.current,
+                    viewModel,
+                    task,
+                    userId,
+                    galleryLauncher
+                )
+            }
 
-            CustomTextField(
-                value = task.title,
-                onValueChange = viewModel::onTitleChange,
-                label = "Title",
-                modifier = Modifier.fillMaxWidth()
-            )
+            item {
+                Divider()
+            }
 
-            CustomTextField(
-                value = task.description,
-                onValueChange = viewModel::onDescriptionChange,
-                label = "Description",
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = false
-            )
-
-            CardEditors(
-                task,
-                viewModel::onDateChange,
-                viewModel::onTimeChange
-            )
-
-        }
-    }
-}
-
-@Composable
-private fun CardEditors(
-    task: Task,
-    onDateChange: (Long) -> Unit,
-    onTimeChange: (Int, Int) -> Unit
-) {
-    val activity = LocalContext.current as AppCompatActivity
-    val showDatePicker = remember { mutableStateOf(false) }
-
-    RegularCardEditor(
-        R.string.date,
-        Icons.Filled.DateRange,
-        task.dueDate,
-        Modifier.padding(top = 16.dp)
-    ) {
-        showDatePicker.value = true
-    }
-
-    ShowDate(
-        onDateChange = onDateChange,
-        openDialog = showDatePicker
-    )
-
-    RegularCardEditor(
-        R.string.time,
-        Icons.Filled.Timer,
-        task.dueTime,
-        Modifier.padding(top = 16.dp)
-    ) {
-        showTimePicker(
-            activity,
-            onTimeChange
-        )
-    }
-}
-
-
-@Composable
-fun PickImageFromGallery(
-    context: Context,
-    viewModel: TaskEditCreateViewModel,
-    task: Task,
-    userId: String
-) {
-    val updatedTask by rememberUpdatedState(task)
-
-    Row(
-        modifier = Modifier.padding(vertical = 16.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        val imageUrl = viewModel.imageUri.value
-
-        if (imageUrl != null) {
-            AsyncImage(
-                url = imageUrl,
-                modifier = Modifier
-                    .size(100.dp)
-                    .clip(CircleShape)
-                    .weight(1f, fill = false),
-                contentDescription = "Task Image"
-            )
-        }
-
-    }
-}
-
-
-
-
-@SuppressLint("UnrememberedMutableState")
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun ShowDate(
-    onDateChange: (Long) -> Unit,
-    openDialog: MutableState<Boolean>
-) {
-    if (openDialog.value) {
-        val datePickerState = rememberDatePickerState()
-        val confirmEnabled = derivedStateOf { datePickerState.selectedDateMillis != null }
-        DatePickerDialog(
-            onDismissRequest = {
-                openDialog.value = false
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        onDateChange(datePickerState.selectedDateMillis!!)
-                        openDialog.value = false
-                    },
-                    enabled = confirmEnabled.value
-                ) {
-                    Text("OK")
-                }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = {
-                        openDialog.value = false
-                    }
-                ) {
-                    Text("Cancel")
+            item {
+                SectionTitle("Color")
+                task.color?.let {
+                    ColorPicker(
+                        it,
+                        viewModel::onColorChange
+                    )
                 }
             }
-        ) {
-            DatePicker(
-                state = datePickerState
-            )
+
+            item {
+                Divider()
+            }
+
+            item {
+                SectionTitle("Title & Description")
+                CustomTextField(
+                    value = task.title,
+                    onValueChange = viewModel::onTitleChange,
+                    label = "Title",
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = customTextFieldColors()
+                )
+                CustomMultiLineTextfield(
+                    value = task.description,
+                    onValueChange = viewModel::onDescriptionChange,
+                    modifier = Modifier.fillMaxWidth(),
+                    hintText = "Description",
+                    textStyle = MaterialTheme.typography.bodyLarge,
+                    maxLines = 4,
+                    colors = customTextFieldColors()
+                )
+            }
+
+            item {
+                Divider(
+                    modifier = Modifier
+                        .padding(top = 18.dp)
+                )
+            }
+
+            item {
+                // Date Time Location Notification
+                SectionTitle("Location, Date, Time & Notification")
+                ShowLocation(
+                    locationDisplay = viewModel.locationDisplay,
+                    onEditClick = { openScreen(TASK_MAP_SCREEN) },
+                    onLocationReset = viewModel::onLocationReset,
+                )
+
+                CardEditors(
+                    task,
+                    viewModel::onDateChange,
+                    viewModel::onTimeChange,
+                    viewModel = viewModel
+                )
+            }
+        }
+
+        when (newTaskState) {
+            is Resource.Loading -> {
+                // Display a loading indicator
+                LoadingIndicator()
+            }
+            is Resource.Success -> {
+
+            }
+
+            is Resource.Error -> {
+                // Handle error
+            }
+            else -> {
+                // Handle empty state
+            }
         }
     }
 }
 
-private fun showTimePicker(activity: AppCompatActivity?, onTimeChange: (Int, Int) -> Unit) {
-    val picker = MaterialTimePicker.Builder()
-        .setTimeFormat(TimeFormat.CLOCK_24H)
-        .setTheme(R.style.CustomTimePickerTheme)
-        .setInputMode(MaterialTimePicker.INPUT_MODE_CLOCK)
-        .build()
-
-    activity?.let {
-        picker.show(it.supportFragmentManager, picker.toString())
-        picker.addOnPositiveButtonClickListener { onTimeChange(picker.hour, picker.minute) }
-    }
-}
 
 

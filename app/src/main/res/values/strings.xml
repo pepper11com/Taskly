@@ -54,7 +54,7 @@
     <string name="delete_account_description">You will lose all your tasks and your account will be deleted. This action is irreversible.</string>
     <string name="location">Location</string>
     <string name="no_location_selected">No location selected</string>
-    <string name="alert_time">Add notification</string>
+    <string name="alert_time">Notification</string>
 
 
 

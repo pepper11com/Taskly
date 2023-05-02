@@ -339,7 +339,7 @@ private fun TaskInformation(
     }
     Card(
         modifier = Modifier
-            .fillMaxWidth()
+            .fillMaxSize()
             .padding(8.dp)
             .combinedClickable(
                 onClick = {},
@@ -369,8 +369,7 @@ private fun TaskInformation(
         ) {
             Row(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 8.dp),
+                    .fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -378,6 +377,10 @@ private fun TaskInformation(
                     Text(text = task.title, style = MaterialTheme.typography.headlineMedium)
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(text = task.description, style = MaterialTheme.typography.bodyMedium)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(text = "Due: $dueDateText", style = MaterialTheme.typography.bodyMedium)
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(text = "Status: ${task.status}", style = MaterialTheme.typography.bodyMedium)
                 }
 
                 StaticMap(
@@ -387,23 +390,6 @@ private fun TaskInformation(
                         .padding(8.dp)
                         .clip(RoundedCornerShape(4.dp))
                 )
-            }
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 8.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column {
-                    Text(text = "Due: $dueDateText", style = MaterialTheme.typography.bodyMedium)
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = "Status: ${task.status}",
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                }
             }
         }
     }

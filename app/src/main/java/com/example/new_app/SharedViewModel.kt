@@ -20,6 +20,17 @@ class SharedViewModel : ViewModel() {
     private val _mapsVisible = MutableLiveData<Boolean>(true)
     val mapsVisible: LiveData<Boolean> = _mapsVisible
 
+    private val _initEdit = MutableLiveData<Boolean>(true)
+    val initEdit: LiveData<Boolean> = _initEdit
+
+    fun toggleInitEdit() {
+        _initEdit.value = _initEdit.value?.not()
+    }
+
+    fun resetInitEdit() {
+        _initEdit.value = true
+    }
+
     fun toggleMapsVisible() {
         _mapsVisible.value = _mapsVisible.value?.not()
     }
