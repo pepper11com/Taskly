@@ -11,9 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 
 @Composable
-fun LoadingIndicator(
-    modifier: Modifier = Modifier
-) {
+fun LoadingIndicator() {
     Box(
         modifier = Modifier
             .fillMaxSize()

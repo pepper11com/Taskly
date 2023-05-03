@@ -2,7 +2,6 @@ package com.example.new_app.screens.task.create_edit_tasks.edit_task
 
 import android.annotation.SuppressLint
 import android.graphics.*
-import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
@@ -25,8 +24,11 @@ import com.example.new_app.common.composables.PickImageFromGallery
 import com.example.new_app.common.composables.SectionTitle
 import com.example.new_app.common.composables.ShowLocation
 import com.example.new_app.common.composables.customTextFieldColors
+import com.example.new_app.common.ext.divider
+import com.example.new_app.common.ext.lazyColumn
 import com.example.new_app.common.util.Resource
 import com.example.new_app.screens.task.create_edit_tasks.TaskEditCreateViewModel
+import com.example.new_app.R.string as EditTaskString
 
 @OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("UnusedMaterialScaffoldPaddingParameter")
@@ -54,16 +56,10 @@ fun EditTaskScreen(
     val init = mainViewModel.initEdit.value
     LaunchedEffect(Unit) {
         if (init == true){
-            Log.d("EditTaskScreen", "LaunchedEffect: INIT")
             viewModel.initialize(taskId)
             mainViewModel.toggleInitEdit()
         }
     }
-
-    // Task(id=6y04BhDo0yJaK9EwlSdz, title=kladdddd, description=klad,
-    // createdBy=ZnqD1qmsKhZoIvR5m3GjpoSviEG3, dueDate=Tue, 2 May 2023, dueTime=16:52, assignedTo=[ZnqD1qmsKhZoIvR5m3GjpoSviEG3],
-    // isCompleted=false, status=ACTIVE, taskDate=Tue May 02 15:46:12 GMT+02:00 2023, color=-9675909, alertMessageTimer=3600000,
-    // imageUri=null, location=CustomLatLng(latitude=56.284643, longitude=9.435532), locationName=8620 Kjellerup, Denemarken)
 
     Scaffold(
         topBar = {
@@ -80,15 +76,12 @@ fun EditTaskScreen(
     ) { innerPadding ->
         LazyColumn(
             modifier = Modifier
-                .fillMaxSize()
-                .nestedScroll(scrollBehavior.nestedScrollConnection)
-                .padding(innerPadding)
-                .padding(16.dp),
+                .lazyColumn(innerPadding)
+                .nestedScroll(scrollBehavior.nestedScrollConnection),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-
             item {
-                SectionTitle("Image")
+                SectionTitle(EditTaskString.image)
                 PickImageFromGallery(
                     LocalContext.current,
                     viewModel,
@@ -97,13 +90,11 @@ fun EditTaskScreen(
                     galleryLauncher
                 )
             }
-
             item {
                 Divider()
             }
-
             item {
-                SectionTitle("Color")
+                SectionTitle(EditTaskString.color)
                 task.color?.let {
                     ColorPicker(
                         it,
@@ -111,17 +102,15 @@ fun EditTaskScreen(
                     )
                 }
             }
-
             item {
                 Divider()
             }
-
             item {
-                SectionTitle("Title & Description")
+                SectionTitle(EditTaskString.title_description)
                 CustomTextField(
                     value = task.title,
                     onValueChange = viewModel::onTitleChange,
-                    label = "Title",
+                    label = EditTaskString.title,
                     modifier = Modifier.fillMaxWidth(),
                     colors = customTextFieldColors()
                 )
@@ -129,29 +118,22 @@ fun EditTaskScreen(
                     value = task.description,
                     onValueChange = viewModel::onDescriptionChange,
                     modifier = Modifier.fillMaxWidth(),
-                    hintText = "Description",
+                    hintText = EditTaskString.description,
                     textStyle = MaterialTheme.typography.bodyLarge,
                     maxLines = 4,
                     colors = customTextFieldColors()
                 )
             }
-
             item {
-                Divider(
-                    modifier = Modifier
-                        .padding(top = 18.dp)
-                )
+                Divider(Modifier.divider())
             }
-
             item {
-                // Date Time Location Notification
-                SectionTitle("Location, Date, Time & Notification")
+                SectionTitle(EditTaskString.location_date_time_notification)
                 ShowLocation(
                     locationDisplay = viewModel.locationDisplay,
                     onEditClick = { openScreen(TASK_MAP_SCREEN) },
                     onLocationReset = viewModel::onLocationReset,
                 )
-
                 CardEditors(
                     task,
                     viewModel::onDateChange,
@@ -163,19 +145,9 @@ fun EditTaskScreen(
 
         when (newTaskState) {
             is Resource.Loading -> {
-                // Display a loading indicator
                 LoadingIndicator()
             }
-            is Resource.Success -> {
-
-            }
-
-            is Resource.Error -> {
-                // Handle error
-            }
-            else -> {
-                // Handle empty state
-            }
+            else -> {}
         }
     }
 }

@@ -20,7 +20,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.new_app.LOGIN_SCREEN
 import com.example.new_app.NAVIGATOR_SCREEN
 import com.example.new_app.SIGN_UP_SCREEN
-import com.example.new_app.TASK_LIST_SCREEN
 import com.example.new_app.common.composables.CustomButton
 import com.example.new_app.common.composables.CustomPasswordTextField
 import com.example.new_app.common.composables.CustomTextField
@@ -28,6 +27,8 @@ import com.example.new_app.common.composables.LoadingIndicator
 import com.example.new_app.common.util.Resource
 import com.example.new_app.model.service.GoogleAuth
 import kotlinx.coroutines.launch
+import com.example.new_app.R.string as LoginString
+
 
 @Composable
 fun LoginScreen(
@@ -64,7 +65,7 @@ fun LoginScreen(
         CustomTextField(
             value = uiState.email,
             onValueChange = viewModel::onEmailChange,
-            label = "Email"
+            label = LoginString.email
         )
 
         Spacer(modifier = Modifier.height(16.dp))

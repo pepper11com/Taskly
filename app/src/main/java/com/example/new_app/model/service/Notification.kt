@@ -130,3 +130,8 @@ fun scheduleTaskReminder(taskId: String, title: String, message: String, dueDate
     WorkManager.getInstance(context).enqueueUniqueWork(taskId, ExistingWorkPolicy.REPLACE, reminderRequest)
 }
 
+fun cancelTaskReminder(taskId: String, context: Context) {
+    WorkManager.getInstance(context).cancelUniqueWork(taskId)
+}
+
+

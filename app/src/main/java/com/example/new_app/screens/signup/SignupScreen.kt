@@ -17,6 +17,8 @@ import com.example.new_app.common.composables.CustomPasswordTextField
 import com.example.new_app.common.composables.CustomTextField
 import com.example.new_app.common.composables.LoadingIndicator
 import com.example.new_app.common.util.Resource
+import com.example.new_app.R.string as SignupString
+
 
 @Composable
 fun SignupScreen(
@@ -78,7 +80,7 @@ fun SignupContent(
         CustomTextField(
             value = uiState.email,
             onValueChange = viewModel::onEmailChange,
-            label = "Email",
+            label = SignupString.email,
             modifier = Modifier.fillMaxWidth(),
         )
 
@@ -124,7 +126,7 @@ fun SignupContent(
 
         if (uiState.error != null) {
             Text(
-                text = uiState.error ?: "",
+                text = uiState.error,
                 color = MaterialTheme.colorScheme.error,
                 modifier = Modifier.padding(top = 16.dp)
             )

@@ -16,6 +16,7 @@ import com.example.new_app.model.CustomLatLng
 import com.example.new_app.model.Task
 import com.example.new_app.model.service.AccountService
 import com.example.new_app.model.service.FirebaseService
+import com.example.new_app.model.service.cancelTaskReminder
 import com.example.new_app.model.service.scheduleTaskReminder
 import com.example.new_app.screens.task.tasklist.generateStaticMapUrl
 import com.google.android.gms.maps.model.LatLng
@@ -264,6 +265,10 @@ class TaskEditCreateViewModel @Inject constructor(
                     if (task.value.location?.latitude != null && task.value.location?.longitude != null) {
                         imageUrl = generateStaticMapUrl(task.value)
                     }
+
+                    // Cancel the previous task reminder
+                    cancelTaskReminder(taskId, context)
+
                     task.value.dueDateToMillis()?.let { dueDateMillis ->
                         val notificationId = generateUniqueNotificationId()
                         scheduleTaskReminder(

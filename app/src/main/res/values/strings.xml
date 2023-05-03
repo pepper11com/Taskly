@@ -31,14 +31,21 @@
 
     <!-- TasksScreen -->
     <string name="tasks">Tasks</string>
+    <string name="new_task">New Task</string>
+    <string name="deleted_tasks">Deleted Tasks</string>
+    <string name="completed_tasks">Completed Tasks</string>
 
 
-    <!-- EditTaskScreen -->
+    <!-- EditTaskScreen / Create -->
     <string name="edit_task">Edit your task</string>
     <string name="title">Title</string>
     <string name="description">Description</string>
     <string name="date">Date</string>
     <string name="time">Time</string>
+    <string name="location_date_time_notification">Location, Date, Time &amp; Notification</string>
+    <string name="title_description">Title &amp; Description</string>
+    <string name="color">Color</string>
+    <string name="image">Image</string>
 
 
     <!-- SettingsScreen -->

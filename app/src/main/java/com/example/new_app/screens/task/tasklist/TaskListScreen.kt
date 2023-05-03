@@ -1,28 +1,44 @@
 package com.example.new_app.screens.task.tasklist
 
 
-import android.annotation.SuppressLint
 import android.graphics.Bitmap
-import android.os.Build
-import androidx.annotation.RequiresApi
-import androidx.compose.animation.core.*
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Divider
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberTopAppBarState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.new_app.EDIT_TASK_SCREEN
 import com.example.new_app.SharedViewModel
 import com.example.new_app.TASK_ID
@@ -30,21 +46,19 @@ import com.example.new_app.TASK_ID_KEY
 import com.example.new_app.common.composables.CustomTabRow
 import com.example.new_app.common.composables.CustomTopAppBar
 import com.example.new_app.common.composables.LoadingIndicator
-import com.example.new_app.common.util.Resource
-import com.example.new_app.model.Task
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import androidx.compose.material3.ExtendedFloatingActionButton
-import androidx.compose.ui.text.font.FontWeight
+import com.example.new_app.common.composables.TaskListScreenSideEffects
+import com.example.new_app.common.composables.isScrollingUp
+import com.example.new_app.common.ext.padding16
 import com.example.new_app.common.sort.getFilteredTasks
 import com.example.new_app.common.sort.sortTasks
-import com.example.new_app.model.service.Notification
-import com.example.new_app.screens.login.LoginViewModel
+import com.example.new_app.common.util.Resource
+import com.example.new_app.model.Task
 import com.example.new_app.screens.login.UserData
 import com.example.new_app.screens.task.create_edit_tasks.TaskEditCreateViewModel
+import kotlinx.coroutines.launch
+import com.example.new_app.R.string as TaskString
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
-@SuppressLint("UnusedMaterialScaffoldPaddingParameter")
 @Composable
 fun TaskListScreen(
     openScreen: (String) -> Unit,
@@ -54,9 +68,9 @@ fun TaskListScreen(
     viewModel: TaskListViewModel = hiltViewModel()
 ) {
 
-    LaunchedEffect(Unit){
-        mainViewModel.resetInitEdit()
-    }
+//    LaunchedEffect(Unit){
+//        mainViewModel.resetInitEdit()
+//    }
 
     val userId = viewModel.currentUserId
     val deleteTasksState by viewModel.deleteTasksState.collectAsState()
@@ -64,12 +78,17 @@ fun TaskListScreen(
     val userProfilePictureUrl = userData?.profilePictureUrl
     val userGoogleName = userData?.username
     val context = LocalContext.current
-    val uiState by viewModel.taskListUiState.collectAsState()
+    //TODO TEST TEST TEST THIS was - .collectAsState()
+    val uiState by viewModel.taskListUiState.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
     val showDialog = remember { mutableStateOf(false) }
     val currentTask = remember { mutableStateOf<Task?>(null) }
     val selectedTasks = remember { mutableStateListOf<Task>() }
-    val tabTitles = listOf("Deleted Tasks", "Tasks", "Completed Tasks")
+    val tabTitles = listOf(
+        stringResource(TaskString.deleted_tasks),
+        stringResource(TaskString.tasks),
+        stringResource(TaskString.completed_tasks)
+    )
     val selectedIndex = remember { mutableStateOf(1) }
     val filteredTasks = remember(uiState.tasks, selectedIndex.value, sortType) {
         val filtered =
@@ -83,22 +102,30 @@ fun TaskListScreen(
     val isScreenVisible = remember { mutableStateOf(true) }
     val mapsVisible by mainViewModel.mapsVisible.observeAsState(initial = true)
 
-    LaunchedEffect(lastAddedTaskId) {
-        if (lastAddedTaskId != null && isScreenVisible.value) {
-            val lastAddedTaskIndex = filteredTasks.indexOfFirst { it.id == lastAddedTaskId }
-            if (lastAddedTaskIndex != -1) {
-                delay(500)
-                listState.animateScrollToItem(lastAddedTaskIndex)
-                mainViewModel.updateLastAddedTaskId(null)
-            }
-        }
-    }
-    DisposableEffect(Unit) {
-        onDispose {
-            isScreenVisible.value = false
-        }
-    }
+    //TODO TEST TEST TEST THIS
+    TaskListScreenSideEffects(
+        mainViewModel = mainViewModel,
+        listState = listState,
+        lastAddedTaskId = lastAddedTaskId,
+        isScreenVisible = isScreenVisible,
+        filteredTasks = filteredTasks,
+    )
 
+//    LaunchedEffect(lastAddedTaskId) {
+//        if (lastAddedTaskId != null && isScreenVisible.value) {
+//            val lastAddedTaskIndex = filteredTasks.indexOfFirst { it.id == lastAddedTaskId }
+//            if (lastAddedTaskIndex != -1) {
+//                delay(500)
+//                listState.animateScrollToItem(lastAddedTaskIndex)
+//                mainViewModel.updateLastAddedTaskId(null)
+//            }
+//        }
+//    }
+//    DisposableEffect(Unit) {
+//        onDispose {
+//            isScreenVisible.value = false
+//        }
+//    }
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         floatingActionButton = {
@@ -111,11 +138,11 @@ fun TaskListScreen(
                 },
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.background,
-                modifier = Modifier.padding(16.dp),
-                icon = { Icon(Icons.Filled.Add, "Localized description") },
+                modifier = Modifier.padding16(),
+                icon = { Icon(Icons.Filled.Add, "Add Task") },
                 text = {
                     Text(
-                        text = "New Task",
+                        text = stringResource(TaskString.new_task),
                         fontWeight = FontWeight.SemiBold,
                     )
                 },
@@ -124,7 +151,7 @@ fun TaskListScreen(
         topBar = {
             Column {
                 CustomTopAppBar(
-                    title = "Tasks",
+                    title = TaskString.new_task,
                     selectedIndex = selectedIndex,
                     selectedTasks = selectedTasks,
                     uiState = uiState,
@@ -136,7 +163,6 @@ fun TaskListScreen(
                     userProfilePictureUrl = userProfilePictureUrl,
                     userGoogleName = userGoogleName,
                 )
-
                 CustomTabRow(
                     selectedIndex = selectedIndex,
                     tabTitles = tabTitles,
@@ -153,9 +179,7 @@ fun TaskListScreen(
                 .padding(paddingValues)
         ) {
             if (uiState.isLoading) {
-                LoadingIndicator(
-                    modifier = Modifier.fillMaxSize()
-                )
+                LoadingIndicator()
             } else {
                 LazyColumn(
                     state = listState,
@@ -163,7 +187,6 @@ fun TaskListScreen(
                         .fillMaxSize()
                         .nestedScroll(scrollBehavior.nestedScrollConnection)
                 ) {
-
                     itemsIndexed(filteredTasks, key = { _, task -> task.id }) { _, task ->
                         val taskBitmap = remember { mutableStateOf<Bitmap?>(null) }
                         Column(
@@ -175,8 +198,7 @@ fun TaskListScreen(
                                 onClick = {
                                     openScreen(
                                         "$EDIT_TASK_SCREEN$TASK_ID_KEY".replace(
-                                            "{$TASK_ID}",
-                                            task.id
+                                            "{$TASK_ID}", task.id
                                         )
                                     )
                                 },
@@ -189,7 +211,11 @@ fun TaskListScreen(
                                 },
                                 status = task.status,
                                 taskBitmap = taskBitmap,
-                                isSelected = taskSelectionStates.getOrPut(task.id) { mutableStateOf(task in selectedTasks) },
+                                isSelected = taskSelectionStates.getOrPut(task.id) {
+                                    mutableStateOf(
+                                        task in selectedTasks
+                                    )
+                                },
                                 selectedTasks = selectedTasks,
                                 onSelectedTasksChange = { selectedTask, isChecked ->
                                     if (isChecked) {
@@ -221,50 +247,14 @@ fun TaskListScreen(
 
             when (deleteTasksState) {
                 is Resource.Loading -> {
-                    // Display a loading indicator
                     LoadingIndicator()
                 }
-
                 is Resource.Success -> {
-                    // Handle successful deletion of tasks
                     selectedTasks.clear()
                     viewModel.resetDeleteTasksState()
                 }
-
-                is Resource.Error -> {
-                    // Handle error
-                }
-
-                else -> {
-                    // Handle empty state
-                }
+                else -> {}
             }
         }
     }
 }
-
-
-
-@Composable
-private fun LazyListState.isScrollingUp(): Boolean {
-    var previousIndex by remember(this) { mutableStateOf(firstVisibleItemIndex) }
-    var previousScrollOffset by remember(this) { mutableStateOf(firstVisibleItemScrollOffset) }
-    return remember(this) {
-        derivedStateOf {
-            if (previousIndex != firstVisibleItemIndex) {
-                previousIndex > firstVisibleItemIndex
-            } else {
-                previousScrollOffset >= firstVisibleItemScrollOffset
-            }.also {
-                previousIndex = firstVisibleItemIndex
-                previousScrollOffset = firstVisibleItemScrollOffset
-            }
-        }
-    }.value
-}
-
-
-
-
-
-

@@ -1,6 +1,7 @@
 package com.example.new_app.common.composables
 
 import android.content.Context
+import androidx.annotation.StringRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -38,6 +39,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -62,7 +64,7 @@ import java.time.LocalDateTime
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CustomTopAppBar(
-    title: String,
+    @StringRes title: Int,
     selectedIndex: MutableState<Int>,
     selectedTasks: SnapshotStateList<Task>,
     uiState: TaskListUiState,
@@ -216,7 +218,7 @@ fun CustomTopAppBar(
             } else {
                 Text(
                     textAlign = TextAlign.Center,
-                    text = title,
+                    text = stringResource(title),
                     color = Color.White,
                     fontSize = 24.sp,
                     fontWeight = FontWeight.Bold,

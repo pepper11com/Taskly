@@ -1,8 +1,8 @@
 package com.example.new_app.common.composables
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
@@ -17,6 +17,7 @@ import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -31,7 +32,7 @@ import androidx.compose.ui.unit.sp
 fun CustomTextField(
     value: String,
     onValueChange: (String) -> Unit,
-    label: String,
+    @StringRes label: Int,
     modifier: Modifier = Modifier,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     singleLine: Boolean = true,
@@ -49,7 +50,7 @@ fun CustomTextField(
         OutlinedTextField(
             value = value,
             onValueChange = onValueChange,
-            label = { Text(label) },
+            label = { Text(stringResource(label)) },
             modifier = Modifier
                 .fillMaxWidth(),
             isError = isError && isErrorState.value,
@@ -67,7 +68,6 @@ fun CustomTextField(
             )
         }
     }
-
 
     LaunchedEffect(value) {
         isErrorState.value = value.isNotEmpty()
@@ -122,7 +122,6 @@ fun CustomPasswordTextField(
         }
     }
 
-
     LaunchedEffect(value) {
         isErrorState.value = value.isNotEmpty()
     }
@@ -133,7 +132,7 @@ fun CustomMultiLineTextfield(
     value: String,
     onValueChange: (String) -> Unit,
     modifier: Modifier = Modifier,
-    hintText: String = "",
+    @StringRes hintText: Int,
     textStyle: TextStyle = MaterialTheme.typography.bodySmall,
     maxLines: Int = 4,
     colors: TextFieldColors = OutlinedTextFieldDefaults.colors(
@@ -145,10 +144,10 @@ fun CustomMultiLineTextfield(
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
-        label = { Text(hintText) },
+        label = { Text(stringResource(hintText)) },
         textStyle = textStyle,
         maxLines = maxLines,
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
         colors = colors,
         singleLine = false,
         keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),

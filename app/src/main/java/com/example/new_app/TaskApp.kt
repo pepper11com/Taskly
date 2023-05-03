@@ -50,18 +50,17 @@ fun TaskApp(
     taskEditCreateViewModel: TaskEditCreateViewModel = hiltViewModel(),
     googleAuthUiClient: GoogleAuth
 ) {
-    New_AppTheme() {
+    New_AppTheme {
 
         val appState = rememberAppState()
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             RequestNotificationPermissionDialog(
-                appState = appState,
+                appState = appState
             )
         }
 
         Surface(color = MaterialTheme.colorScheme.background) {
-
 
             Scaffold(
                 snackbarHost = {
@@ -76,13 +75,12 @@ fun TaskApp(
                                 actionColor = DarkOrange,
                                 dismissActionContentColor = Color.White,
                                 modifier = Modifier.padding(8.dp),
-                                actionOnNewLine = true,
+                                actionOnNewLine = true
                             )
                         }
                     )
-                },
-
-            ) {  _ ->
+                }
+            ) {
                 NavHost(
                     navController = appState.navController,
                     startDestination = SPLASH_SCREEN,
@@ -103,13 +101,13 @@ fun TaskApp(
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun RequestNotificationPermissionDialog(
-    appState: TaskAppState,
+    appState: TaskAppState
 ) {
     val permissionState = rememberPermissionState(permission = Manifest.permission.POST_NOTIFICATIONS)
 
     if (!permissionState.status.isGranted) {
         if (permissionState.status.shouldShowRationale) {
-            RationaleSnackbar(snackbarHostState = appState.snackbarState, onRequestPermission = { permissionState.launchPermissionRequest() },)
+            RationaleSnackbar(snackbarHostState = appState.snackbarState, onRequestPermission = { permissionState.launchPermissionRequest() })
         } else {
             PermissionDialog { permissionState.launchPermissionRequest() }
         }
@@ -145,7 +143,7 @@ fun NavGraphBuilder.taskAppGraph(
     composable(SPLASH_SCREEN) {
         SplashScreen(
             openAndPopUp = { route, popUp -> appState.navigateAndPopUp(route, popUp) },
-            clearBackstack = { appState.clearBackstack() },
+            clearBackstack = { appState.clearBackstack() }
         )
     }
 
@@ -155,12 +153,9 @@ fun NavGraphBuilder.taskAppGraph(
             navigateToMainScreen = { route -> appState.clearAndNavigate(route) },
             clearAndNavigateAndPopUp = { route, popUp -> appState.clearAndNavigateAndPopUp(route, popUp) },
             clearAndPopUpMultiple = { route, popUpScreens -> appState.clearAndPopUpMultiple(route, popUpScreens) },
-
             openScreen = { route -> appState.navigate(route) },
             clearBackstack = { appState.clearBackstack() },
-
             navigateToLogin = { route -> appState.clearAndNavigate(route) }
-
         )
     }
 
@@ -209,7 +204,7 @@ fun NavGraphBuilder.taskAppGraph(
             openAndPopUp = { route, popUp -> appState.navigateAndPopUp(route, popUp) },
             openScreen = { route -> appState.navigate(route) },
             viewModel = taskEditCreateViewModel,
-            popUpScreen = { appState.popUp() },
+            popUpScreen = { appState.popUp() }
         )
     }
 
@@ -227,22 +222,16 @@ fun NavGraphBuilder.taskAppGraph(
         )
     }
 
-
     composable(
         route = "$CREATE_TASK_SCREEN$TASK_ID_KEY",
         arguments = listOf(navArgument(TASK_ID) { defaultValue = TASK_DEFAULT_ID })
     ) {
         CreateTaskScreen(
             popUpScreen = { appState.popUp() },
-            taskId = it.arguments?.getString(TASK_ID) ?: TASK_DEFAULT_ID,
             userId = it.arguments?.getString("userId") ?: "",
             mainViewModel = mainViewModel,
-            openAndPopUp = { route, popUp -> appState.navigateAndPopUp(route, popUp) },
             openScreen = { route -> appState.navigate(route) },
             viewModel = taskEditCreateViewModel
         )
     }
-
-
-
 }

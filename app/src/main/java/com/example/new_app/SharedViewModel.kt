@@ -1,7 +1,6 @@
 package com.example.new_app
 
 import android.util.Log
-import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -17,10 +16,10 @@ class SharedViewModel : ViewModel() {
     private val _selectedTaskIds = MutableStateFlow<Set<String>>(emptySet())
     val selectedTaskIds: StateFlow<Set<String>> = _selectedTaskIds.asStateFlow()
 
-    private val _mapsVisible = MutableLiveData<Boolean>(true)
+    private val _mapsVisible = MutableLiveData(true)
     val mapsVisible: LiveData<Boolean> = _mapsVisible
 
-    private val _initEdit = MutableLiveData<Boolean>(true)
+    private val _initEdit = MutableLiveData(true)
     val initEdit: LiveData<Boolean> = _initEdit
 
     fun toggleInitEdit() {
