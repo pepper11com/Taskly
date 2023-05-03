@@ -21,7 +21,6 @@ import com.example.new_app.model.service.scheduleTaskReminder
 import com.example.new_app.screens.task.tasklist.generateStaticMapUrl
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
-import com.google.firebase.storage.FirebaseStorage
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -49,7 +48,7 @@ class TaskEditCreateViewModel @Inject constructor(
 
     val task = mutableStateOf(Task())
     val imageUri = mutableStateOf<String?>(null)
-    var marker: Marker? = null
+    private var marker: Marker? = null
 
     private val _taskEditCreateState = MutableStateFlow<Resource<Unit>>(Resource.Empty())
     val taskEditCreateState: StateFlow<Resource<Unit>> get() = _taskEditCreateState
@@ -185,8 +184,8 @@ class TaskEditCreateViewModel @Inject constructor(
         // Save the task first to get the task ID
         when (val saveResult = firebaseService.save(newTask)) {
             is Resource.Success -> {
+                SnackbarManager.showMessage("Task successfully created")
                 popUpScreen()
-
                 val savedTaskId = saveResult.data
                 // Check if there is an image to upload
                 if (imageUri.value != null) {
@@ -259,6 +258,7 @@ class TaskEditCreateViewModel @Inject constructor(
             )
             when (val updateResult = firebaseService.updateTask(updatedTask)) {
                 is Resource.Success -> {
+                    SnackbarManager.showMessage("Task successfully edited")
                     popUpScreen()
                     onTaskCreated(taskId)
                     var imageUrl: String? = null
@@ -299,6 +299,7 @@ class TaskEditCreateViewModel @Inject constructor(
         } else {
             when (val updateResult = firebaseService.updateTask(task.value)) {
                 is Resource.Success -> {
+                    SnackbarManager.showMessage("Task successfully edited")
                     popUpScreen()
                     var imageUrl: String? = null
                     if (task.value.location?.latitude != null && task.value.location?.longitude != null) {
@@ -349,7 +350,7 @@ class TaskEditCreateViewModel @Inject constructor(
                     editExistingTask(context, taskId, popUpScreen, onTaskCreated)
                 }
                 _taskEditCreateState.value = Resource.Success(Unit)
-                SnackbarManager.showMessage("Task successfully saved")
+
             } catch (e: Exception) {
                 _taskEditCreateState.value = Resource.Error(e.message ?: "Unknown error")
                 SnackbarManager.showMessage("Unknown error")

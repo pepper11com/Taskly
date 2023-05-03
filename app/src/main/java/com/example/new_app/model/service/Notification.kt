@@ -26,18 +26,16 @@ class Notification (
     var title: String,
     var message: String,
 ){
-    val channelID: String = "FCM100"
-    val channelName: String = "Task Notification"
-    val groupKey = "com.example.taskly.NOTIFICATION_GROUP"
-    val notificationManager = context.applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-    lateinit var notificationChannel: NotificationChannel
-    lateinit var notificationBuilder: NotificationCompat.Builder
+    private val channelID: String = "FCM100"
+    private val channelName: String = "Task Notification"
+    private val groupKey = "com.example.taskly.NOTIFICATION_GROUP"
+    private val notificationManager = context.applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+    private lateinit var notificationChannel: NotificationChannel
+    private lateinit var notificationBuilder: NotificationCompat.Builder
 
     fun fireNotification(imageUrl: String?, notificationId: Int){
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-            notificationChannel = NotificationChannel(channelID, channelName, NotificationManager.IMPORTANCE_HIGH)
-            notificationManager.createNotificationChannel(notificationChannel)
-        }
+        notificationChannel = NotificationChannel(channelID, channelName, NotificationManager.IMPORTANCE_HIGH)
+        notificationManager.createNotificationChannel(notificationChannel)
         val intent = Intent(context, MainActivity::class.java)
         val pendingIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_IMMUTABLE)
 

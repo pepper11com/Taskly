@@ -3,24 +3,20 @@ package com.example.new_app.screens.signup
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.new_app.NAVIGATOR_SCREEN
-import com.example.new_app.SIGN_UP_SCREEN
-import com.example.new_app.TASK_LIST_SCREEN
 import com.example.new_app.common.ext.isValidEmail
 import com.example.new_app.common.ext.isValidPassword
 import com.example.new_app.common.snackbar.SnackbarManager
 import com.example.new_app.common.util.Resource
 import com.example.new_app.model.service.AccountService
-import com.example.new_app.model.service.FirebaseService
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+
 @HiltViewModel
 class SignupViewModel @Inject constructor(
     private val accountService: AccountService,
-    private val firebaseService: FirebaseService
 ) : ViewModel() {
 
     var uiState = mutableStateOf(SignupUiState())

@@ -1,7 +1,6 @@
 package com.example.new_app.screens.task.tasklist
 
 
-import android.graphics.Bitmap
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -31,6 +30,7 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
@@ -67,41 +67,41 @@ fun TaskListScreen(
     taskEditCreateViewModel: TaskEditCreateViewModel,
     viewModel: TaskListViewModel = hiltViewModel()
 ) {
-
 //    LaunchedEffect(Unit){
 //        mainViewModel.resetInitEdit()
 //    }
-
     val userId = viewModel.currentUserId
-    val deleteTasksState by viewModel.deleteTasksState.collectAsState()
-    val sortType by viewModel.sortType.collectAsState()
-    val userProfilePictureUrl = userData?.profilePictureUrl
-    val userGoogleName = userData?.username
-    val context = LocalContext.current
     //TODO TEST TEST TEST THIS was - .collectAsState()
     val uiState by viewModel.taskListUiState.collectAsStateWithLifecycle()
-    val scope = rememberCoroutineScope()
+    val deleteTasksState by viewModel.deleteTasksState.collectAsState()
+    val sortType by viewModel.sortType.collectAsState()
+    val lastAddedTaskId by mainViewModel.lastAddedTaskId.observeAsState(null)
+    val mapsVisible by mainViewModel.mapsVisible.observeAsState(true)
+
+    val userProfilePictureUrl = userData?.profilePictureUrl
+    val userGoogleName = userData?.username
+
+    val selectedIndex = rememberSaveable { mutableStateOf(1) }
     val showDialog = remember { mutableStateOf(false) }
     val currentTask = remember { mutableStateOf<Task?>(null) }
     val selectedTasks = remember { mutableStateListOf<Task>() }
+    val isScreenVisible = remember { mutableStateOf(true) }
+    val taskSelectionStates = remember { mutableMapOf<String, MutableState<Boolean>>() }
+
+    val scope = rememberCoroutineScope()
+    val listState = rememberLazyListState()
+    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
+    val context = LocalContext.current
+
     val tabTitles = listOf(
         stringResource(TaskString.deleted_tasks),
         stringResource(TaskString.tasks),
         stringResource(TaskString.completed_tasks)
     )
-    val selectedIndex = remember { mutableStateOf(1) }
     val filteredTasks = remember(uiState.tasks, selectedIndex.value, sortType) {
-        val filtered =
-            getFilteredTasks(uiState.tasks, TaskStatus.values()[selectedIndex.value], sortType)
+        val filtered = getFilteredTasks(uiState.tasks, TaskStatus.values()[selectedIndex.value], sortType)
         sortTasks(filtered, sortType)
     }
-    val taskSelectionStates = remember { mutableMapOf<String, MutableState<Boolean>>() }
-    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
-    val listState = rememberLazyListState()
-    val lastAddedTaskId by mainViewModel.lastAddedTaskId.observeAsState(null)
-    val isScreenVisible = remember { mutableStateOf(true) }
-    val mapsVisible by mainViewModel.mapsVisible.observeAsState(initial = true)
-
     //TODO TEST TEST TEST THIS
     TaskListScreenSideEffects(
         mainViewModel = mainViewModel,
@@ -153,7 +153,6 @@ fun TaskListScreen(
                 CustomTopAppBar(
                     title = TaskString.new_task,
                     selectedIndex = selectedIndex,
-                    selectedTasks = selectedTasks,
                     uiState = uiState,
                     openScreen = openScreen,
                     viewModel = viewModel,
@@ -188,12 +187,10 @@ fun TaskListScreen(
                         .nestedScroll(scrollBehavior.nestedScrollConnection)
                 ) {
                     itemsIndexed(filteredTasks, key = { _, task -> task.id }) { _, task ->
-                        val taskBitmap = remember { mutableStateOf<Bitmap?>(null) }
                         Column(
                             modifier = Modifier.animateItemPlacement()
                         ) {
                             SwipeableTaskListItem(
-                                context = context,
                                 task = task,
                                 onClick = {
                                     openScreen(
@@ -210,13 +207,11 @@ fun TaskListScreen(
                                     }
                                 },
                                 status = task.status,
-                                taskBitmap = taskBitmap,
                                 isSelected = taskSelectionStates.getOrPut(task.id) {
                                     mutableStateOf(
                                         task in selectedTasks
                                     )
                                 },
-                                selectedTasks = selectedTasks,
                                 onSelectedTasksChange = { selectedTask, isChecked ->
                                     if (isChecked) {
                                         selectedTasks.add(selectedTask)

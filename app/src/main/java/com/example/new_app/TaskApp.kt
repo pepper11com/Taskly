@@ -25,6 +25,9 @@ import com.example.new_app.common.composables.RationaleSnackbar
 import com.example.new_app.common.snackbar.SnackbarManager
 import com.example.new_app.model.service.GoogleAuth
 import com.example.new_app.screens.authentication.AuthenticationScreen
+import com.example.new_app.screens.calender.MonthlyCalendarScreen
+import com.example.new_app.screens.calender.WeeklyCalendarViewScreen
+import com.example.new_app.screens.calender_screens.CalenderScreens
 import com.example.new_app.screens.google_maps.LocationPickerScreen
 import com.example.new_app.screens.task.create_edit_tasks.createtask.CreateTaskScreen
 import com.example.new_app.screens.login.LoginScreen
@@ -35,6 +38,7 @@ import com.example.new_app.screens.splashscreen.SplashScreen
 import com.example.new_app.screens.task.create_edit_tasks.TaskEditCreateViewModel
 import com.example.new_app.screens.task.create_edit_tasks.edit_task.EditTaskScreen
 import com.example.new_app.screens.task.tasklist.TaskListScreen
+import com.example.new_app.screens.task.tasklist.TaskListViewModel
 import com.example.new_app.theme.*
 import com.example.new_app.theme.New_AppTheme
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
@@ -48,6 +52,7 @@ import kotlinx.coroutines.CoroutineScope
 fun TaskApp(
     mainViewModel: SharedViewModel = hiltViewModel(),
     taskEditCreateViewModel: TaskEditCreateViewModel = hiltViewModel(),
+    taskListViewModel: TaskListViewModel = hiltViewModel(),
     googleAuthUiClient: GoogleAuth
 ) {
     New_AppTheme {
@@ -89,7 +94,8 @@ fun TaskApp(
                         appState,
                         mainViewModel,
                         taskEditCreateViewModel,
-                        googleAuthUiClient
+                        googleAuthUiClient,
+                        taskListViewModel
                     )
                 }
             }
@@ -137,7 +143,8 @@ fun NavGraphBuilder.taskAppGraph(
     appState: TaskAppState,
     mainViewModel: SharedViewModel,
     taskEditCreateViewModel: TaskEditCreateViewModel,
-    googleAuthUiClient: GoogleAuth
+    googleAuthUiClient: GoogleAuth,
+    taskListViewModel: TaskListViewModel
 ) {
 
     composable(SPLASH_SCREEN) {
@@ -195,9 +202,33 @@ fun NavGraphBuilder.taskAppGraph(
             openScreen = { route -> appState.navigate(route) },
             mainViewModel = mainViewModel,
             userData = googleAuthUiClient.getSignedInUser(),
-            taskEditCreateViewModel = taskEditCreateViewModel
+            taskEditCreateViewModel = taskEditCreateViewModel,
+            viewModel = taskListViewModel
         )
     }
+
+    composable(CALENDAR_SCREENS){
+        CalenderScreens(
+            openScreen = { route -> appState.navigate(route) },
+            userData = googleAuthUiClient.getSignedInUser(),
+            viewModel = taskListViewModel,
+            taskEditCreateViewModel = taskEditCreateViewModel,
+        )
+    }
+
+//    composable(MONTHLY_CALENDAR_SCREEN){
+//        MonthlyCalendarScreen(
+//            openScreen = { route -> appState.navigate(route) },
+//            viewModel = taskListViewModel
+//        )
+//    }
+//
+//    composable(WEEKLY_CALENDAR_VIEW_SCREEN){
+//        WeeklyCalendarViewScreen(
+//            openScreen = { route -> appState.navigate(route) },
+//            viewModel = taskListViewModel
+//        )
+//    }
 
     composable(TASK_MAP_SCREEN){
         LocationPickerScreen(

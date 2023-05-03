@@ -1,26 +1,18 @@
 package com.example.new_app.model.service
 
-import android.content.Context
-import android.net.Uri
 import com.example.new_app.common.util.Resource
 import com.example.new_app.model.User
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.FirebaseAuthException
-import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
-import java.io.File
-import java.io.FileOutputStream
-import java.util.*
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class AccountService @Inject constructor(
     private val firebaseAuth: FirebaseAuth,
-    private val firebaseFirestore: FirebaseFirestore,
     private val googleAuth: GoogleAuth
 ) {
 

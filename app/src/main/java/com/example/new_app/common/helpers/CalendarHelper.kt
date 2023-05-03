@@ -1,30 +1,11 @@
 package com.example.new_app.common.helpers
 
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.snapshotFlow
-import com.example.new_app.screens.calender.displayText
-import com.kizitonwose.calendar.compose.weekcalendar.WeekCalendarState
+
+import com.example.new_app.common.ext.displayText
+import com.kizitonwose.calendar.compose.CalendarLayoutInfo
+import com.kizitonwose.calendar.core.CalendarMonth
 import com.kizitonwose.calendar.core.Week
 import com.kizitonwose.calendar.core.yearMonth
-import kotlinx.coroutines.flow.filter
-
-
-/**
- * Find first visible week in a paged week calendar **after** scrolling stops.
- */
-@Composable
-fun rememberFirstVisibleWeekAfterScroll(state: WeekCalendarState): Week {
-    val visibleWeek = remember(state) { mutableStateOf(state.firstVisibleWeek) }
-    LaunchedEffect(state) {
-        snapshotFlow { state.isScrollInProgress }
-            .filter { scrolling -> !scrolling }
-            .collect { visibleWeek.value = state.firstVisibleWeek }
-    }
-    return visibleWeek.value
-}
 
 fun getWeekPageTitle(week: Week): String {
     val firstDate = week.days.first().date
@@ -41,3 +22,22 @@ fun getWeekPageTitle(week: Week): String {
         }
     }
 }
+
+val CalendarLayoutInfo.completelyVisibleMonths: List<CalendarMonth>
+    get() {
+        val visibleItemsInfo = this.visibleMonthsInfo.toMutableList()
+        return if (visibleItemsInfo.isEmpty()) {
+            emptyList()
+        } else {
+            val lastItem = visibleItemsInfo.last()
+            val viewportSize = this.viewportEndOffset + this.viewportStartOffset
+            if (lastItem.offset + lastItem.size > viewportSize) {
+                visibleItemsInfo.removeLast()
+            }
+            val firstItem = visibleItemsInfo.firstOrNull()
+            if (firstItem != null && firstItem.offset < this.viewportStartOffset) {
+                visibleItemsInfo.removeFirst()
+            }
+            visibleItemsInfo.map { it.month }
+        }
+    }

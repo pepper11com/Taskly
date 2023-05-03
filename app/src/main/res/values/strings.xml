@@ -63,6 +63,16 @@
     <string name="no_location_selected">No location selected</string>
     <string name="alert_time">Notification</string>
 
+    <!-- Calendar -->
+    <string name="calendar">Calendar</string>
+    <string name="no_tasks">You have no tasks yet for this day</string>
+    <string name="due">Due: %1$s %2$s</string>
+    <string name="calendar_description">Description: %1$s</string>
+    <string name="calendar_status">Status: %1$s</string>
+    <string name="calendar_location">Location: %1$s</string>
+    <string name="no_due_date">No due date</string>
+    <string name="monthly_due_date">Due: %1$s</string>
+
 
 
 </resources>

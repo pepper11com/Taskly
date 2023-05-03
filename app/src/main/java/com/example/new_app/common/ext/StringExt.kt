@@ -1,6 +1,9 @@
 package com.example.new_app.common.ext
 
 import android.util.Patterns
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import java.util.regex.Pattern
 
 private const val MIN_PASS_LENGTH = 6
@@ -22,4 +25,13 @@ fun String.passwordMatches(repeated: String): Boolean {
 
 fun String.idFromParameter(): String {
     return this.substring(1, this.length - 1)
+}
+
+fun String.toDate(): Date? {
+    val dateFormat = SimpleDateFormat("EEE, d MMM yyyy", Locale.ENGLISH)
+    return try {
+        dateFormat.parse(this)
+    } catch (e: Exception) {
+        null
+    }
 }

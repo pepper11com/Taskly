@@ -1,12 +1,12 @@
 package com.example.new_app.screens.calender
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.text.format.DateUtils
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -14,25 +14,23 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentWidth
-import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Divider
 import androidx.compose.material.Icon
-import androidx.compose.material.LocalContentColor
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowForward
@@ -40,32 +38,50 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarScrollBehavior
-import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.new_app.R
+import com.example.new_app.common.composables.MonthHeader
+import com.example.new_app.common.composables.SimpleCalendarTitle
+import com.example.new_app.common.composables.rememberFirstCompletelyVisibleMonth
+import com.example.new_app.common.ext.calendar
+import com.example.new_app.common.ext.customCalendarBox
+import com.example.new_app.common.ext.customCalendarBox2
+import com.example.new_app.common.ext.displayText
+import com.example.new_app.common.ext.divider
+import com.example.new_app.common.ext.padding8
+import com.example.new_app.common.ext.paddingMaxsize
+import com.example.new_app.common.ext.standardImage
+import com.example.new_app.common.ext.staticMap
+import com.example.new_app.common.ext.toDate
+import com.example.new_app.common.ext.toLocalDate
 import com.example.new_app.model.Task
-import com.example.new_app.screens.login.UserData
 import com.example.new_app.screens.task.tasklist.ShowDialogWithTaskDetailsAndDelete
 import com.example.new_app.screens.task.tasklist.StaticMap
 import com.example.new_app.screens.task.tasklist.TaskListViewModel
@@ -83,29 +99,33 @@ import com.kizitonwose.calendar.core.nextMonth
 import com.kizitonwose.calendar.core.previousMonth
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.Month
 import java.time.YearMonth
-import java.time.ZoneId
 import java.time.format.TextStyle
 import java.util.*
+import com.example.new_app.R.string as CalendarString
 
-@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
-fun CalendarViewScreen(
+fun MonthlyCalendarScreen(
     viewModel: TaskListViewModel,
     openScreen: (String) -> Unit,
+
+    paddingValues: PaddingValues,
+    scrollBehavior: TopAppBarScrollBehavior,
+    listState: LazyListState,
 ) {
-    val tasks by viewModel.taskListUiState.collectAsState()
+    // todo test test test was - val tasks by viewModel.taskListUiState.collectAsState()
+    val tasks by viewModel.taskListUiState.collectAsStateWithLifecycle()
     val taskList = tasks.tasks
     val context = LocalContext.current
 
     val currentMonth = remember { YearMonth.now() }
-    val startMonth = remember { currentMonth.minusMonths(500) }
-    val endMonth = remember { currentMonth.plusMonths(500) }
-    var selection by remember { mutableStateOf<CalendarDay?>(null) }
+    val startMonth = remember { currentMonth.minusMonths(100) }
+    val endMonth = remember { currentMonth.plusMonths(100) }
+    var selection by rememberSaveable { mutableStateOf<CalendarDay?>(CalendarDay(currentMonth.atDay(LocalDate.now().dayOfMonth), DayPosition.MonthDate)) }
     val daysOfWeek = remember { daysOfWeek() }
 
     val state = rememberCalendarState(
@@ -121,55 +141,53 @@ fun CalendarViewScreen(
             val date = selection?.date
             if (date == null || state.firstVisibleMonth.yearMonth.month != date.month) emptyList() else taskList.filter { task ->
                 task.dueDate.toDate().toLocalDate() == date
-            }
+            }.sortedBy { it.dueDate.toDate() }
         }
     }
 
     val coroutineScope = rememberCoroutineScope()
     val visibleMonth = rememberFirstCompletelyVisibleMonth(state)
-    LaunchedEffect(visibleMonth) {
-        // Clears selection if we scroll to a new month.
-        selection = null
-    }
 
-    Column {
+    LazyColumn(
+        modifier = Modifier
+            .calendar(paddingValues, scrollBehavior),
+        state = listState,
+    ) {
+        item {
+            SimpleCalendarTitle(
+                modifier = Modifier
+                    .background(MaterialTheme.colorScheme.background)
+                    .padding(horizontal = 8.dp, vertical = 12.dp),
+                currentMonth = visibleMonth.yearMonth,
+                goToPrevious = {
+                    coroutineScope.launch {
+                        state.animateScrollToMonth(state.firstVisibleMonth.yearMonth.previousMonth)
+                    }
+                },
+                goToNext = {
+                    coroutineScope.launch {
+                        state.animateScrollToMonth(state.firstVisibleMonth.yearMonth.nextMonth)
+                    }
+                },
+            )
 
-        val customCalendarColors = MaterialTheme.colorScheme.copy(
-            background = Color(0xFFEDEDED),
-        )
-        SimpleCalendarTitle(
-            modifier = Modifier
-                .background(MaterialTheme.colorScheme.background)
-                .padding(horizontal = 8.dp, vertical = 12.dp),
-            currentMonth = visibleMonth.yearMonth,
-            goToPrevious = {
-                coroutineScope.launch {
-                    state.animateScrollToMonth(state.firstVisibleMonth.yearMonth.previousMonth)
-                }
-            },
-            goToNext = {
-                coroutineScope.launch {
-                    state.animateScrollToMonth(state.firstVisibleMonth.yearMonth.nextMonth)
-                }
-            },
-        )
-
-        CompositionLocalProvider(LocalContentColor provides customCalendarColors.primaryContainer) {
             HorizontalCalendar(
-                modifier = Modifier.wrapContentWidth(),
+                modifier = Modifier.wrapContentWidth().padding8(),
                 state = state,
                 dayContent = { day ->
-
-                    val tasksOnDate = if (day.position == DayPosition.MonthDate) {
-                        taskList.filter { task ->
-                            task.dueDate.toDate().toLocalDate() == day.date
+                    val tasksOnDate = remember(day.date, taskList) {
+                        if (day.position == DayPosition.MonthDate) {
+                            taskList.filter { task ->
+                                task.dueDate.toDate().toLocalDate() == day.date
+                            }
+                        } else {
+                            emptyList()
                         }
-                    } else {
-                        emptyList()
                     }
-
-                    val colors = tasksOnDate.map { task ->
-                        task.color?.let { Color(it) } ?: Color(0xFF4E4E4E)
+                    val colors = remember(day.date, tasksOnDate) {
+                        tasksOnDate.map { task ->
+                            task.color?.let { Color(it) } ?: Color(0xFF4E4E4E)
+                        }
                     }
 
                     Day(
@@ -179,7 +197,6 @@ fun CalendarViewScreen(
                     ) { clicked ->
                         selection = clicked
                     }
-
                 },
                 monthHeader = {
                     MonthHeader(
@@ -188,17 +205,41 @@ fun CalendarViewScreen(
                     )
                 },
             )
+        }
 
-            Divider(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 4.dp),
-                color = Color(0xFF4E4E4E),
-                thickness = 1.dp
-            )
-
-            Column(modifier = Modifier.fillMaxWidth()) {
-                tasksInSelectedDate.value.forEach { task ->
+        if (tasksInSelectedDate.value.isEmpty()) {
+            item {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .divider(),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Text(
+                            modifier = Modifier.padding8(),
+                            text = stringResource(CalendarString.no_tasks),
+                            fontSize = 24.sp,
+                            color = Color.White.copy(alpha = 0.3f)
+                        )
+                        Image(
+                            modifier = Modifier.standardImage(),
+                            painter = painterResource(id = R.drawable.removebg_preview),
+                            contentDescription = "No tasks",
+                            colorFilter = ColorFilter.tint(Color.White.copy(alpha = 0.3f))
+                        )
+                    }
+                }
+            }
+        } else {
+            itemsIndexed(tasksInSelectedDate.value, key = { _, task -> task.id }) { _, task ->
+                Column(
+                    modifier = Modifier.animateItemPlacement()
+                ) {
                     TaskInformation(
                         task,
                         viewModel,
@@ -208,7 +249,6 @@ fun CalendarViewScreen(
             }
         }
     }
-
 }
 
 @Composable
@@ -218,6 +258,15 @@ private fun Day(
     colors: List<Color> = emptyList(),
     onClick: (CalendarDay) -> Unit = {},
 ) {
+
+    val displayedColors = remember(colors) { colors.take(3) }
+    val textColor = remember(day.position) {
+        when (day.position) {
+            DayPosition.MonthDate -> Color.White
+            DayPosition.InDate, DayPosition.OutDate -> Color.LightGray
+        }
+    }
+
     Box(
         modifier = Modifier
             .aspectRatio(1f)
@@ -233,12 +282,6 @@ private fun Day(
                 onClick = { onClick(day) },
             ),
     ) {
-        val textColor = when (day.position) {
-            DayPosition.MonthDate -> Color.White
-            DayPosition.InDate, DayPosition.OutDate -> Color.LightGray
-        }
-        val displayedColors = colors.take(3)
-
 
         Text(
             modifier = Modifier
@@ -259,23 +302,15 @@ private fun Day(
             for (color in displayedColors) {
                 Box(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 4.dp)
-                        .height(5.dp)
-                        .clip(RoundedCornerShape(25.dp))
-                        .background(color),
+                        .customCalendarBox(color),
                 )
             }
         }
-
         if (colors.size > 3) {
             Box(
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
-                    .padding(end = 2.dp, bottom = 2.dp)
-                    .size(16.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primary)
+                    .customCalendarBox2(MaterialTheme.colorScheme.primary),
             ) {
                 Text(
                     modifier = Modifier.align(Alignment.Center),
@@ -288,24 +323,6 @@ private fun Day(
     }
 }
 
-@Composable
-private fun MonthHeader(
-    modifier: Modifier = Modifier,
-    daysOfWeek: List<DayOfWeek> = emptyList(),
-) {
-    Row(modifier.fillMaxWidth()) {
-        for (dayOfWeek in daysOfWeek) {
-            Text(
-                modifier = Modifier.weight(1f),
-                textAlign = TextAlign.Center,
-                fontSize = 12.sp,
-                color = Color.White,
-                text = dayOfWeek.displayText(uppercase = true),
-                fontWeight = FontWeight.Light,
-            )
-        }
-    }
-}
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -335,12 +352,11 @@ private fun TaskInformation(
             DateUtils.MINUTE_IN_MILLIS
         )
     } else {
-        "No due date"
+        stringResource(CalendarString.no_due_date)
     }
     Card(
         modifier = Modifier
-            .fillMaxSize()
-            .padding(8.dp)
+            .paddingMaxsize()
             .combinedClickable(
                 onClick = {},
                 onLongClick = {
@@ -378,146 +394,22 @@ private fun TaskInformation(
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(text = task.description, style = MaterialTheme.typography.bodyMedium)
                     Spacer(modifier = Modifier.height(8.dp))
-                    Text(text = "Due: $dueDateText", style = MaterialTheme.typography.bodyMedium)
+                    Text(
+                        text = stringResource(CalendarString.monthly_due_date, dueDateText),
+                        style = MaterialTheme.typography.bodyMedium
+                    )
                     Spacer(modifier = Modifier.height(4.dp))
-                    Text(text = "Status: ${task.status}", style = MaterialTheme.typography.bodyMedium)
+                    Text(
+                        text = stringResource(CalendarString.calendar_status, task.status),
+                        style = MaterialTheme.typography.bodyMedium
+                    )
                 }
 
                 StaticMap(
                     staticMapUrl = taskImage,
-                    modifier = Modifier
-                        .size(100.dp)
-                        .padding(8.dp)
-                        .clip(RoundedCornerShape(4.dp))
+                    modifier = Modifier.staticMap()
                 )
             }
         }
     }
 }
-
-
-fun String.toDate(): Date? {
-    val dateFormat = SimpleDateFormat("EEE, d MMM yyyy", Locale.ENGLISH)
-    return try {
-        dateFormat.parse(this)
-    } catch (e: Exception) {
-        null
-    }
-}
-
-fun Date?.toLocalDate(): LocalDate? {
-    return this?.toInstant()?.atZone(ZoneId.systemDefault())?.toLocalDate()
-}
-
-
-@Composable
-fun SimpleCalendarTitle(
-    modifier: Modifier,
-    currentMonth: YearMonth,
-    goToPrevious: () -> Unit,
-    goToNext: () -> Unit,
-) {
-    Column {
-        Row(
-            modifier = modifier.height(40.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            CalendarNavigationIcon(
-                icon = Icons.Filled.ArrowBack,
-                contentDescription = "Previous",
-                onClick = goToPrevious,
-            )
-            Text(
-                modifier = Modifier
-                    .weight(1f)
-                    .testTag("MonthTitle"),
-                text = currentMonth.displayText(),
-                fontSize = 22.sp,
-                textAlign = TextAlign.Center,
-                fontWeight = FontWeight.Medium,
-                color = Color.White,
-            )
-            CalendarNavigationIcon(
-                icon = Icons.Filled.ArrowForward,
-                contentDescription = "Next",
-                onClick = goToNext,
-            )
-        }
-
-        Divider(
-            Modifier
-                .padding(horizontal = 24.dp),
-
-            color = Color.White,
-            thickness = 1.dp,
-        )
-    }
-}
-
-@Composable
-private fun CalendarNavigationIcon(
-    icon: ImageVector,
-    contentDescription: String,
-    onClick: () -> Unit,
-) = Box(
-    modifier = Modifier
-        .fillMaxHeight()
-        .aspectRatio(1f)
-        .clip(shape = CircleShape)
-        .clickable(role = Role.Button, onClick = onClick),
-) {
-    Icon(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(4.dp)
-            .align(Alignment.Center),
-        imageVector = icon,
-        contentDescription = contentDescription,
-        tint = Color.White,
-    )
-}
-
-fun YearMonth.displayText(short: Boolean = false): String {
-    return "${this.month.displayText(short = short)} ${this.year}"
-}
-
-fun Month.displayText(short: Boolean = true): String {
-    val style = if (short) TextStyle.SHORT else TextStyle.FULL
-    return getDisplayName(style, Locale.ENGLISH)
-}
-
-fun DayOfWeek.displayText(uppercase: Boolean = false): String {
-    return getDisplayName(TextStyle.SHORT, Locale.ENGLISH).let { value ->
-        if (uppercase) value.uppercase(Locale.ENGLISH) else value
-    }
-}
-
-@Composable
-fun rememberFirstCompletelyVisibleMonth(state: CalendarState): CalendarMonth {
-    val visibleMonth = remember(state) { mutableStateOf(state.firstVisibleMonth) }
-    LaunchedEffect(state) {
-        snapshotFlow { state.layoutInfo.completelyVisibleMonths.firstOrNull() }
-            .filterNotNull()
-            .collect { month -> visibleMonth.value = month }
-    }
-    return visibleMonth.value
-}
-
-private val CalendarLayoutInfo.completelyVisibleMonths: List<CalendarMonth>
-    get() {
-        val visibleItemsInfo = this.visibleMonthsInfo.toMutableList()
-        return if (visibleItemsInfo.isEmpty()) {
-            emptyList()
-        } else {
-            val lastItem = visibleItemsInfo.last()
-            val viewportSize = this.viewportEndOffset + this.viewportStartOffset
-            if (lastItem.offset + lastItem.size > viewportSize) {
-                visibleItemsInfo.removeLast()
-            }
-            val firstItem = visibleItemsInfo.firstOrNull()
-            if (firstItem != null && firstItem.offset < this.viewportStartOffset) {
-                visibleItemsInfo.removeFirst()
-            }
-            visibleItemsInfo.map { it.month }
-        }
-    }

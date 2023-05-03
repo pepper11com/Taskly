@@ -32,9 +32,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.snapshots.SnapshotStateList
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -48,7 +45,6 @@ import androidx.compose.ui.unit.sp
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
 import coil.transform.CircleCropTransformation
-import com.example.new_app.R
 import com.example.new_app.SETTINGS_SCREEN
 import com.example.new_app.SharedViewModel
 import com.example.new_app.common.sort.TaskSortType
@@ -57,8 +53,6 @@ import com.example.new_app.model.Task
 import com.example.new_app.screens.task.create_edit_tasks.TaskEditCreateViewModel
 import com.example.new_app.screens.task.tasklist.TaskListUiState
 import com.example.new_app.screens.task.tasklist.TaskListViewModel
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import java.time.LocalDateTime
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -66,7 +60,6 @@ import java.time.LocalDateTime
 fun CustomTopAppBar(
     @StringRes title: Int,
     selectedIndex: MutableState<Int>,
-    selectedTasks: SnapshotStateList<Task>,
     uiState: TaskListUiState,
     openScreen: (String) -> Unit,
     viewModel: TaskListViewModel,
@@ -111,14 +104,12 @@ fun CustomTopAppBar(
                         )
                     }
                 } else {
-                    if (selectedTaskIds.isNotEmpty()) {
-                        IconButton(onClick = { mainViewModel.clearSelectedTaskIds() }) {
-                            Icon(
-                                Icons.Default.Deselect,
-                                contentDescription = "Deselect All",
-                                tint = Color.White
-                            )
-                        }
+                    IconButton(onClick = { mainViewModel.clearSelectedTaskIds() }) {
+                        Icon(
+                            Icons.Default.Deselect,
+                            contentDescription = "Deselect All",
+                            tint = Color.White
+                        )
                     }
                 }
             }
@@ -257,20 +248,20 @@ fun CustomTopAppBarCalendar(
         ),
         actions = {
 
-                if (userProfilePictureUrl != null) {
-                    UserImage(
-                        userProfilePictureUrl = userProfilePictureUrl,
-                        openScreen = openScreen
+            if (userProfilePictureUrl != null) {
+                UserImage(
+                    userProfilePictureUrl = userProfilePictureUrl,
+                    openScreen = openScreen
+                )
+            } else {
+                IconButton(onClick = { openScreen(SETTINGS_SCREEN) }) {
+                    Icon(
+                        Icons.Filled.Settings,
+                        contentDescription = "Settings",
+                        tint = Color.White
                     )
-                } else {
-                    IconButton(onClick = { openScreen(SETTINGS_SCREEN) }) {
-                        Icon(
-                            Icons.Filled.Settings,
-                            contentDescription = "Settings",
-                            tint = Color.White
-                        )
-                    }
                 }
+            }
         },
         title = {
             if (userGoogleName != null) {
@@ -327,20 +318,20 @@ fun CustomTopAppBarSmall(
             containerColor = MaterialTheme.colorScheme.background,
         ),
         actions = {
-                if (userProfilePictureUrl != null) {
-                    UserImage(
-                        userProfilePictureUrl = userProfilePictureUrl,
-                        openScreen = openScreen
+            if (userProfilePictureUrl != null) {
+                UserImage(
+                    userProfilePictureUrl = userProfilePictureUrl,
+                    openScreen = openScreen
+                )
+            } else {
+                IconButton(onClick = { openScreen(SETTINGS_SCREEN) }) {
+                    Icon(
+                        Icons.Filled.Settings,
+                        contentDescription = "Settings",
+                        tint = Color.White
                     )
-                } else {
-                    IconButton(onClick = { openScreen(SETTINGS_SCREEN) }) {
-                        Icon(
-                            Icons.Filled.Settings,
-                            contentDescription = "Settings",
-                            tint = Color.White
-                        )
-                    }
                 }
+            }
 
         },
         title = {
@@ -366,7 +357,7 @@ fun UserImage(
             Image(
                 painter = rememberAsyncImagePainter(
                     ImageRequest.Builder(LocalContext.current).data(data = url)
-                        .apply<ImageRequest.Builder>(block = fun ImageRequest.Builder.() {
+                        .apply(block = fun ImageRequest.Builder.() {
                             crossfade(true)
                             transformations(CircleCropTransformation())
                         }).build()
@@ -479,7 +470,11 @@ fun CustomEditTaskAppBar(
                     enabled = task.title.isNotBlank() && task.description.isNotBlank(),
                     onClick = {
                         viewModel.onDoneClick(context, taskId, popUpScreen,
-                            onTaskCreated = { newTaskId -> mainViewModel.updateLastAddedTaskId(newTaskId) }
+                            onTaskCreated = { newTaskId ->
+                                mainViewModel.updateLastAddedTaskId(
+                                    newTaskId
+                                )
+                            }
                         )
                         mainViewModel.resetInitEdit()
                     }

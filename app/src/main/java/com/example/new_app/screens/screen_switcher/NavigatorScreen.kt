@@ -5,9 +5,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
-import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.new_app.SharedViewModel
 import com.example.new_app.common.composables.BottomNavigationBar
 import com.example.new_app.screens.calender_screens.CalenderScreens
@@ -22,9 +21,9 @@ fun NavigatorScreen(
     mainViewModel: SharedViewModel,
     userData: UserData?,
     taskEditCreateViewModel: TaskEditCreateViewModel,
+    viewModel: TaskListViewModel
 ) {
-    val selectedIndex = remember { mutableStateOf(0) }
-    val viewModel: TaskListViewModel = hiltViewModel()
+    val selectedIndex = rememberSaveable { mutableStateOf(0) }
 
     Scaffold(
         bottomBar = {
@@ -49,7 +48,8 @@ fun NavigatorScreen(
                     CalenderScreens(
                         openScreen = openScreen,
                         userData = userData,
-                        viewModel = viewModel
+                        viewModel = viewModel,
+                        taskEditCreateViewModel = taskEditCreateViewModel
                     )
                 }
             }

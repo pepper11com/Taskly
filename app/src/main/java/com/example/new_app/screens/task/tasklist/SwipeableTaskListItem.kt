@@ -1,26 +1,32 @@
 package com.example.new_app.screens.task.tasklist
 
 import android.content.Context
-import android.graphics.Bitmap
-import android.os.Build
 import android.os.VibrationEffect
 import android.os.Vibrator
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.animateOffsetAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.FractionalThreshold
+import androidx.compose.material.SwipeableState
+import androidx.compose.material.swipeable
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
-import androidx.compose.runtime.snapshots.SnapshotStateList
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -30,52 +36,27 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil.compose.AsyncImagePainter
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
 import com.example.new_app.R
-import com.example.new_app.model.Task
-import kotlin.math.roundToInt
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.FractionalThreshold
-import androidx.compose.material.SwipeableState
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.swipeable
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Checkbox
-import androidx.compose.material3.CheckboxDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Text
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.unit.Dp
 import com.example.new_app.SharedViewModel
 import com.example.new_app.common.sort.getDueDateAndTime
-import kotlinx.coroutines.delay
+import com.example.new_app.model.Task
+import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun SwipeableTaskListItem(
-    context: Context,
     task: Task,
-    taskBitmap: MutableState<Bitmap?>,
     onClick: () -> Unit,
     viewModel: TaskListViewModel,
     onLongPress: () -> Unit,
     status: TaskStatus,
     isSelected: MutableState<Boolean>,
-    selectedTasks: SnapshotStateList<Task>,
     onSelectedTasksChange: (Task, Boolean) -> Unit,
     onTaskSwipedBackToActive: (Task) -> Unit,
     isFlashing: Boolean = false,
@@ -133,12 +114,10 @@ fun SwipeableTaskListItem(
     ) {
         TaskListItem(
             task = task,
-            taskBitmap = taskBitmap,
             onClick = onClick,
             onLongPress = onLongPress,
             offset = offset,
             isSelected = isSelected,
-            selectedTasks = selectedTasks,
             onSelectedTasksChange = onSelectedTasksChange,
             isFlashing = isFlashing,
             mainViewModel = mainViewModel,
@@ -152,12 +131,10 @@ fun SwipeableTaskListItem(
 @Composable
 fun TaskListItem(
     task: Task,
-    taskBitmap: MutableState<Bitmap?>,
     onClick: () -> Unit,
     onLongPress: () -> Unit,
     offset: Offset = Offset.Zero,
     isSelected: MutableState<Boolean>,
-    selectedTasks: SnapshotStateList<Task>,
     onSelectedTasksChange: (Task, Boolean) -> Unit,
     isFlashing: Boolean = false,
     mainViewModel: SharedViewModel,
@@ -168,7 +145,6 @@ fun TaskListItem(
     val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
     val flashState = rememberSaveable { mutableStateOf(isFlashing) }
     val taskIsSelected = mainViewModel.selectedTaskIds.collectAsState().value.contains(task.id)
-
     val taskColor = task.color?.let { Color(it) }
 
     val flashColor = animateColorAsState(
@@ -179,13 +155,11 @@ fun TaskListItem(
         targetValue = if (mapVisible) mapHeight else 0.dp,
         animationSpec = tween(durationMillis = 400)
     )
-
     LaunchedEffect(flashState.value) {
         if (flashState.value) {
             flashState.value = false
         }
     }
-
     SideEffect {
         flashState.value = isFlashing
     }
@@ -198,7 +172,6 @@ fun TaskListItem(
                 error(R.drawable.baseline_account_box_24)
             }).build()
     )
-
 
     Card(
         colors = CardDefaults.cardColors(
@@ -253,7 +226,6 @@ fun TaskListItem(
                         color = Color.White
                     )
                 }
-
                 taskColor?.let {
                     Modifier
                         .padding(8.dp)
@@ -261,11 +233,10 @@ fun TaskListItem(
                         .background(color = it)
                         .size(30.dp)
                 }?.let {
-                    Box (
+                    Box(
                         modifier = it
                     )
                 }
-
                 if (TaskStatus.ACTIVE != task.status) {
                     Checkbox(
                         checked = taskIsSelected,
@@ -284,34 +255,31 @@ fun TaskListItem(
                     )
                 }
             }
-
-
-                if (task.locationName != null && task.location != null) {
-                    val staticMapUrl = generateStaticMapUrl(task)
-                    StaticMap(
-                        staticMapUrl = staticMapUrl,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(8.dp)
-                            .height(animatedMapHeight.value)
-                            .clip(RoundedCornerShape(8.dp)),
-                    )
-                    Text(
-                        modifier = Modifier.padding(start = 14.dp, bottom = 12.dp),
-                        text = task.locationName.toString(),
-                        fontSize = 9.sp,
-                        color = Color.White,
-                    )
-                } else {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(8.dp)
-                            .height(animatedMapHeight.value)
-                            .background(Color(0xFF666666), shape = RoundedCornerShape(8.dp))
-                    )
-                }
-
+            if (task.locationName != null && task.location != null) {
+                val staticMapUrl = generateStaticMapUrl(task)
+                StaticMap(
+                    staticMapUrl = staticMapUrl,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp)
+                        .height(animatedMapHeight.value)
+                        .clip(RoundedCornerShape(8.dp)),
+                )
+                Text(
+                    modifier = Modifier.padding(start = 14.dp, bottom = 12.dp),
+                    text = task.locationName.toString(),
+                    fontSize = 9.sp,
+                    color = Color.White,
+                )
+            } else {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp)
+                        .height(animatedMapHeight.value)
+                        .background(Color(0xFF666666), shape = RoundedCornerShape(8.dp))
+                )
+            }
         }
     }
 }

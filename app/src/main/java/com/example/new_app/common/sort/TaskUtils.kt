@@ -22,11 +22,6 @@ enum class TaskSortType {
     COLOR
 }
 
-
-@RequiresApi(Build.VERSION_CODES.O)
-val dateFormat = DateTimeFormatter.ofPattern("EEE, d MMM yyyy", Locale.ENGLISH)
-
-@RequiresApi(Build.VERSION_CODES.O)
 fun sortTasksByDueDate(tasks: List<Task>, ascending: Boolean): List<Task> {
     val dateFormat = DateTimeFormatter.ofPattern("EEE, d MMM yyyy", Locale.ENGLISH)
     val sortedTasks = tasks.sortedWith(compareBy { task ->
@@ -42,7 +37,6 @@ fun sortTasksByColor(tasks: List<Task>, ascending: Boolean): List<Task> {
     return if (ascending) sortedTasks else sortedTasks.reversed()
 }
 
-@RequiresApi(Build.VERSION_CODES.O)
 fun getFilteredTasks(tasks: List<Task>, status: TaskStatus, sortType: TaskSortType): List<Task> {
     val sortedTasks = sortTasks(tasks, sortType)
 
@@ -55,23 +49,6 @@ fun getFilteredTasks(tasks: List<Task>, status: TaskStatus, sortType: TaskSortTy
         }
     }
 }
-
-//fun onSelectAllTasks(selectedIndex: Int, selectedTasks: SnapshotStateList<Task>, taskList: List<Task>) {
-//
-//    val status = when (selectedIndex) {
-//        0 -> TaskStatus.DELETED
-//        2 -> TaskStatus.COMPLETED
-//        else -> TaskStatus.ACTIVE
-//    }
-//
-//    val tasksToSelect = taskList.filter { it.status == status }
-//
-//    tasksToSelect.forEach { task ->
-//        if (task !in selectedTasks) {
-//            selectedTasks.add(task)
-//        }
-//    }
-//}
 
 fun onSelectAllTasks(selectedIndex: Int, mainViewModel: SharedViewModel, taskList: List<Task>) {
 
@@ -93,12 +70,12 @@ fun onSelectAllTasks(selectedIndex: Int, mainViewModel: SharedViewModel, taskLis
 fun getDueDateAndTime(task: Task): String {
     val stringBuilder = StringBuilder("")
 
-    if (task.dueDate.orEmpty().isNotBlank()) {
+    if (task.dueDate.isNotBlank()) {
         stringBuilder.append(task.dueDate)
         stringBuilder.append(" ")
     }
 
-    if (task.dueTime.orEmpty().isNotBlank()) {
+    if (task.dueTime.isNotBlank()) {
         stringBuilder.append("at ")
         stringBuilder.append(task.dueTime)
     }
@@ -110,7 +87,6 @@ fun getDueDateAndTime(task: Task): String {
     return stringBuilder.toString()
 }
 
-@RequiresApi(Build.VERSION_CODES.O)
 fun sortTasks(tasks: List<Task>, sortType: TaskSortType): List<Task> {
     return when (sortType) {
         TaskSortType.DATE_CREATED_ASC -> tasks.sortedBy { it.taskDate }

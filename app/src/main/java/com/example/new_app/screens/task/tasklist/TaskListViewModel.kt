@@ -31,7 +31,7 @@ class TaskListViewModel @Inject constructor(
     private val _deleteTasksState = MutableStateFlow<Resource<Unit>>(Resource.Empty())
     val deleteTasksState: StateFlow<Resource<Unit>> get() = _deleteTasksState
 
-    private val _sortType = MutableStateFlow<TaskSortType>(TaskSortType.DUE_DATE_DESC)
+    private val _sortType = MutableStateFlow(TaskSortType.DUE_DATE_DESC)
     val sortType: StateFlow<TaskSortType> = _sortType.asStateFlow()
 
     val currentUserId: String
@@ -47,7 +47,9 @@ class TaskListViewModel @Inject constructor(
     private suspend fun loadTasks() {
         firebaseService.tasks
             .catch { e -> _taskListUiState.value = TaskListUiState(error = e.message) }
-            .collect { tasks -> _taskListUiState.value = TaskListUiState(tasks = tasks, isLoading = false) }
+            .collect { tasks ->
+                _taskListUiState.value = TaskListUiState(tasks = tasks, isLoading = false)
+            }
     }
 
     fun updateSortType(sortType: TaskSortType) {
@@ -108,7 +110,6 @@ class TaskListViewModel @Inject constructor(
             }
         }
     }
-
 
 
     fun resetDeleteTasksState() {

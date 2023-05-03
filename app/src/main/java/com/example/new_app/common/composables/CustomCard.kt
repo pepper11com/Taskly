@@ -1,12 +1,9 @@
 package com.example.new_app.common.composables
 
-import android.content.Context
-import android.content.res.Configuration
 import androidx.annotation.StringRes
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -14,20 +11,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-
-@Composable
-fun DangerousCardEditor(
-    @StringRes title: Int,
-    icon: ImageVector,
-    content: String,
-    modifier: Modifier,
-    onEditClick: () -> Unit
-) {
-    CardEditor(title, icon, content, onEditClick, MaterialTheme.colorScheme.primary, modifier)
-}
 
 @Composable
 fun RegularCardEditor(

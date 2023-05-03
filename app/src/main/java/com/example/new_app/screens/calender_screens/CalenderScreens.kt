@@ -6,21 +6,34 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import com.example.new_app.R
 import com.example.new_app.common.composables.CustomTabRow
 import com.example.new_app.common.composables.CustomTopAppBarCalendar
-import com.example.new_app.screens.calender.CalendarViewScreen
+import com.example.new_app.common.composables.isScrollingUp
+import com.example.new_app.common.ext.padding16
+import com.example.new_app.screens.calender.MonthlyCalendarScreen
 import com.example.new_app.screens.calender.WeeklyCalendarViewScreen
 import com.example.new_app.screens.login.UserData
+import com.example.new_app.screens.task.create_edit_tasks.TaskEditCreateViewModel
 import com.example.new_app.screens.task.tasklist.TaskListViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -29,16 +42,38 @@ fun CalenderScreens(
     openScreen: (String) -> Unit,
     userData: UserData?,
     viewModel: TaskListViewModel,
+    taskEditCreateViewModel: TaskEditCreateViewModel
 ) {
-
-    val selectedIndex = remember { mutableStateOf(0) }
+    val selectedIndex = rememberSaveable { mutableStateOf(0) }
     val tabTitles = listOf("Week Calendar", "Month Calendar")
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
     val userProfilePictureUrl = userData?.profilePictureUrl
     val userGoogleName = userData?.username
     val listState = rememberLazyListState()
 
+    val userId = viewModel.currentUserId
+
     Scaffold(
+        floatingActionButton = {
+            ExtendedFloatingActionButton(
+                shape = RoundedCornerShape(16.dp),
+                expanded = listState.isScrollingUp(),
+                onClick = {
+                    taskEditCreateViewModel.resetTask()
+                    viewModel.onAddClick(openScreen, userId)
+                },
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.background,
+                modifier = Modifier.padding16(),
+                icon = { Icon(Icons.Filled.Add, "Add Task") },
+                text = {
+                    Text(
+                        text = stringResource(R.string.new_task),
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                },
+            )
+        },
         topBar = {
             Column {
                 CustomTopAppBarCalendar(
@@ -56,32 +91,36 @@ fun CalenderScreens(
             }
         }
     ) { paddingValues ->
-        LazyColumn(
+
+        Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
-                .nestedScroll(scrollBehavior.nestedScrollConnection)
                 .background(MaterialTheme.colorScheme.background),
-            state = listState,
         ) {
-            item {
 
                 when (selectedIndex.value) {
                     0 -> {
                         WeeklyCalendarViewScreen(
                             viewModel = viewModel,
                             openScreen = openScreen,
+
+                            paddingValues = paddingValues,
+                            scrollBehavior = scrollBehavior,
+                            listState = listState,
                         )
                     }
 
                     1 -> {
-                        CalendarViewScreen(
+                        MonthlyCalendarScreen(
                             viewModel = viewModel,
                             openScreen = openScreen,
+
+                            paddingValues = paddingValues,
+                            scrollBehavior = scrollBehavior,
+                            listState = listState,
                         )
                     }
                 }
-            }
         }
     }
 }
