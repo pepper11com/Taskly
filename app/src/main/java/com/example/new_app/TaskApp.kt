@@ -115,7 +115,7 @@ fun RequestNotificationPermissionDialog(
         if (permissionState.status.shouldShowRationale) {
             RationaleSnackbar(snackbarHostState = appState.snackbarState, onRequestPermission = { permissionState.launchPermissionRequest() })
         } else {
-            PermissionDialog { permissionState.launchPermissionRequest() }
+            PermissionDialog(onRequestPermission = { permissionState.launchPermissionRequest() })
         }
     }
 }
@@ -162,7 +162,9 @@ fun NavGraphBuilder.taskAppGraph(
             clearAndPopUpMultiple = { route, popUpScreens -> appState.clearAndPopUpMultiple(route, popUpScreens) },
             openScreen = { route -> appState.navigate(route) },
             clearBackstack = { appState.clearBackstack() },
-            navigateToLogin = { route -> appState.clearAndNavigate(route) }
+            navigateToLogin = { route -> appState.clearAndNavigate(route) },
+
+            popUpScreen = { appState.popUp() },
         )
     }
 
@@ -188,14 +190,14 @@ fun NavGraphBuilder.taskAppGraph(
         )
     }
 
-    composable(TASK_LIST_SCREEN) {
-        TaskListScreen(
-            openScreen = { route -> appState.navigate(route) },
-            mainViewModel = mainViewModel,
-            userData = googleAuthUiClient.getSignedInUser(),
-            taskEditCreateViewModel = taskEditCreateViewModel
-        )
-    }
+//    composable(TASK_LIST_SCREEN) {
+//        TaskListScreen(
+//            openScreen = { route -> appState.navigate(route) },
+//            mainViewModel = mainViewModel,
+//            userData = googleAuthUiClient.getSignedInUser(),
+//            taskEditCreateViewModel = taskEditCreateViewModel
+//        )
+//    }
 
     composable(NAVIGATOR_SCREEN){
         NavigatorScreen(
@@ -207,14 +209,14 @@ fun NavGraphBuilder.taskAppGraph(
         )
     }
 
-    composable(CALENDAR_SCREENS){
-        CalenderScreens(
-            openScreen = { route -> appState.navigate(route) },
-            userData = googleAuthUiClient.getSignedInUser(),
-            viewModel = taskListViewModel,
-            taskEditCreateViewModel = taskEditCreateViewModel,
-        )
-    }
+//    composable(CALENDAR_SCREENS){
+//        CalenderScreens(
+//            openScreen = { route -> appState.navigate(route) },
+//            userData = googleAuthUiClient.getSignedInUser(),
+//            viewModel = taskListViewModel,
+//            taskEditCreateViewModel = taskEditCreateViewModel,
+//        )
+//    }
 
 //    composable(MONTHLY_CALENDAR_SCREEN){
 //        MonthlyCalendarScreen(

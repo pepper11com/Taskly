@@ -4,21 +4,23 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.example.new_app.LOGIN_SCREEN
-import com.example.new_app.SETTINGS_SCREEN
 import com.example.new_app.SPLASH_SCREEN
-import com.example.new_app.TASK_LIST_SCREEN
 import com.example.new_app.common.composables.CustomButton
+import com.example.new_app.common.composables.CustomTopAppBarSmall
+import com.example.new_app.common.composables.EmptyTopBar
 import com.example.new_app.common.composables.LoadingIndicator
 import com.example.new_app.common.util.Resource
 
-
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
     openAndPopUp: (String, String) -> Unit,
@@ -28,31 +30,47 @@ fun SettingsScreen(
 
     openScreen: (String) -> Unit,
     clearBackstack: () -> Unit,
-    navigateToLogin: (String) -> Unit = {}
+    navigateToLogin: (String) -> Unit = {},
+    popUpScreen: () -> Unit = {}
 ) {
     val viewModel: SettingsViewModel = hiltViewModel()
     val showDialog = remember { mutableStateOf(false) }
     val authenticationState by viewModel.settingsState.collectAsState()
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        CustomButton(
-            onClick = { viewModel.onSignOutClick() },
-            text = "Logout",
-            modifier = Modifier.padding(vertical = 8.dp)
-        )
+    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
+    val listState = rememberLazyListState()
 
-        CustomButton(
-            onClick = { showDialog.value = true },
-            text = "Delete Account",
-            modifier = Modifier.padding(vertical = 8.dp)
-        )
+    Scaffold(
+        topBar = {
+            CustomTopAppBarSmall(
+                title = "Settings",
+                scrollBehavior = scrollBehavior,
+                popUpScreen = popUpScreen
+            )
+        }
+    ) { paddingValues ->
+        LazyColumn(
+            modifier = Modifier.padding(paddingValues).fillMaxSize().padding(16.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            item{
+                CustomButton(
+                    onClick = { viewModel.onSignOutClick() },
+                    text = "Logout",
+                    modifier = Modifier.padding(vertical = 8.dp)
+                )
+
+                CustomButton(
+                    onClick = { showDialog.value = true },
+                    text = "Delete Account",
+                    modifier = Modifier.padding(vertical = 8.dp)
+                )
+            }
+        }
     }
+
+
 
     if (showDialog.value) {
         AlertDialog(

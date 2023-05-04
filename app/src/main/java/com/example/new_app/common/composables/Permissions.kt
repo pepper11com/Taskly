@@ -51,8 +51,8 @@ fun PermissionDialog(onRequestPermission: () -> Unit) {
                     Spacer(modifier = Modifier.height(24.dp))
                     TextButton(
                         onClick = {
-                            onRequestPermission()
                             showWarningDialog = false
+                            onRequestPermission()
                         },
                         modifier = Modifier.align(Alignment.End)
                     ) {
@@ -70,16 +70,16 @@ fun RationaleSnackbar(
     onRequestPermission: () -> Unit
 ) {
     LaunchedEffect(snackbarHostState) {
-        val result = snackbarHostState.showSnackbar(
-            message = "The notification permission is important for this app. If you want to receive" +
-                    " notifications, please grant the permission.",
-            actionLabel = "Grant",
+        snackbarHostState.showSnackbar(
+            message = "If you want to receive notifications, please navigate to the app settings and grant permission.",
+//            actionLabel = "Grant",
             duration =  SnackbarDuration.Long,
             withDismissAction = true
         )
-        if (result == SnackbarResult.ActionPerformed) {
-            onRequestPermission()
-        }
+
+//        if (result == SnackbarResult.ActionPerformed) {
+//            onRequestPermission()
+//        }
     }
 }
 

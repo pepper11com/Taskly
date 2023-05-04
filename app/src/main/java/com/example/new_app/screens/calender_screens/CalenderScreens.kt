@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -28,6 +29,7 @@ import androidx.compose.ui.unit.dp
 import com.example.new_app.R
 import com.example.new_app.common.composables.CustomTabRow
 import com.example.new_app.common.composables.CustomTopAppBarCalendar
+import com.example.new_app.common.composables.HomeFloatingActionButton
 import com.example.new_app.common.composables.isScrollingUp
 import com.example.new_app.common.ext.padding16
 import com.example.new_app.screens.calender.MonthlyCalendarScreen
@@ -42,37 +44,25 @@ fun CalenderScreens(
     openScreen: (String) -> Unit,
     userData: UserData?,
     viewModel: TaskListViewModel,
-    taskEditCreateViewModel: TaskEditCreateViewModel
+    taskEditCreateViewModel: TaskEditCreateViewModel,
+    listState: LazyListState
 ) {
     val selectedIndex = rememberSaveable { mutableStateOf(0) }
     val tabTitles = listOf("Week Calendar", "Month Calendar")
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
     val userProfilePictureUrl = userData?.profilePictureUrl
     val userGoogleName = userData?.username
-    val listState = rememberLazyListState()
 
     val userId = viewModel.currentUserId
 
     Scaffold(
         floatingActionButton = {
-            ExtendedFloatingActionButton(
-                shape = RoundedCornerShape(16.dp),
-                expanded = listState.isScrollingUp(),
-                onClick = {
-                    taskEditCreateViewModel.resetTask()
-                    viewModel.onAddClick(openScreen, userId)
-                },
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.background,
-                modifier = Modifier.padding16(),
-                icon = { Icon(Icons.Filled.Add, "Add Task") },
-                text = {
-                    Text(
-                        text = stringResource(R.string.new_task),
-                        fontWeight = FontWeight.SemiBold,
-                    )
-                },
-            )
+            HomeFloatingActionButton(
+                extended = listState.isScrollingUp()
+            ) {
+                taskEditCreateViewModel.resetTask()
+                viewModel.onAddClick(openScreen, userId)
+            }
         },
         topBar = {
             Column {

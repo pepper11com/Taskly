@@ -307,9 +307,8 @@ fun CustomTopAppBarCalendar(
 @Composable
 fun CustomTopAppBarSmall(
     title: String,
-    openScreen: (String) -> Unit,
+    popUpScreen: () -> Unit,
     scrollBehavior: TopAppBarScrollBehavior,
-    userProfilePictureUrl: String?
 ) {
     TopAppBar(
         modifier = Modifier.fillMaxWidth(),
@@ -317,26 +316,19 @@ fun CustomTopAppBarSmall(
         colors = TopAppBarDefaults.topAppBarColors(
             containerColor = MaterialTheme.colorScheme.background,
         ),
-        actions = {
-            if (userProfilePictureUrl != null) {
-                UserImage(
-                    userProfilePictureUrl = userProfilePictureUrl,
-                    openScreen = openScreen
+        navigationIcon = {
+            IconButton(onClick = { popUpScreen() }) {
+                Icon(
+                    Icons.Filled.ArrowBack,
+                    contentDescription = "Back",
+                    tint = Color.White
                 )
-            } else {
-                IconButton(onClick = { openScreen(SETTINGS_SCREEN) }) {
-                    Icon(
-                        Icons.Filled.Settings,
-                        contentDescription = "Settings",
-                        tint = Color.White
-                    )
-                }
             }
-
         },
         title = {
             Text(
                 text = title,
+                fontWeight = FontWeight.SemiBold,
                 color = Color.White,
             )
         }

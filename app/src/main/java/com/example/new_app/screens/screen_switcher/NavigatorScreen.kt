@@ -2,6 +2,7 @@ package com.example.new_app.screens.screen_switcher
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
@@ -24,11 +25,13 @@ fun NavigatorScreen(
     viewModel: TaskListViewModel
 ) {
     val selectedIndex = rememberSaveable { mutableStateOf(0) }
+    val listState = rememberLazyListState()
 
     Scaffold(
         bottomBar = {
             BottomNavigationBar(
                 selectedIndex = selectedIndex,
+                listState = listState
             )
         }
     ) { paddingValues ->
@@ -40,7 +43,8 @@ fun NavigatorScreen(
                         mainViewModel = mainViewModel,
                         userData = userData,
                         viewModel = viewModel,
-                        taskEditCreateViewModel = taskEditCreateViewModel
+                        taskEditCreateViewModel = taskEditCreateViewModel,
+                        listState = listState
                     )
                 }
 
@@ -49,7 +53,8 @@ fun NavigatorScreen(
                         openScreen = openScreen,
                         userData = userData,
                         viewModel = viewModel,
-                        taskEditCreateViewModel = taskEditCreateViewModel
+                        taskEditCreateViewModel = taskEditCreateViewModel,
+                        listState = listState
                     )
                 }
             }

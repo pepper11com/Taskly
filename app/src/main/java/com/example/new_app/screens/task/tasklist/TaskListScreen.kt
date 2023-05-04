@@ -1,20 +1,27 @@
 package com.example.new_app.screens.task.tasklist
 
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -31,6 +38,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
@@ -45,6 +53,7 @@ import com.example.new_app.TASK_ID
 import com.example.new_app.TASK_ID_KEY
 import com.example.new_app.common.composables.CustomTabRow
 import com.example.new_app.common.composables.CustomTopAppBar
+import com.example.new_app.common.composables.HomeFloatingActionButton
 import com.example.new_app.common.composables.LoadingIndicator
 import com.example.new_app.common.composables.TaskListScreenSideEffects
 import com.example.new_app.common.composables.isScrollingUp
@@ -65,7 +74,8 @@ fun TaskListScreen(
     mainViewModel: SharedViewModel,
     userData: UserData?,
     taskEditCreateViewModel: TaskEditCreateViewModel,
-    viewModel: TaskListViewModel = hiltViewModel()
+    viewModel: TaskListViewModel = hiltViewModel(),
+    listState: LazyListState,
 ) {
 //    LaunchedEffect(Unit){
 //        mainViewModel.resetInitEdit()
@@ -89,7 +99,6 @@ fun TaskListScreen(
     val taskSelectionStates = remember { mutableMapOf<String, MutableState<Boolean>>() }
 
     val scope = rememberCoroutineScope()
-    val listState = rememberLazyListState()
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
     val context = LocalContext.current
 
@@ -129,24 +138,12 @@ fun TaskListScreen(
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         floatingActionButton = {
-            ExtendedFloatingActionButton(
-                shape = RoundedCornerShape(16.dp),
-                expanded = listState.isScrollingUp(),
-                onClick = {
-                    taskEditCreateViewModel.resetTask()
-                    viewModel.onAddClick(openScreen, userId)
-                },
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.background,
-                modifier = Modifier.padding16(),
-                icon = { Icon(Icons.Filled.Add, "Add Task") },
-                text = {
-                    Text(
-                        text = stringResource(TaskString.new_task),
-                        fontWeight = FontWeight.SemiBold,
-                    )
-                },
-            )
+            HomeFloatingActionButton(
+                extended = listState.isScrollingUp()
+            ) {
+                taskEditCreateViewModel.resetTask()
+                viewModel.onAddClick(openScreen, userId)
+            }
         },
         topBar = {
             Column {
