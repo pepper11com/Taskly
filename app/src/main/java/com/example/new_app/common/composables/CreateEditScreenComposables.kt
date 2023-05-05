@@ -69,9 +69,9 @@ import com.example.new_app.R
 import com.example.new_app.model.Task
 import com.example.new_app.screens.task.create_edit_tasks.TaskEditCreateViewModel
 import com.example.new_app.theme.DarkGrey
+import com.example.new_app.theme.DarkOrange
 import com.google.android.material.timepicker.MaterialTimePicker
 import com.google.android.material.timepicker.TimeFormat
-
 
 @Composable
 fun AsyncImage(url: String, modifier: Modifier = Modifier, contentDescription: String? = null) {
@@ -204,6 +204,26 @@ fun ShowDate(
         ) {
             DatePicker(
                 state = datePickerState,
+                colors = DatePickerDefaults.colors(
+                    containerColor = DarkGrey,
+                    titleContentColor = Color.White,
+                    headlineContentColor = Color.White,
+                    weekdayContentColor = Color.White,
+                    subheadContentColor = Color.White,
+                    yearContentColor = Color.White,
+                    currentYearContentColor = Color.White,
+                    selectedYearContentColor = DarkGrey,
+                    selectedYearContainerColor = DarkOrange,
+                    dayContentColor = Color.White,
+                    disabledDayContentColor = Color.White,
+                    selectedDayContentColor = DarkGrey,
+                    disabledSelectedDayContentColor = Color.White,
+                    selectedDayContainerColor = DarkOrange,
+                    todayContentColor = DarkOrange,
+                    todayDateBorderColor = DarkOrange,
+                    dayInSelectionRangeContentColor = Color.White,
+                    dayInSelectionRangeContainerColor = Color.White
+                )
             )
         }
     }

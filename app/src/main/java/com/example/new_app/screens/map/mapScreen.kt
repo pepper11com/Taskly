@@ -130,6 +130,8 @@ fun LocationPicker(
                             focusedLabelColor = Color.Black,
                             unfocusedLabelColor = Color.Black,
                             errorLabelColor = Color.Black,
+                            focusedTextColor = Color.White,
+                            unfocusedTextColor = Color.White,
                         )
                     ),
                     onSearch = {
@@ -161,7 +163,7 @@ fun LocationPicker(
                             Icon(
                                 imageVector = Icons.Default.ArrowBack,
                                 contentDescription = "Search location",
-                                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = ContentAlpha.medium),
+                                tint = Color.White.copy(alpha = ContentAlpha.medium),
                                 modifier = Modifier
                                     .clickable(
                                         interactionSource = interactionSource,
@@ -176,7 +178,7 @@ fun LocationPicker(
                             Icon(
                                 imageVector = Icons.Default.Search,
                                 contentDescription = "Search location",
-                                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = ContentAlpha.medium))
+                                tint = Color.White.copy(alpha = ContentAlpha.medium))
                         }
                     },
                     trailingIcon = {
@@ -184,7 +186,7 @@ fun LocationPicker(
                             Icon(
                                 imageVector = Icons.Default.Clear,
                                 contentDescription = "Clear search",
-                                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = ContentAlpha.medium),
+                                tint = Color.White.copy(alpha = ContentAlpha.medium),
                                 modifier = Modifier
                                     .clickable(
                                         interactionSource = interactionSource,

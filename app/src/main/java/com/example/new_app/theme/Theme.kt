@@ -11,14 +11,14 @@ private val DarkColorPalette = darkColorScheme(
     primary = DarkOrange,
     onPrimary = DarkGrey,
     secondary = LightOrange,
-    background = Color(0xFF000000),
+    background = Color.Black,
 )
 
 private val LightColorPalette = lightColorScheme(
     primary = DarkOrange,
     onPrimary = DarkGrey,
     secondary = LightOrange,
-    background = Color(0xFFFFFFFF),
+    background = Color.Black,
 
     /* Other default colors to override
     primary: Color,

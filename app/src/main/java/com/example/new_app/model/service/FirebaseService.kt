@@ -4,6 +4,7 @@ import android.net.Uri
 import android.util.Log
 import com.example.new_app.common.util.Resource
 import com.example.new_app.model.Task
+import com.example.new_app.screens.task.tasklist.TaskStatus
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.FirebaseFirestore
@@ -46,6 +47,12 @@ class FirebaseService @Inject constructor(
             currentCollection(uid).document(taskId).get().await().toObject()
         }
 
+    suspend fun updateTaskStatus(taskId: String, status: TaskStatus) {
+        currentUser.value?.uid?.let { uid ->
+            currentCollection(uid).document(taskId).update("status", status)
+        }
+    }
+
     suspend fun save(task: Task): Resource<String> {
         return try {
             val taskId = firebaseAuth.currentUser?.uid?.let { uid ->
@@ -71,17 +78,20 @@ class FirebaseService @Inject constructor(
             // Deletes the task from Firestore
             currentCollection(uid).document(taskId).delete().await()
 
-            // Deletes the image from Firebase Storage if there's one associated with the task
-            task?.imageUri?.let { imageUrl ->
-                val path = imageUrl
-                    .substringAfter("example-f27a3.appspot.com/o/")
-                    .substringBefore("?")
-                    .replace("%2F", "/")
+            // If the task exists, proceed with image deletion
+            if (task != null) {
+                // Deletes the image from Firebase Storage if there's one associated with the task
+                task.imageUri?.let { imageUrl ->
+                    val path = imageUrl
+                        .substringAfter("example-f27a3.appspot.com/o/")
+                        .substringBefore("?")
+                        .replace("%2F", "/")
 
-                Log.d("FirebaseService", "imageUrl: $imageUrl")
-                Log.d("FirebaseService", "path: $path")
+                    Log.d("FirebaseService", "imageUrl: $imageUrl")
+                    Log.d("FirebaseService", "path: $path")
 
-                firebaseStorage.reference.child(path).delete().await()
+                    firebaseStorage.reference.child(path).delete().await()
+                }
             }
         }
     }

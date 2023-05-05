@@ -62,7 +62,7 @@ class TaskEditCreateViewModel @Inject constructor(
                     task.value = firebaseService.getTask(taskId) ?: Task()
 
                     task.value.let {
-                        locationDisplay.value = it.locationName.toString()
+                        locationDisplay.value = if (it.locationName == null) "No location set" else it.locationName!!
                     }
 
                     task.value.let {

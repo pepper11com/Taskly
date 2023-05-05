@@ -52,27 +52,23 @@ class SignupViewModel @Inject constructor(
             if (!email.isValidEmail()) {
                 _authenticationState.value = Resource.Error("Invalid email")
                 SnackbarManager.showMessage("Invalid email")
-                return@launch
             }
-            if (!password.isValidPassword()) {
+            else if (!password.isValidPassword()) {
                 _authenticationState.value = Resource.Error("Invalid password")
                 SnackbarManager.showMessage("Invalid password")
-                return@launch
             }
-            if (password != confirmPassword) {
+            else if (password != confirmPassword) {
                 _authenticationState.value = Resource.Error("Passwords don't match")
                 SnackbarManager.showMessage("Passwords don't match")
-                return@launch
-            }
-
-            try {
-                accountService.createAccount(email, password)
-                _authenticationState.value = Resource.Success(Unit)
-            } catch (e: Exception) {
-                _authenticationState.value = Resource.Error(e.message ?: "Error signing up")
-                SnackbarManager.showMessage(e.message ?: "Error signing up")
-            } finally {
-                _authenticationState.value = Resource.Empty()
+            } else{
+                try {
+                    accountService.createAccount(email, password)
+                    _authenticationState.value = Resource.Success(Unit)
+                    SnackbarManager.showMessage("Account created successfully")
+                } catch (e: Exception) {
+                    _authenticationState.value = Resource.Error(e.message ?: "Error signing up")
+                    SnackbarManager.showMessage(e.message ?: "Error signing up")
+                }
             }
         }
     }

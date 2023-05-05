@@ -18,6 +18,8 @@ fun customTextFieldColors(): TextFieldColors {
         selectionColors = TextSelectionColors(
             Color(0xFF444444),
             Color(0xFF444444).copy(alpha = 0.5f),
-        )
+        ),
+        focusedTextColor = Color.White,
+        unfocusedTextColor = Color.White.copy(alpha = ContentAlpha.disabled),
     )
 }

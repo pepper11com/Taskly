@@ -42,6 +42,8 @@ fun CustomTextField(
         focusedBorderColor = MaterialTheme.colorScheme.secondary,
         unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = ContentAlpha.disabled),
         focusedLabelColor = MaterialTheme.colorScheme.secondary,
+        focusedTextColor = Color.White,
+        unfocusedTextColor = Color.White,
     )
 ) {
     val isErrorState = remember { mutableStateOf(false) }
@@ -109,6 +111,8 @@ fun CustomPasswordTextField(
                 focusedBorderColor = MaterialTheme.colorScheme.secondary,
                 unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = ContentAlpha.disabled),
                 focusedLabelColor = MaterialTheme.colorScheme.secondary,
+                focusedTextColor = Color.White,
+                unfocusedTextColor = Color.White,
             )
         )
 

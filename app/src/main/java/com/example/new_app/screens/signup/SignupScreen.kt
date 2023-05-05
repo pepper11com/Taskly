@@ -9,6 +9,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.new_app.AUTHENTICATION_SCREEN
 import com.example.new_app.LOGIN_SCREEN
 import com.example.new_app.NAVIGATOR_SCREEN
 import com.example.new_app.SIGN_UP_SCREEN
@@ -47,7 +48,7 @@ fun SignupScreen(
             }
 
             is Resource.Error -> {
-                openAndPopUp(LOGIN_SCREEN, SIGN_UP_SCREEN)
+//                openAndPopUp(AUTHENTICATION_SCREEN, SIGN_UP_SCREEN)
             }
 
             is Resource.Loading -> {

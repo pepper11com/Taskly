@@ -150,7 +150,7 @@ fun NavGraphBuilder.taskAppGraph(
     composable(SPLASH_SCREEN) {
         SplashScreen(
             openAndPopUp = { route, popUp -> appState.navigateAndPopUp(route, popUp) },
-            clearBackstack = { appState.clearBackstack() }
+            clearBackstack = { appState.clearBackstack() },
         )
     }
 

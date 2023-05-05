@@ -39,7 +39,7 @@ fun LocationPickerScreen(
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = Color.Black,
                 ),
-                title = { Text("Task location") },
+                title = { Text("Task location", color = Color.White) },
                 navigationIcon = {
                     IconButton(
                         onClick = {

@@ -28,7 +28,7 @@ fun RegularCardEditor(
         icon = icon,
         content = content,
         onEditClick =onEditClick,
-        Color.White,
+        highlightColor = Color.White,
         modifier = modifier,
         location = location
     )
@@ -78,7 +78,10 @@ private fun CardEditor(
                             .weight(2f)
                     ) {
                         Row(horizontalArrangement = Arrangement.End) {
-                            Text(text = content)
+                            Text(
+                                text = content,
+                                color = Color.White
+                            )
                         }
                     }
                 }
@@ -112,7 +115,7 @@ private fun CardEditor(
                     )
                 }
                 if (content.isNotBlank()) {
-                    Text(text = content, modifier = Modifier.padding(16.dp, 0.dp))
+                    Text(text = content, modifier = Modifier.padding(16.dp, 0.dp), color = Color.White)
                 }
 
                 Icon((icon), contentDescription = "Icon", tint = highlightColor)
