@@ -13,8 +13,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Deselect
 import androidx.compose.material.icons.filled.Done
-import androidx.compose.material.icons.filled.LocationOff
-import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.SelectAll
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Tune
@@ -65,7 +63,6 @@ fun CustomTopAppBar(
     viewModel: TaskListViewModel,
     scrollBehavior: TopAppBarScrollBehavior,
     mainViewModel: SharedViewModel,
-    mapsVisible: Boolean,
     userProfilePictureUrl: String?,
     userGoogleName: String?
 ) {
@@ -112,18 +109,6 @@ fun CustomTopAppBar(
                         )
                     }
                 }
-            }
-
-            IconButton(
-                onClick = {
-                    mainViewModel.toggleMapsVisible()
-                }
-            ) {
-                Icon(
-                    imageVector = if (mapsVisible) Icons.Default.LocationOn else Icons.Default.LocationOff,
-                    contentDescription = "Toggle Map",
-                    tint = Color.White
-                )
             }
 
             DropdownContextMenu(

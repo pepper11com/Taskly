@@ -4,8 +4,12 @@ import android.content.Context
 import android.os.VibrationEffect
 import android.os.Vibrator
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateOffsetAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
@@ -18,11 +22,16 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.FractionalThreshold
 import androidx.compose.material.SwipeableState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.swipeable
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
@@ -61,7 +70,6 @@ fun SwipeableTaskListItem(
     onTaskSwipedBackToActive: (Task) -> Unit,
     isFlashing: Boolean = false,
     mainViewModel: SharedViewModel,
-    mapsVisible: Boolean
 ) {
     //width of the swipeable item
     val screenWidth = LocalConfiguration.current.screenWidthDp.dp
@@ -121,7 +129,6 @@ fun SwipeableTaskListItem(
             onSelectedTasksChange = onSelectedTasksChange,
             isFlashing = isFlashing,
             mainViewModel = mainViewModel,
-            mapVisible = mapsVisible
         )
     }
 }
@@ -138,8 +145,6 @@ fun TaskListItem(
     onSelectedTasksChange: (Task, Boolean) -> Unit,
     isFlashing: Boolean = false,
     mainViewModel: SharedViewModel,
-    mapVisible: Boolean = true,
-    mapHeight: Dp = 140.dp
 ) {
     val context = LocalContext.current
     val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
@@ -147,14 +152,14 @@ fun TaskListItem(
     val taskIsSelected = mainViewModel.selectedTaskIds.collectAsState().value.contains(task.id)
     val taskColor = task.color?.let { Color(it) }
 
+    var expanded by rememberSaveable { mutableStateOf(false) }
+
+
     val flashColor = animateColorAsState(
         targetValue = if (flashState.value) Color(0xFFCCCCCC) else Color(0xFF444444),
         animationSpec = tween(durationMillis = 5000)
     )
-    val animatedMapHeight = animateDpAsState(
-        targetValue = if (mapVisible) mapHeight else 0.dp,
-        animationSpec = tween(durationMillis = 400)
-    )
+
     LaunchedEffect(flashState.value) {
         if (flashState.value) {
             flashState.value = false
@@ -194,7 +199,14 @@ fun TaskListItem(
                 },
             )
     ) {
-        Column {
+        Column(
+            modifier = Modifier.animateContentSize(
+                animationSpec = tween(
+                    durationMillis = 300,
+                    easing = FastOutSlowInEasing
+                )
+            )
+        ) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -207,8 +219,8 @@ fun TaskListItem(
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
-                        .size(48.dp)
-                        .clip(RoundedCornerShape(8.dp)),
+                        .size(32.dp)
+                        .clip(RoundedCornerShape(4.dp)),
                 )
                 Column(
                     modifier = Modifier
@@ -226,59 +238,85 @@ fun TaskListItem(
                         color = Color.White
                     )
                 }
-                taskColor?.let {
-                    Modifier
-                        .padding(8.dp)
-                        .clip(CircleShape)
-                        .background(color = it)
-                        .size(30.dp)
-                }?.let {
-                    Box(
-                        modifier = it
-                    )
-                }
-                if (TaskStatus.ACTIVE != task.status) {
-                    Checkbox(
-                        checked = taskIsSelected,
-                        onCheckedChange = { isChecked ->
-                            isSelected.value = isChecked
-                            onSelectedTasksChange(task, isChecked)
-                            mainViewModel.onTaskSelection(task.id, isChecked)
-                        },
-                        colors = CheckboxDefaults.colors(
-                            checkmarkColor = Color(0xFFFF8C00),
-                            disabledCheckedColor = MaterialTheme.colorScheme.background,
-                            disabledIndeterminateColor = MaterialTheme.colorScheme.background,
-                            uncheckedColor = MaterialTheme.colorScheme.background,
-                            checkedColor = MaterialTheme.colorScheme.background,
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    taskColor?.let {
+                        Modifier
+                            .padding(8.dp)
+                            .clip(CircleShape)
+                            .background(color = it)
+                            .size(24.dp)
+                    }?.let {
+                        Box(
+                            modifier = it
                         )
-                    )
+                    }
+
+                    IconButton(
+                        onClick = { expanded = !expanded }
+                    ) {
+                        Icon(
+                            imageVector = if (expanded) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore,
+                            contentDescription = if (expanded) {
+                                "Show less"
+                            } else {
+                                "Show more"
+                            }
+                        )
+                    }
+
+                    if (TaskStatus.ACTIVE != task.status) {
+                        Checkbox(
+                            modifier = Modifier.padding(start = 8.dp),
+                            checked = taskIsSelected,
+                            onCheckedChange = { isChecked ->
+                                isSelected.value = isChecked
+                                onSelectedTasksChange(task, isChecked)
+                                mainViewModel.onTaskSelection(task.id, isChecked)
+                            },
+                            colors = CheckboxDefaults.colors(
+                                checkmarkColor = Color(0xFFFF8C00),
+                                disabledCheckedColor = MaterialTheme.colorScheme.background,
+                                disabledIndeterminateColor = MaterialTheme.colorScheme.background,
+                                uncheckedColor = MaterialTheme.colorScheme.background,
+                                checkedColor = MaterialTheme.colorScheme.background,
+                            )
+                        )
+                    }
                 }
             }
-            if (task.locationName != null && task.location != null) {
-                val staticMapUrl = generateStaticMapUrl(task)
-                StaticMap(
-                    staticMapUrl = staticMapUrl,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(8.dp)
-                        .height(animatedMapHeight.value)
-                        .clip(RoundedCornerShape(8.dp)),
-                )
+
+            if (expanded) {
                 Text(
-                    modifier = Modifier.padding(start = 14.dp, bottom = 12.dp),
-                    text = task.locationName.toString(),
-                    fontSize = 9.sp,
+                    modifier = Modifier.padding(8.dp),
+                    text = task.description,
+                    fontSize = 11.sp,
                     color = Color.White,
+                    lineHeight = 13.sp
                 )
-            } else {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(8.dp)
-                        .height(animatedMapHeight.value)
-                        .background(Color(0xFF666666), shape = RoundedCornerShape(8.dp))
-                )
+
+                if (task.locationName != null && task.location != null) {
+                    val staticMapUrl = generateStaticMapUrl(task)
+                    StaticMap(
+                        staticMapUrl = staticMapUrl,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(8.dp)
+                            .height(140.dp)
+                            .clip(RoundedCornerShape(8.dp)),
+                    )
+                }
+
+                if (task.locationName != null) {
+                    Text(
+                        modifier = Modifier.padding(start = 8.dp, bottom = 8.dp),
+                        text = task.locationName.toString(),
+                        fontSize = 9.sp,
+                        color = Color.White,
+                        lineHeight = 12.sp
+                    )
+                }
             }
         }
     }

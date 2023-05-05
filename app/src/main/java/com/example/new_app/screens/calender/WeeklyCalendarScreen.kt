@@ -3,6 +3,9 @@ package com.example.new_app.screens.calender
 import android.content.Context
 import android.os.VibrationEffect
 import android.os.Vibrator
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -18,13 +21,21 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarScrollBehavior
@@ -36,6 +47,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalContext
@@ -61,7 +73,9 @@ import com.example.new_app.common.ext.standardImage
 import com.example.new_app.common.helpers.getWeekPageTitle
 import com.example.new_app.model.Task
 import com.example.new_app.screens.task.tasklist.ShowDialogWithTaskDetailsAndDelete
+import com.example.new_app.screens.task.tasklist.StaticMap
 import com.example.new_app.screens.task.tasklist.TaskListViewModel
+import com.example.new_app.screens.task.tasklist.generateStaticMapUrl
 import com.kizitonwose.calendar.compose.WeekCalendar
 import com.kizitonwose.calendar.compose.weekcalendar.rememberWeekCalendarState
 import java.time.LocalDate
@@ -102,7 +116,9 @@ fun WeeklyCalendarViewScreen(
             val visibleWeek = rememberFirstVisibleWeekAfterScroll(state)
 
             Row(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 16.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 8.dp, vertical = 16.dp),
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -127,7 +143,11 @@ fun WeeklyCalendarViewScreen(
                         taskDate == day.date
                     }
 
-                    Day(day.date, isSelected = selection == day.date, hasActiveTasks = hasActiveTasks) { clicked ->
+                    Day(
+                        day.date,
+                        isSelected = selection == day.date,
+                        hasActiveTasks = hasActiveTasks
+                    ) { clicked ->
                         if (selection != clicked) {
                             selection = clicked
                         }
@@ -179,7 +199,9 @@ fun HourlyTaskView(
             contentAlignment = Alignment.Center
         ) {
             Column(
-                modifier = Modifier.fillMaxWidth().divider(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .divider(),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
@@ -203,7 +225,9 @@ fun HourlyTaskView(
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.background)
         ) {
-            val taskHours = tasksForSelectedDate.mapNotNull { it.dueTime.split(":")[0].toIntOrNull() }.toSet().sorted()
+            val taskHours =
+                tasksForSelectedDate.mapNotNull { it.dueTime.split(":")[0].toIntOrNull() }.toSet()
+                    .sorted()
             var lastDisplayedHour = -1
 
             taskHours.forEach { taskHour ->
@@ -230,11 +254,104 @@ fun HourlyTaskView(
                     currentTaskHour == taskHour
                 }
 
+//                tasksForThisHour.forEach { task ->
+//                    Card(
+//                        modifier = Modifier
+//                            .fillMaxWidth()
+//                            .padding4()
+//                            .combinedClickable(
+//                                onClick = {},
+//                                onLongClick = {
+//                                    selectedTask.value = task
+//                                    vibrator.vibrate(
+//                                        VibrationEffect.createOneShot(
+//                                            25,
+//                                            VibrationEffect.DEFAULT_AMPLITUDE
+//                                        )
+//                                    )
+//                                },
+//                            ),
+//                        shape = RoundedCornerShape(8.dp),
+//                        elevation = CardDefaults.cardElevation(
+//                            defaultElevation = 5.dp,
+//                        ),
+//                        colors = CardDefaults.cardColors(
+//                            containerColor = Color(task.color ?: -478827),
+//                            contentColor = Color.Black,
+//                        ),
+//                    ) {
+//                        Column(
+//                            modifier = Modifier
+//                                .animateContentSize(
+//                                    animationSpec = tween(
+//                                        durationMillis = 300,
+//                                        easing = FastOutSlowInEasing
+//                                    )
+//                                )
+//                                .padding8()
+//                        ) {
+//                            Text(
+//                                text = task.title,
+//                                fontSize = 16.sp,
+//                                color = Color.Black,
+//                                fontWeight = FontWeight.Bold
+//                            )
+//
+//                            Text(
+//                                text = String.format(
+//                                    stringResource(CalendarString.due),
+//                                    task.dueDate,
+//                                    task.dueTime
+//                                ),
+//                                fontSize = 12.sp,
+//                                color = Color.Black,
+//                            )
+//
+//                            task.description.takeIf { it.isNotBlank() }?.let {
+//                                Text(
+//                                    text = String.format(
+//                                        stringResource(CalendarString.calendar_description),
+//                                        it
+//                                    ),
+//                                    fontSize = 12.sp,
+//                                    color = Color.Black,
+//                                    lineHeight = 16.sp
+//                                )
+//                            }
+//
+//                            Text(
+//                                text = String.format(stringResource(CalendarString.calendar_status),
+//                                    task.status.toString().lowercase()
+//                                        .replaceFirstChar {
+//                                            if (it.isLowerCase()) it.titlecase(Locale.ROOT) else it.toString()
+//                                        }),
+//                                fontSize = 12.sp,
+//                                color = Color.Black,
+//                            )
+//
+//
+//                            task.locationName?.takeIf { it.isNotBlank() }?.let {
+//                                Text(
+//                                    text = String.format(
+//                                        stringResource(CalendarString.calendar_location),
+//                                        it
+//                                    ),
+//                                    fontSize = 9.sp,
+//                                    color = Color.Black,
+//                                    lineHeight = 12.sp
+//                                )
+//                            }
+//                        }
+//                    }
+//                }
+
                 tasksForThisHour.forEach { task ->
+                    var expanded by rememberSaveable { mutableStateOf(false) }
+
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding4()
+                            .padding(4.dp)
                             .combinedClickable(
                                 onClick = {},
                                 onLongClick = {
@@ -257,50 +374,105 @@ fun HourlyTaskView(
                         ),
                     ) {
                         Column(
-                            modifier = Modifier.padding8(),
+                            modifier = Modifier
+                                .animateContentSize(
+                                    animationSpec = tween(
+                                        durationMillis = 300,
+                                        easing = FastOutSlowInEasing
+                                    )
+                                )
+                                .padding(8.dp)
                         ) {
-                            Text(
-                                text = task.title,
-                                fontSize = 16.sp,
-                                color = Color.Black,
-                                fontWeight = FontWeight.Bold
-                            )
+                            Row(
+                                modifier = Modifier.fillMaxWidth().padding(bottom = 4.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column {
+                                    Text(
+                                        text = task.title,
+                                        fontSize = 16.sp,
+                                        color = Color.Black,
+                                        fontWeight = FontWeight.Bold
+                                    )
 
-                            Text(
-                                text = String.format(stringResource(CalendarString.due), task.dueDate, task.dueTime),
-                                fontSize = 12.sp,
-                                color = Color.Black,
-                            )
+                                    Text(
+                                        text = String.format(
+                                            stringResource(CalendarString.due),
+                                            task.dueDate,
+                                            task.dueTime
+                                        ),
+                                        fontSize = 12.sp,
+                                        color = Color.Black,
+                                    )
+                                }
+
+                                if (task.locationName != null) {
+                                    IconButton(
+                                        onClick = { expanded = !expanded }
+                                    ) {
+                                        Icon(
+                                            imageVector = if (expanded) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore,
+                                            contentDescription = if (expanded) {
+                                                "Show less"
+                                            } else {
+                                                "Show more"
+                                            }
+                                        )
+                                    }
+                                }
+                            }
 
                             task.description.takeIf { it.isNotBlank() }?.let {
                                 Text(
-                                    text = String.format(stringResource(CalendarString.calendar_description), it),
+                                    text = String.format(
+                                        stringResource(CalendarString.calendar_description),
+                                        it
+                                    ),
                                     fontSize = 12.sp,
                                     color = Color.Black,
                                     lineHeight = 16.sp
                                 )
                             }
 
-                                Text(
-                                    text = String.format(stringResource(CalendarString.calendar_status), task.status.toString().lowercase()
+                            Text(
+                                text = String.format(stringResource(CalendarString.calendar_status),
+                                    task.status.toString().lowercase()
                                         .replaceFirstChar {
                                             if (it.isLowerCase()) it.titlecase(Locale.ROOT) else it.toString()
                                         }),
-                                    fontSize = 12.sp,
-                                    color = Color.Black,
-                                )
+                                fontSize = 12.sp,
+                                color = Color.Black,
+                            )
 
-
-                            task.locationName?.takeIf { it.isNotBlank() }?.let {
-                                Text(
-                                    text = String.format(stringResource(CalendarString.calendar_location), it),
-                                    fontSize = 12.sp,
-                                    color = Color.Black,
-                                )
+                            if (expanded) {
+                                if (task.locationName != null && task.location != null) {
+                                    val staticMapUrl = generateStaticMapUrl(task)
+                                    StaticMap(
+                                        staticMapUrl = staticMapUrl,
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(8.dp)
+                                            .height(140.dp)
+                                            .clip(RoundedCornerShape(8.dp)),
+                                    )
+                                }
+                                task.locationName?.takeIf { it.isNotBlank() }?.let {
+                                    Text(
+                                        text = String.format(
+                                            stringResource(CalendarString.calendar_location),
+                                            it
+                                        ),
+                                        fontSize = 9.sp,
+                                        color = Color.Black,
+                                        lineHeight = 12.sp
+                                    )
+                                }
                             }
                         }
                     }
                 }
+
 
                 lastDisplayedHour = taskHour
             }
@@ -318,7 +490,12 @@ fun HourlyTaskView(
 }
 
 @Composable
-private fun Day(date: LocalDate, isSelected: Boolean, hasActiveTasks: Boolean, onClick: (LocalDate) -> Unit) {
+private fun Day(
+    date: LocalDate,
+    isSelected: Boolean,
+    hasActiveTasks: Boolean,
+    onClick: (LocalDate) -> Unit
+) {
     Box(
         modifier = Modifier
             .fillMaxWidth()

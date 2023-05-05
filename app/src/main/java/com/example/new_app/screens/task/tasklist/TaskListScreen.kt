@@ -86,7 +86,6 @@ fun TaskListScreen(
     val deleteTasksState by viewModel.deleteTasksState.collectAsState()
     val sortType by viewModel.sortType.collectAsState()
     val lastAddedTaskId by mainViewModel.lastAddedTaskId.observeAsState(null)
-    val mapsVisible by mainViewModel.mapsVisible.observeAsState(true)
 
     val userProfilePictureUrl = userData?.profilePictureUrl
     val userGoogleName = userData?.username
@@ -155,7 +154,6 @@ fun TaskListScreen(
                     viewModel = viewModel,
                     scrollBehavior = scrollBehavior,
                     mainViewModel = mainViewModel,
-                    mapsVisible = mapsVisible,
                     userProfilePictureUrl = userProfilePictureUrl,
                     userGoogleName = userGoogleName,
                 )
@@ -221,7 +219,6 @@ fun TaskListScreen(
                                 },
                                 isFlashing = task.id == lastAddedTaskId,
                                 mainViewModel = mainViewModel,
-                                mapsVisible = mapsVisible,
                             )
                             Divider()
                         }

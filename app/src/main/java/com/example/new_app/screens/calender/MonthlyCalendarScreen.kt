@@ -172,7 +172,9 @@ fun MonthlyCalendarScreen(
             )
 
             HorizontalCalendar(
-                modifier = Modifier.wrapContentWidth().padding8(),
+                modifier = Modifier
+                    .wrapContentWidth()
+                    .padding8(),
                 state = state,
                 dayContent = { day ->
                     val tasksOnDate = remember(day.date, taskList) {
@@ -395,14 +397,22 @@ private fun TaskInformation(
                     Text(text = task.description, style = MaterialTheme.typography.bodyMedium)
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = stringResource(CalendarString.monthly_due_date, dueDateText),
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
                         text = stringResource(CalendarString.calendar_status, task.status),
                         style = MaterialTheme.typography.bodyMedium
                     )
+                    Spacer(modifier = Modifier.height(4.dp))
+
+                    Row {
+                        Text(
+                            text = stringResource(CalendarString.monthly_due_date, dueDateText),
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                        Text(
+                            text = " - ${task.dueDate} ${task.dueTime}",
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
+
                 }
 
                 StaticMap(

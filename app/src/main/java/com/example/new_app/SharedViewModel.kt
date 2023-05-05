@@ -16,9 +16,6 @@ class SharedViewModel : ViewModel() {
     private val _selectedTaskIds = MutableStateFlow<Set<String>>(emptySet())
     val selectedTaskIds: StateFlow<Set<String>> = _selectedTaskIds.asStateFlow()
 
-    private val _mapsVisible = MutableLiveData(true)
-    val mapsVisible: LiveData<Boolean> = _mapsVisible
-
     private val _initEdit = MutableLiveData(true)
     val initEdit: LiveData<Boolean> = _initEdit
 
@@ -28,10 +25,6 @@ class SharedViewModel : ViewModel() {
 
     fun resetInitEdit() {
         _initEdit.value = true
-    }
-
-    fun toggleMapsVisible() {
-        _mapsVisible.value = _mapsVisible.value?.not()
     }
 
     fun updateLastAddedTaskId(newTaskId: String?) {
