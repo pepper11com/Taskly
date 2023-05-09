@@ -18,12 +18,3 @@ The Task app is an intuitive and easy-to-use appointment management app that kee
 - Dedicated lists for deleted and completed events
 - Option to clear your history as needed
 
-## Getting Started
-
-### Prerequisites
-- Android Studio
-- Firebase account
-- Google Maps API key
-
-### Installation
-1. Clone the repository
