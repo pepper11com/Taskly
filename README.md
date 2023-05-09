@@ -18,9 +18,7 @@ The Task app is an intuitive and easy-to-use appointment management app that kee
 - Dedicated lists for deleted and completed events
 - Option to clear your history as needed
 
-<img src="./images/Screenshot_20230509_192440_Google Play services.jpg" width="200"> <img src="./images/Screenshot_20230509_192509_Taskly.jpg" width="200"> <img src="./images/Screenshot_20230509_192538_Taskly.jpg" width="200"> <img src="./images/Screenshot_20230509_192820_Taskly.jpg" width="200"> <img src="./images/Screenshot_20230509_192827_Taskly.jpg" width="200"> <img src="./images/Screenshot_20230509_192838_Taskly.jpg" width="200">
-
-<img src="./images/Screenshot_20230509_192556_Taskly.jpg" width="200"> <img src="./images/Screenshot_20230509_192747_Taskly.jpg" width="200"> <img src="./images/Screenshot_20230509_192848_Taskly.jpg" width="200"> <img src="./images/Screenshot_20230509_192816_Taskly.jpg" width="200"> <img src="./images/Screenshot_20230509_192859_Taskly.jpg" width="200">
+<img src="./images/Screenshot_20230509_192440_Google Play services.jpg" width="200"> <img src="./images/Screenshot_20230509_192509_Taskly.jpg" width="200"> <img src="./images/Screenshot_20230509_192538_Taskly.jpg" width="200"> <img src="./images/Screenshot_20230509_192820_Taskly.jpg" width="200"> <img src="./images/Screenshot_20230509_192827_Taskly.jpg" width="200"> <img src="./images/Screenshot_20230509_192838_Taskly.jpg" width="200"> <img src="./images/Screenshot_20230509_192556_Taskly.jpg" width="200"> <img src="./images/Screenshot_20230509_192747_Taskly.jpg" width="200"> <img src="./images/Screenshot_20230509_192848_Taskly.jpg" width="200"> <img src="./images/Screenshot_20230509_192816_Taskly.jpg" width="200"> <img src="./images/Screenshot_20230509_192859_Taskly.jpg" width="200">
 
 
 
