@@ -220,7 +220,7 @@ fun TaskListScreen(
                                 isFlashing = task.id == lastAddedTaskId,
                                 mainViewModel = mainViewModel,
                             )
-                            Divider()
+//                            Divider()
                         }
                     }
                 }

@@ -45,6 +45,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
@@ -229,8 +230,10 @@ fun TaskListItem(
                 ) {
                     Text(
                         text = task.title,
+                        maxLines = 1,
                         style = MaterialTheme.typography.titleLarge,
-                        color = Color.White
+                        color = Color.White,
+                        overflow = TextOverflow.Ellipsis
                     )
                     Text(
                         text = getDueDateAndTime(task),

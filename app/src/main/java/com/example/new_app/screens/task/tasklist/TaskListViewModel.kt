@@ -31,7 +31,7 @@ class TaskListViewModel @Inject constructor(
     private val _deleteTasksState = MutableStateFlow<Resource<Unit>>(Resource.Empty())
     val deleteTasksState: StateFlow<Resource<Unit>> get() = _deleteTasksState
 
-    private val _sortType = MutableStateFlow(TaskSortType.DUE_DATE_DESC)
+    private val _sortType = MutableStateFlow(TaskSortType.DUE_DATE_ASC)
     val sortType: StateFlow<TaskSortType> = _sortType.asStateFlow()
 
     val currentUserId: String
