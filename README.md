@@ -4,7 +4,7 @@ Task app with calendar
 
 The Task app is an intuitive and easy-to-use appointment management app that keeps your personal and professional life organized. With seamless Firebase authentication, create an account and start scheduling appointments in no time. Add important details like title, description, images, time, date, and location using Google Maps integration. Stay informed with a quick glance at your home screen, where all upcoming appointments are displayed. Access more information with a long press, and effortlessly manage your events by swiping left to delete or right to mark as completed. The Task app also offers a notification system to remind you when an appointment is about to begin. Keep track of past events in dedicated deleted and completed lists, with the option to clear your history as needed. Let Task App help you stay on top of your schedule, so you never miss a beat!
 
-![Task App Home Screen](./images/home_screen.png)
+![Task App Home Screen](./images/Screenshot_20230509_192430_Taskly.jpg)
 
 ## Features
 - Firebase Authentication for secure login and account creation
