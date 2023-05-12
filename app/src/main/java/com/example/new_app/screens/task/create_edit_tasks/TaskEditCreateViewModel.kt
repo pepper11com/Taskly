@@ -21,6 +21,7 @@ import com.example.new_app.model.service.scheduleTaskReminder
 import com.example.new_app.screens.task.tasklist.generateStaticMapUrl
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
+import com.google.firebase.storage.StorageException
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -41,6 +42,7 @@ import javax.inject.Inject
 class TaskEditCreateViewModel @Inject constructor(
     private val firebaseService: FirebaseService,
     private val accountService: AccountService,
+
 ) : ViewModel() {
 
     private val dateFormat = "EEE, d MMM yyyy"
@@ -360,33 +362,21 @@ class TaskEditCreateViewModel @Inject constructor(
         }
     }
 
-//    fun onDeleteImageClick() {
-//        viewModelScope.launch {
-//            task.value.imageUri?.let { imageUrl ->
-//                val path = imageUrl.substringAfter("task_images/")
-//                firebaseService.deleteImage(path)
-//                task.value = task.value.copy(imageUri = null)
-//                imageUri.value = null
-//            }
-//            imageUri.value = null
-//        }
-//    }
     fun onDeleteImageClick() {
         viewModelScope.launch {
-            task.value.imageUri?.let { imageUrl ->
-                val path = imageUrl
-                    .substringAfter("example-f27a3.appspot.com/o/")
-                    .substringBefore("?")
-                    .replace("%2F", "/")
+            val userId = accountService.currentUserId
+            val taskId = task.value.id
+            val path = "task_images/$userId/$taskId"
 
-                Log.d("onDeleteImageClick", "imageUrl: $imageUrl")
-                Log.d("onDeleteImageClick", "path: $path")
-
-                firebaseService.deleteImage(path)
-                task.value = task.value.copy(imageUri = null)
-                imageUri.value = null
-            }
+            task.value = task.value.copy(imageUri = null)
             imageUri.value = null
+
+            if (firebaseService.doesImageExist(path)) {
+                firebaseService.deleteImage(path)
+            } else {
+                // Handle the case when the image does not exist
+                Log.d("onDeleteImageClick", "Image not found at path: $path")
+            }
         }
     }
 

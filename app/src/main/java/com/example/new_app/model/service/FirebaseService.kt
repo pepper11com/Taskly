@@ -12,6 +12,7 @@ import com.google.firebase.firestore.ktx.snapshots
 import com.google.firebase.firestore.ktx.toObjects
 import com.google.firebase.firestore.ktx.toObject
 import com.google.firebase.storage.FirebaseStorage
+import com.google.firebase.storage.StorageException
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -70,6 +71,32 @@ class FirebaseService @Inject constructor(
         }
     }
 
+//    suspend fun delete(taskId: String) {
+//        firebaseAuth.currentUser?.uid?.let { uid ->
+//            // Gets the task before deleting it
+//            val task = currentCollection(uid).document(taskId).get().await().toObject<Task>()
+//
+//            // Deletes the task from Firestore
+//            currentCollection(uid).document(taskId).delete().await()
+//
+//            // If the task exists, proceed with image deletion
+//            if (task != null) {
+//                // Deletes the image from Firebase Storage if there's one associated with the task
+//                task.imageUri?.let { imageUrl ->
+//                    val path = imageUrl
+//                        .substringAfter("example-f27a3.appspot.com/o/")
+//                        .substringBefore("?")
+//                        .replace("%2F", "/")
+//
+//                    Log.d("FirebaseService", "imageUrl: $imageUrl")
+//                    Log.d("FirebaseService", "path: $path")
+//
+//                    firebaseStorage.reference.child(path).delete().await()
+//                }
+//            }
+//        }
+//    }
+
     suspend fun delete(taskId: String) {
         firebaseAuth.currentUser?.uid?.let { uid ->
             // Gets the task before deleting it
@@ -82,19 +109,22 @@ class FirebaseService @Inject constructor(
             if (task != null) {
                 // Deletes the image from Firebase Storage if there's one associated with the task
                 task.imageUri?.let { imageUrl ->
-                    val path = imageUrl
-                        .substringAfter("example-f27a3.appspot.com/o/")
-                        .substringBefore("?")
-                        .replace("%2F", "/")
+                    val path = "task_images/$uid/$taskId"
 
                     Log.d("FirebaseService", "imageUrl: $imageUrl")
                     Log.d("FirebaseService", "path: $path")
 
-                    firebaseStorage.reference.child(path).delete().await()
+                    if (doesImageExist(path)) {
+                        firebaseStorage.reference.child(path).delete().await()
+                    } else {
+                        // Handle the case when the image does not exist
+                        Log.d("FirebaseService", "Image not found at path: $path")
+                    }
                 }
             }
         }
     }
+
 
     suspend fun deleteAllForUser(userId: String) {
         val matchingTasks = currentCollection(userId).get().await()
@@ -139,6 +169,20 @@ class FirebaseService @Inject constructor(
             Resource.Success(Unit)
         } catch (e: Exception) {
             Resource.Error(e.message ?: "Unknown error")
+        }
+    }
+
+    suspend fun doesImageExist(path: String): Boolean {
+        return try {
+            val storageRef = firebaseStorage.reference.child(path)
+            storageRef.metadata.await()
+            true
+        } catch (e: StorageException) {
+            if (e.errorCode == StorageException.ERROR_OBJECT_NOT_FOUND) {
+                false
+            } else {
+                throw e
+            }
         }
     }
 

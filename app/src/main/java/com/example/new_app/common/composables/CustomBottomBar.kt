@@ -24,6 +24,13 @@ import androidx.compose.ui.unit.dp
 import com.example.new_app.screens.screen_switcher.BottomNavigationItem
 import com.example.new_app.theme.MediumGrey
 
+
+// EnterTransition, ExitTransition, fadeIn, expandIn, fadeOut, shrinkOut, AnimatedVisibilityScope
+//See Also:
+//fadeIn, scaleIn, slideIn, slideInHorizontally, slideInVertically, expandIn, expandHorizontally, expandVertically, AnimatedVisibility
+//See Also:
+//fadeOut, scaleOut, slideOut, slideOutHorizontally, slideOutVertically, shrinkOut, shrinkHorizontally, shrinkVertically, AnimatedVisibility
+
 val bottomNavigationItems = listOf(
     BottomNavigationItem(
         label = "Tasks",
@@ -45,11 +52,6 @@ fun BottomNavigationBar(
 ) {
     val visible = listState.isScrollingUp()
 
-    // EnterTransition, ExitTransition, fadeIn, expandIn, fadeOut, shrinkOut, AnimatedVisibilityScope
-    //See Also:
-    //fadeIn, scaleIn, slideIn, slideInHorizontally, slideInVertically, expandIn, expandHorizontally, expandVertically, AnimatedVisibility
-    //See Also:
-    //fadeOut, scaleOut, slideOut, slideOutHorizontally, slideOutVertically, shrinkOut, shrinkHorizontally, shrinkVertically, AnimatedVisibility
 
     AnimatedVisibility(
         visible = visible,

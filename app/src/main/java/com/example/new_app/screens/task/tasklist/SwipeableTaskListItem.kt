@@ -17,6 +17,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.ExperimentalMaterialApi
@@ -56,6 +57,7 @@ import com.example.new_app.R
 import com.example.new_app.SharedViewModel
 import com.example.new_app.common.sort.getDueDateAndTime
 import com.example.new_app.model.Task
+import kotlinx.coroutines.delay
 import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterialApi::class)
@@ -71,7 +73,24 @@ fun SwipeableTaskListItem(
     onTaskSwipedBackToActive: (Task) -> Unit,
     isFlashing: Boolean = false,
     mainViewModel: SharedViewModel,
+
+    lastAddedTaskId: String?,
+    isScreenVisible: MutableState<Boolean>,
+    listState: LazyListState,
+    filteredTasks: List<Task>,
 ) {
+
+    LaunchedEffect(lastAddedTaskId) {
+        if (lastAddedTaskId != null && isScreenVisible.value) {
+            val lastAddedTaskIndex = filteredTasks.indexOfFirst { it.id == lastAddedTaskId }
+            if (lastAddedTaskIndex != -1) {
+                delay(500)
+                listState.animateScrollToItem(lastAddedTaskIndex)
+                mainViewModel.updateLastAddedTaskId(null)
+            }
+        }
+    }
+
     //width of the swipeable item
     val screenWidth = LocalConfiguration.current.screenWidthDp.dp
     val swipeableState = remember(task.id) { SwipeableState(0) }

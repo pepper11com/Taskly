@@ -1,34 +1,22 @@
 package com.example.new_app.screens.task.tasklist
 
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExtendedFloatingActionButton
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -38,13 +26,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.new_app.EDIT_TASK_SCREEN
@@ -55,15 +40,14 @@ import com.example.new_app.common.composables.CustomTabRow
 import com.example.new_app.common.composables.CustomTopAppBar
 import com.example.new_app.common.composables.HomeFloatingActionButton
 import com.example.new_app.common.composables.LoadingIndicator
-import com.example.new_app.common.composables.TaskListScreenSideEffects
 import com.example.new_app.common.composables.isScrollingUp
-import com.example.new_app.common.ext.padding16
 import com.example.new_app.common.sort.getFilteredTasks
 import com.example.new_app.common.sort.sortTasks
 import com.example.new_app.common.util.Resource
 import com.example.new_app.model.Task
 import com.example.new_app.screens.login.UserData
 import com.example.new_app.screens.task.create_edit_tasks.TaskEditCreateViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import com.example.new_app.R.string as TaskString
 
@@ -77,9 +61,9 @@ fun TaskListScreen(
     viewModel: TaskListViewModel = hiltViewModel(),
     listState: LazyListState,
 ) {
-//    LaunchedEffect(Unit){
-//        mainViewModel.resetInitEdit()
-//    }
+    LaunchedEffect(Unit){
+        mainViewModel.resetInitEdit()
+    }
     val userId = viewModel.currentUserId
     //TODO TEST TEST TEST THIS was - .collectAsState()
     val uiState by viewModel.taskListUiState.collectAsStateWithLifecycle()
@@ -111,13 +95,13 @@ fun TaskListScreen(
         sortTasks(filtered, sortType)
     }
     //TODO TEST TEST TEST THIS
-    TaskListScreenSideEffects(
-        mainViewModel = mainViewModel,
-        listState = listState,
-        lastAddedTaskId = lastAddedTaskId,
-        isScreenVisible = isScreenVisible,
-        filteredTasks = filteredTasks,
-    )
+//    TaskListScreenSideEffects(
+//        mainViewModel = mainViewModel,
+//        listState = listState,
+//        lastAddedTaskId = lastAddedTaskId,
+//        isScreenVisible = isScreenVisible,
+//        filteredTasks = filteredTasks,
+//    )
 
 //    LaunchedEffect(lastAddedTaskId) {
 //        if (lastAddedTaskId != null && isScreenVisible.value) {
@@ -129,11 +113,11 @@ fun TaskListScreen(
 //            }
 //        }
 //    }
-//    DisposableEffect(Unit) {
-//        onDispose {
-//            isScreenVisible.value = false
-//        }
-//    }
+    DisposableEffect(Unit) {
+        onDispose {
+            isScreenVisible.value = false
+        }
+    }
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         floatingActionButton = {
@@ -219,8 +203,12 @@ fun TaskListScreen(
                                 },
                                 isFlashing = task.id == lastAddedTaskId,
                                 mainViewModel = mainViewModel,
+
+                                lastAddedTaskId = lastAddedTaskId,
+                            isScreenVisible = isScreenVisible,
+                            listState = listState,
+                            filteredTasks = filteredTasks,
                             )
-//                            Divider()
                         }
                     }
                 }
