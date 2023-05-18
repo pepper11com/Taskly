@@ -24,6 +24,7 @@ class TaskAppState(
                     text,
                     withDismissAction = true,
                 )
+                snackbarManager.messages.value = null
             }
         }
     }

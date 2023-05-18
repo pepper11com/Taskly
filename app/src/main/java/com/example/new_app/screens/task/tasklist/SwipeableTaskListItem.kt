@@ -191,10 +191,10 @@ fun TaskListItem(
 
     val painter = rememberAsyncImagePainter(
         ImageRequest.Builder(LocalContext.current)
-            .data(data = task.imageUri ?: R.drawable.baseline_account_box_24)
+            .data(data = task.imageUri ?: R.drawable.removebg_preview)
             .apply(block = fun ImageRequest.Builder.() {
                 crossfade(true)
-                error(R.drawable.baseline_account_box_24)
+                error(R.drawable.removebg_preview)
             }).build()
     )
 
