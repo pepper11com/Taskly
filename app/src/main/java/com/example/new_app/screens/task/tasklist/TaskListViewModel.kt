@@ -1,5 +1,6 @@
 package com.example.new_app.screens.task.tasklist
 
+import android.content.Context
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -10,6 +11,7 @@ import com.example.new_app.common.util.Resource
 import com.example.new_app.model.Task
 import com.example.new_app.model.service.AccountService
 import com.example.new_app.model.service.FirebaseService
+import com.example.new_app.model.service.cancelTaskReminder
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -64,9 +66,10 @@ class TaskListViewModel @Inject constructor(
         openScreen("${CREATE_TASK_SCREEN}/${task.id}")
     }
 
-    fun onTaskDelete(task: Task) {
+    fun onTaskDelete(task: Task, context: Context) {
         viewModelScope.launch {
             firebaseService.delete(task.id)
+            cancelTaskReminder(task.id, context)
             loadTasks()
         }
     }
@@ -100,12 +103,13 @@ class TaskListViewModel @Inject constructor(
 //        }
 //    }
 
-    fun onDeleteSelectedTasks(taskIds: List<String>) {
+    fun onDeleteSelectedTasks(taskIds: List<String>, context: Context) {
         viewModelScope.launch {
             Log.d("TaskListViewModel", "onDeleteSelectedTasks: ${taskIds.size}")
             taskIds.forEach { taskId ->
                 launch {
                     firebaseService.delete(taskId)
+                    cancelTaskReminder(taskId, context)
                 }
             }
         }

@@ -1,4 +1,4 @@
-package com.example.new_app.screens.map
+package com.example.new_app.screens.google_maps
 
 import android.content.Context
 import android.os.Bundle

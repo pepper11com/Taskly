@@ -66,6 +66,7 @@ fun CustomTopAppBar(
     userProfilePictureUrl: String?,
     userGoogleName: String?
 ) {
+    val context = LocalContext.current
     val selectedTaskIds by mainViewModel.selectedTaskIds.collectAsState()
     val currentSortType by viewModel.sortType.collectAsState()
     val now = LocalDateTime.now()
@@ -158,7 +159,7 @@ fun CustomTopAppBar(
                     onActionClick = { action ->
                         when (action) {
                             "Delete All Selected" -> {
-                                viewModel.onDeleteSelectedTasks(selectedTaskIds.toList())
+                                viewModel.onDeleteSelectedTasks(selectedTaskIds.toList(), context)
                                 mainViewModel.clearSelectedTaskIds()
                             }
                         }

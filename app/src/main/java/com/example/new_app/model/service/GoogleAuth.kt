@@ -29,10 +29,8 @@ class GoogleAuth(
         } catch (e: Exception) {
             e.printStackTrace()
             if (e is CancellationException) {
-                Log.d("GoogleAuth", "signInWithIntent: KAAAS2 " + e.message)
                 throw e
             } else {
-                Log.d("GoogleAuth", "signInWithIntent: KAAAS3 " + e.message)
                 null
             }
         }
@@ -59,7 +57,6 @@ class GoogleAuth(
         } catch (e: Exception) {
             e.printStackTrace()
             if (e is CancellationException) {
-                Log.d("GoogleAuth", "signInWithIntent: KAAAS " + e.message)
                 throw e
             } else {
                 SignInResult(
@@ -102,5 +99,4 @@ class GoogleAuth(
             .setAutoSelectEnabled(true)
             .build()
     }
-
 }

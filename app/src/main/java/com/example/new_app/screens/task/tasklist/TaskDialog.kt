@@ -133,7 +133,7 @@ fun ShowDialogWithTaskDetailsAndDelete(
                         ) {
                             Button(
                                 onClick = {
-                                    viewModel.onTaskDelete(task)
+                                    viewModel.onTaskDelete(task, context)
                                     onDismiss()
                                 },
                                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
@@ -255,7 +255,7 @@ fun ShowDialogWithTaskDetailsAndDelete(
                     ) {
                         Button(
                             onClick = {
-                                viewModel.onTaskDelete(task)
+                                viewModel.onTaskDelete(task, context)
                                 onDismiss()
                             },
                             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)

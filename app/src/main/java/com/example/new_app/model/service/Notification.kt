@@ -16,6 +16,7 @@ import androidx.work.WorkerParameters
 import com.example.new_app.MainActivity
 import java.util.concurrent.TimeUnit
 import android.graphics.BitmapFactory
+import android.util.Log
 import androidx.core.content.ContextCompat
 import com.example.new_app.R
 import okhttp3.OkHttpClient
@@ -129,6 +130,7 @@ fun scheduleTaskReminder(taskId: String, title: String, message: String, dueDate
 }
 
 fun cancelTaskReminder(taskId: String, context: Context) {
+    Log.d("TaskReminder", "cancelTaskReminder: $taskId")
     WorkManager.getInstance(context).cancelUniqueWork(taskId)
 }
 

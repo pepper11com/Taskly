@@ -17,11 +17,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import com.example.new_app.CREATE_TASK_SCREEN
-import com.example.new_app.TASK_MAP_SCREEN
-import com.example.new_app.screens.map.LocationPicker
 import com.example.new_app.screens.task.create_edit_tasks.TaskEditCreateViewModel
-import com.google.android.gms.maps.model.LatLng
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
