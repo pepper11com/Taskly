@@ -45,18 +45,32 @@ class TaskEditCreateViewModel @Inject constructor(
 
 ) : ViewModel() {
 
+    // Format for the date to be displayed
     private val dateFormat = "EEE, d MMM yyyy"
+
+    // State of the alert time to be displayed
     val alertTimeDisplay = mutableStateOf("1 hour in advance")
 
+    // State of the task to be edited/created
     val task = mutableStateOf(Task())
+
+    // State of the image URI for the task
     val imageUri = mutableStateOf<String?>(null)
+
+    // Marker to indicate the location on a map
     private var marker: Marker? = null
 
+    // State for managing the status of task editing/creating operations
     private val _taskEditCreateState = MutableStateFlow<Resource<Unit>>(Resource.Empty())
     val taskEditCreateState: StateFlow<Resource<Unit>> get() = _taskEditCreateState
 
+    // State of the location to be displayed
     val locationDisplay = mutableStateOf("")
 
+    /**
+     * Initializes the view model for editing an existing task.
+     * Fetches the task details from Firebase and updates the task state.
+     */
     fun initialize(taskId: String?) {
         viewModelScope.launch {
             taskId?.let {
@@ -77,6 +91,10 @@ class TaskEditCreateViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Handles change in the alert time option.
+     * Updates the alert time display and task state.
+     */
     fun onAlertOptionChange(option: String) {
         alertTimeDisplay.value = option
         task.value = task.value.copy(alertMessageTimer = alertTimeToMillis(option))
@@ -125,6 +143,10 @@ class TaskEditCreateViewModel @Inject constructor(
         imageUri.value = newValue.toString()
     }
 
+    /**
+     * Compresses the image selected for the task.
+     * Runs on the IO dispatcher to avoid blocking the main thread.
+     */
     private suspend fun compressImage(context: Context, uri: Uri): Uri {
         return withContext(Dispatchers.IO) {
             val imageLoader = ImageLoader(context)
@@ -160,6 +182,9 @@ class TaskEditCreateViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Uploads the compressed image to Firebase and saves the task.
+     */
     private suspend fun uploadImageAndSaveTask(
         newTask: Task,
         taskId: String,
@@ -173,6 +198,10 @@ class TaskEditCreateViewModel @Inject constructor(
         return newTask.copy(imageUri = imageUrl)
     }
 
+    /**
+     * Creates a new task and saves it to Firebase.
+     * If an image has been selected, it is uploaded as well.
+     */
     private suspend fun createNewTask(
         context: Context,
         popUpScreen: () -> Unit,
@@ -242,13 +271,17 @@ class TaskEditCreateViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Edits an existing task and updates it in Firebase.
+     * If an image has been selected, it is uploaded and the task is updated with the new image URI.
+     */
     private suspend fun editExistingTask(
         context: Context,
         taskId: String,
         popUpScreen: () -> Unit,
         onTaskCreated: (String) -> Unit
     ) {
-        // Move the code for editing an existing task from the onDoneClick function here
+
         if (imageUri.value != null) {
             val imageUri = Uri.parse(imageUri.value)
             val updatedTask = uploadImageAndSaveTask(
@@ -337,6 +370,10 @@ class TaskEditCreateViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Handles the user clicking on the Done button.
+     * If a task ID is provided, the existing task is edited; otherwise, a new task is created.
+     */
     fun onDoneClick(
         context: Context,
         taskId: String?,
@@ -362,6 +399,10 @@ class TaskEditCreateViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Deletes the image associated with the task from Firebase.
+     * If the image exists, it is deleted and the task and image URI states are updated.
+     */
     fun onDeleteImageClick() {
         viewModelScope.launch {
             val userId = accountService.currentUserId
@@ -380,6 +421,10 @@ class TaskEditCreateViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Resets the task state to its initial values.
+     * This is typically called when the user wants to discard their changes and start over.
+     */
     fun resetTask() {
         task.value = Task()
         imageUri.value = null
@@ -387,10 +432,18 @@ class TaskEditCreateViewModel @Inject constructor(
         onLocationReset()
     }
 
+    /**
+     * Converts an Int to a clock pattern, padding with a leading zero if necessary.
+     * This is used to format time values for display.
+     */
     private fun Int.toClockPattern(): String {
         return if (this < 10) "0$this" else "$this"
     }
 
+    /**
+     * Converts an alert time option to the corresponding duration in milliseconds.
+     * This is used to set the task's alert time.
+     */
     private fun alertTimeToMillis(option: String): Long {
         return when (option) {
             "5 minutes in advance" -> 5 * 60 * 1000L
@@ -405,6 +458,10 @@ class TaskEditCreateViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Updates the alert time display state based on the alert time value.
+     * This is used to display the selected alert time option to the user.
+     */
     private fun alertTimeToText(option: Long) {
         when (option) {
             5 * 60 * 1000L -> alertTimeDisplay.value = "5 minutes in advance"
@@ -419,9 +476,11 @@ class TaskEditCreateViewModel @Inject constructor(
         }
     }
 
-
+    /**
+     * Generates a unique notification ID for the task.
+     * This is used to distinguish notifications for different tasks.
+     */
     private fun generateUniqueNotificationId(): Int {
         return LocalDateTime.now().hashCode()
     }
-
 }

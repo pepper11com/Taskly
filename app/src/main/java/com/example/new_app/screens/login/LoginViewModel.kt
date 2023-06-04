@@ -29,14 +29,25 @@ class LoginViewModel @Inject constructor(
     private val _authenticationState = MutableStateFlow<Resource<Unit>>(Resource.Empty())
     val authenticationState: StateFlow<Resource<Unit>> get() = _authenticationState
 
+
+    /**
+     * Updates the email value in the UI state when the email input field changes
+     */
     fun onEmailChange(newValue: String) {
         uiState.value = uiState.value.copy(email = newValue)
     }
 
+    /**
+     * Updates the password value in the UI state when the password input field changes
+     */
     fun onPasswordChange(newValue: String) {
         uiState.value = uiState.value.copy(password = newValue)
     }
 
+    /**
+     * Handles the user clicking on the "Sign in with Google" button.
+     * Updates the authentication state and shows a snackbar with the result message.
+     */
     fun onGoogleSignInClick(result: SignInResult) {
         _authenticationState.value = Resource.Loading()
         if (result.data != null) {
@@ -48,6 +59,11 @@ class LoginViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Handles the user clicking on the "Sign in" button.
+     * Authenticates the user with the entered email and password.
+     * Updates the authentication state and shows a snackbar with the result message.
+     */
     fun onSignInClick() {
         viewModelScope.launch {
             _authenticationState.value = Resource.Loading()
@@ -80,6 +96,11 @@ class LoginViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Handles the user clicking on the "Forget password" button.
+     * Sends a password recovery email to the entered email.
+     * Updates the authentication state and shows a snackbar with the result message.
+     */
     fun onForgetPasswordClick() {
         viewModelScope.launch {
             _authenticationState.value = Resource.Loading()
@@ -102,6 +123,10 @@ class LoginViewModel @Inject constructor(
         }
     }
 
+
+    /**
+     * Resets the authentication state to avoid showing old success states when returning to the screen.
+     */
     fun resetSuccessState() {
         _authenticationState.value = Resource.Empty()
     }

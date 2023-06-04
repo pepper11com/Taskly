@@ -32,15 +32,26 @@ class SplashScreenViewModel @Inject constructor(
     private val firebaseService: FirebaseService
 ) : ViewModel() {
 
+    /**
+     * Represents the loading state of the splash screen.
+     * If true, a loading animation should be shown.
+     */
     private val _isLoading = MutableStateFlow(true)
     val isLoading = _isLoading.asStateFlow()
 
+    /**
+     * Represents the current state of the task list loading process.
+     * This includes loading, success, error, and empty states.
+     */
     private val _taskListResource = MutableStateFlow<Resource<List<Task>>>(Resource.Loading())
     val taskListResource: StateFlow<Resource<List<Task>>> = _taskListResource.asStateFlow()
 
     private var snackbarShown = false
 
 
+    /**
+     * Initializes the ViewModel. Sets up a delay to control the loading animation.
+     */
     init {
         viewModelScope.launch {
             delay(1000)
@@ -48,6 +59,11 @@ class SplashScreenViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Handles the app start event. This function is responsible for controlling the app's
+     * navigation when it first starts. If the user is logged in, it navigates to the main
+     * screen and loads tasks. Otherwise, it navigates to the authentication screen.
+     */
     fun onAppStart(openAndPopUp: (String, String) -> Unit, clearBackstack: () -> Unit) {
         viewModelScope.launch {
             Log.d("SplashScreenViewModel", "onAppStart1: " + accountService.hasUser)
@@ -63,6 +79,11 @@ class SplashScreenViewModel @Inject constructor(
             }
         }
     }
+
+    /**
+     * Loads tasks from Firebase service, checks if tasks are overdue and
+     * if yes, moves them to deleted tasks and shows a Snackbar message.
+     */
     private suspend fun loadTasks() {
         firebaseService.tasks
             .catch { e -> _taskListResource.value = Resource.Error(e.message) }
@@ -85,6 +106,9 @@ class SplashScreenViewModel @Inject constructor(
             }
     }
 
+    /**
+     * Updates the status of the given task. The new status is given as a parameter.
+     */
     private suspend fun updateTaskStatus(task: Task, status: TaskStatus) {
         firebaseService.updateTaskStatus(task.id, status)
     }

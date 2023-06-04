@@ -31,29 +31,49 @@ class FirebaseService @Inject constructor(
 
     private val currentUser = MutableStateFlow(firebaseAuth.currentUser)
 
+    /**
+     * Provides real-time user authentication state updates.
+     * Updates the currentUser MutableStateFlow object when the Firebase authentication state changes.
+     */
     init {
         firebaseAuth.addAuthStateListener { firebaseAuth ->
             currentUser.value = firebaseAuth.currentUser
         }
     }
 
+    /**
+     * Returns a Flow of the current user's tasks from Firestore.
+     * Automatically updates when the current user or their tasks change.
+     */
     val tasks: Flow<List<Task>> = currentUser.flatMapLatest { user ->
         user?.let {
             currentCollection(user.uid).snapshots().map { snapshot -> snapshot.toObjects() }
         } ?: flowOf(emptyList())
     }
 
+    /**
+     * Retrieves a task with a specific ID for the current user from Firestore.
+     * Returns null if the user is not authenticated or the task does not exist.
+     */
     suspend fun getTask(taskId: String): Task? =
         firebaseAuth.currentUser?.uid?.let { uid ->
             currentCollection(uid).document(taskId).get().await().toObject()
         }
 
+    /**
+     * Updates the status of a task with a specific ID for the current user in Firestore.
+     * Has no effect if the user is not authenticated or the task does not exist.
+     */
     suspend fun updateTaskStatus(taskId: String, status: TaskStatus) {
         currentUser.value?.uid?.let { uid ->
             currentCollection(uid).document(taskId).update("status", status)
         }
     }
 
+    /**
+     * Saves a new task for the current user to Firestore and returns the ID of the saved task wrapped in a Resource.
+     * Returns an error Resource if the user is not authenticated or there was an issue saving the task.
+     */
     suspend fun save(task: Task): Resource<String> {
         return try {
             val taskId = firebaseAuth.currentUser?.uid?.let { uid ->
@@ -65,38 +85,10 @@ class FirebaseService @Inject constructor(
         }
     }
 
-    suspend fun update(task: Task) {
-        firebaseAuth.currentUser?.uid?.let { uid ->
-            currentCollection(uid).document(task.id).set(task).await()
-        }
-    }
-
-//    suspend fun delete(taskId: String) {
-//        firebaseAuth.currentUser?.uid?.let { uid ->
-//            // Gets the task before deleting it
-//            val task = currentCollection(uid).document(taskId).get().await().toObject<Task>()
-//
-//            // Deletes the task from Firestore
-//            currentCollection(uid).document(taskId).delete().await()
-//
-//            // If the task exists, proceed with image deletion
-//            if (task != null) {
-//                // Deletes the image from Firebase Storage if there's one associated with the task
-//                task.imageUri?.let { imageUrl ->
-//                    val path = imageUrl
-//                        .substringAfter("example-f27a3.appspot.com/o/")
-//                        .substringBefore("?")
-//                        .replace("%2F", "/")
-//
-//                    Log.d("FirebaseService", "imageUrl: $imageUrl")
-//                    Log.d("FirebaseService", "path: $path")
-//
-//                    firebaseStorage.reference.child(path).delete().await()
-//                }
-//            }
-//        }
-//    }
-
+    /**
+     * Deletes a task with a specific ID for the current user from Firestore and Firebase Storage (if it has an associated image).
+     * Has no effect if the user is not authenticated, the task does not exist, or there was an issue deleting the task or its associated image.
+     */
     suspend fun delete(taskId: String) {
         firebaseAuth.currentUser?.uid?.let { uid ->
             // Gets the task before deleting it
@@ -125,7 +117,10 @@ class FirebaseService @Inject constructor(
         }
     }
 
-
+    /**
+     * Deletes all tasks for a specific user from Firestore.
+     * Has no effect if the user does not exist or there was an issue deleting the tasks.
+     */
     suspend fun deleteAllForUser(userId: String) {
         val matchingTasks = currentCollection(userId).get().await()
         matchingTasks.map { it.reference.delete().asDeferred() }.awaitAll()
@@ -134,6 +129,10 @@ class FirebaseService @Inject constructor(
     private fun currentCollection(uid: String): CollectionReference =
         firebaseFirestore.collection(USER_COLLECTION).document(uid).collection(TASK_COLLECTION)
 
+    /**
+     * Updates a task for the current user in Firestore and returns a success Resource.
+     * Returns an error Resource if the user is not authenticated, the task does not exist, or there was an issue updating the task.
+     */
     suspend fun updateTask(task: Task): Resource<Unit> {
         return try {
             firebaseAuth.currentUser?.uid?.let { uid ->
@@ -145,33 +144,10 @@ class FirebaseService @Inject constructor(
         }
     }
 
-    suspend fun deleteTasks(tasks: List<Task>): Resource<Unit> {
-        return try {
-            firebaseAuth.currentUser?.uid?.let { uid ->
-                tasks.forEach { task ->
-                    // Delete the task from Firestore
-                    currentCollection(uid).document(task.id).delete().await()
-
-                    // Delete the image from Firebase Storage if there's one associated with the task
-                    task.imageUri?.let { imageUrl ->
-                        val path = imageUrl
-                            .substringAfter("example-f27a3.appspot.com/o/")
-                            .substringBefore("?")
-                            .replace("%2F", "/")
-
-                        Log.d("FirebaseService", "imageUrl: $imageUrl")
-                        Log.d("FirebaseService", "path: $path")
-
-                        firebaseStorage.reference.child(path).delete().await()
-                    }
-                }
-            }
-            Resource.Success(Unit)
-        } catch (e: Exception) {
-            Resource.Error(e.message ?: "Unknown error")
-        }
-    }
-
+    /**
+     * Checks if an image with a specific path exists in Firebase Storage and returns a boolean value.
+     * Throws a StorageException if there was an issue accessing the storage.
+     */
     suspend fun doesImageExist(path: String): Boolean {
         return try {
             val storageRef = firebaseStorage.reference.child(path)
@@ -186,12 +162,20 @@ class FirebaseService @Inject constructor(
         }
     }
 
+    /**
+     * Uploads an image from a Uri to a specific path in Firebase Storage and returns the download URL as a string.
+     * Throws a StorageException if there was an issue uploading the image.
+     */
     suspend fun uploadImage(uri: Uri, path: String): String {
         val storageRef = firebaseStorage.reference.child(path)
         storageRef.putFile(uri).await()
         return storageRef.downloadUrl.await().toString()
     }
 
+    /**
+     * Deletes an image with a specific path from Firebase Storage.
+     * Throws a StorageException if there was an issue deleting the image.
+     */
     suspend fun deleteImage(path: String) {
         val storageRef = firebaseStorage.reference.child(path)
         storageRef.delete().await()

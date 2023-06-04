@@ -80,7 +80,7 @@ fun SettingsScreen(
             confirmButton = {
                 CustomButton(
                     onClick = {
-                        viewModel.onDeleteAccountClick()
+                        viewModel.onDeleteAccountClick(clearBackstack, navigateToLogin)
                         showDialog.value = false
                     },
                     text = "Yes, Delete Account",

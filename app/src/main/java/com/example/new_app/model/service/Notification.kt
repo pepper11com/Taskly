@@ -126,6 +126,8 @@ fun scheduleTaskReminder(taskId: String, title: String, message: String, dueDate
         .setInputData(data)
         .build()
 
+    Log.d("TaskReminder", "scheduleTaskReminder: $taskId")
+
     WorkManager.getInstance(context).enqueueUniqueWork(taskId, ExistingWorkPolicy.REPLACE, reminderRequest)
 }
 
