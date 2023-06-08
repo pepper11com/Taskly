@@ -24,6 +24,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.example.new_app.TaskViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -67,19 +68,18 @@ fun PermissionDialog(onRequestPermission: () -> Unit) {
 @Composable
 fun RationaleSnackbar(
     snackbarHostState: SnackbarHostState,
-    onRequestPermission: () -> Unit
+    onRequestPermission: () -> Unit,
+    taskViewModel: TaskViewModel
 ) {
-    LaunchedEffect(snackbarHostState) {
-        snackbarHostState.showSnackbar(
-            message = "If you want to receive notifications, please navigate to the app settings and grant permission.",
-//            actionLabel = "Grant",
-            duration =  SnackbarDuration.Long,
-            withDismissAction = true
-        )
-
-//        if (result == SnackbarResult.ActionPerformed) {
-//            onRequestPermission()
-//        }
+    if(!taskViewModel.snackbarShown.value){
+        LaunchedEffect(snackbarHostState) {
+            snackbarHostState.showSnackbar(
+                message = "If you want to receive notifications, please navigate to the app settings and grant permission.",
+                duration =  SnackbarDuration.Long,
+                withDismissAction = true
+            )
+            taskViewModel.snackbarShown.value = true
+        }
     }
 }
 

@@ -57,7 +57,8 @@ fun TaskApp(
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             RequestNotificationPermissionDialog(
-                appState = appState
+                appState = appState,
+                taskViewModel = mainViewModel,
             )
         }
 
@@ -103,13 +104,18 @@ fun TaskApp(
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun RequestNotificationPermissionDialog(
-    appState: TaskAppState
+    appState: TaskAppState,
+    taskViewModel: TaskViewModel
 ) {
     val permissionState = rememberPermissionState(permission = Manifest.permission.POST_NOTIFICATIONS)
 
     if (!permissionState.status.isGranted) {
         if (permissionState.status.shouldShowRationale) {
-            RationaleSnackbar(snackbarHostState = appState.snackbarState, onRequestPermission = { permissionState.launchPermissionRequest() })
+            RationaleSnackbar(
+                snackbarHostState = appState.snackbarState,
+                onRequestPermission = { permissionState.launchPermissionRequest() },
+                taskViewModel = taskViewModel
+            )
         } else {
             PermissionDialog(onRequestPermission = { permissionState.launchPermissionRequest() })
         }

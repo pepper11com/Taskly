@@ -1,6 +1,7 @@
 package com.example.new_app
 
 import android.util.Log
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -18,6 +19,8 @@ class TaskViewModel : ViewModel() {
 
     private val _initEdit = MutableLiveData(true)
     val initEdit: LiveData<Boolean> = _initEdit
+
+    val snackbarShown = mutableStateOf(false)
 
     fun toggleInitEdit() {
         _initEdit.value = _initEdit.value?.not()
