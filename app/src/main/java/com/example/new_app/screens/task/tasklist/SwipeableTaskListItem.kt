@@ -6,10 +6,7 @@ import android.os.Vibrator
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateOffsetAsState
-import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
@@ -47,16 +44,15 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
 import com.example.new_app.R
-import com.example.new_app.SharedViewModel
+import com.example.new_app.TaskViewModel
 import com.example.new_app.common.sort.getDueDateAndTime
-import com.example.new_app.model.Task
+import com.example.new_app.domain.model.Task
 import kotlinx.coroutines.delay
 import kotlin.math.roundToInt
 
@@ -72,7 +68,7 @@ fun SwipeableTaskListItem(
     onSelectedTasksChange: (Task, Boolean) -> Unit,
     onTaskSwipedBackToActive: (Task) -> Unit,
     isFlashing: Boolean = false,
-    mainViewModel: SharedViewModel,
+    mainViewModel: TaskViewModel,
 
     lastAddedTaskId: String?,
     isScreenVisible: MutableState<Boolean>,
@@ -164,7 +160,7 @@ fun TaskListItem(
     isSelected: MutableState<Boolean>,
     onSelectedTasksChange: (Task, Boolean) -> Unit,
     isFlashing: Boolean = false,
-    mainViewModel: SharedViewModel,
+    mainViewModel: TaskViewModel,
 ) {
     val context = LocalContext.current
     val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator

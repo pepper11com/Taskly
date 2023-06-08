@@ -8,8 +8,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
-import com.example.new_app.SharedViewModel
-import com.example.new_app.common.composables.BottomNavigationBar
+import com.example.new_app.TaskViewModel
+import com.example.new_app.common.composables.custom_composables.BottomNavigationBar
 import com.example.new_app.screens.calender_screens.CalenderScreens
 import com.example.new_app.screens.login.UserData
 import com.example.new_app.screens.task.create_edit_tasks.TaskEditCreateViewModel
@@ -19,7 +19,7 @@ import com.example.new_app.screens.task.tasklist.TaskListViewModel
 @Composable
 fun NavigatorScreen(
     openScreen: (String) -> Unit,
-    mainViewModel: SharedViewModel,
+    mainViewModel: TaskViewModel,
     userData: UserData?,
     taskEditCreateViewModel: TaskEditCreateViewModel,
     viewModel: TaskListViewModel

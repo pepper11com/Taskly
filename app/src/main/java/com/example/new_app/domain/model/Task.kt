@@ -1,4 +1,4 @@
-package com.example.new_app.model
+package com.example.new_app.domain.model
 
 import com.example.new_app.screens.task.tasklist.TaskStatus
 import com.google.firebase.firestore.DocumentId

@@ -8,10 +8,10 @@ import com.example.new_app.CREATE_TASK_SCREEN
 import com.example.new_app.TASK_ID_KEY
 import com.example.new_app.common.sort.TaskSortType
 import com.example.new_app.common.util.Resource
-import com.example.new_app.model.Task
-import com.example.new_app.model.service.AccountService
-import com.example.new_app.model.service.FirebaseService
-import com.example.new_app.model.service.cancelTaskReminder
+import com.example.new_app.domain.model.Task
+import com.example.new_app.domain.repository.AccountService
+import com.example.new_app.domain.repository.FirebaseService
+import com.example.new_app.domain.cancelTaskReminder
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

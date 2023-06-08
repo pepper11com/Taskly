@@ -12,16 +12,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import com.example.new_app.SharedViewModel
+import com.example.new_app.TaskViewModel
 import com.example.new_app.TASK_MAP_SCREEN
 import com.example.new_app.common.composables.CardEditors
 import com.example.new_app.common.composables.ColorPicker
-import com.example.new_app.common.composables.CustomEditTaskAppBar
-import com.example.new_app.common.composables.CustomMultiLineTextfield
-import com.example.new_app.common.composables.CustomTextField
+import com.example.new_app.common.composables.top_app_bars.CustomEditTaskAppBar
+import com.example.new_app.common.composables.custom_composables.CustomMultiLineTextfield
+import com.example.new_app.common.composables.custom_composables.CustomTextField
 import com.example.new_app.common.composables.LoadingIndicator
 import com.example.new_app.common.composables.PickImageFromGallery
-import com.example.new_app.common.composables.SectionTitle
+import com.example.new_app.common.composables.custom_composables.SectionTitle
 import com.example.new_app.common.composables.ShowLocation
 import com.example.new_app.common.composables.customTextFieldColors
 import com.example.new_app.common.ext.divider
@@ -37,7 +37,7 @@ fun EditTaskScreen(
     popUpScreen: () -> Unit,
     taskId: String,
     userId: String,
-    mainViewModel: SharedViewModel,
+    mainViewModel: TaskViewModel,
     openScreen: (String) -> Unit,
     viewModel: TaskEditCreateViewModel
 ) {

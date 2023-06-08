@@ -1,15 +1,11 @@
 package com.example.new_app.common.sort
 
-import android.os.Build
-import androidx.annotation.RequiresApi
-import androidx.compose.runtime.snapshots.SnapshotStateList
-import com.example.new_app.SharedViewModel
-import com.example.new_app.model.Task
+import com.example.new_app.TaskViewModel
+import com.example.new_app.domain.model.Task
 import com.example.new_app.screens.task.tasklist.TaskStatus
 import java.lang.StringBuilder
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
-import java.util.Date
 import java.util.Locale
 
 enum class TaskSortType {
@@ -50,7 +46,7 @@ fun getFilteredTasks(tasks: List<Task>, status: TaskStatus, sortType: TaskSortTy
     }
 }
 
-fun onSelectAllTasks(selectedIndex: Int, mainViewModel: SharedViewModel, taskList: List<Task>) {
+fun onSelectAllTasks(selectedIndex: Int, mainViewModel: TaskViewModel, taskList: List<Task>) {
 
     val status = when (selectedIndex) {
         0 -> TaskStatus.DELETED

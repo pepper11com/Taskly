@@ -23,11 +23,8 @@ import androidx.navigation.navArgument
 import com.example.new_app.common.composables.PermissionDialog
 import com.example.new_app.common.composables.RationaleSnackbar
 import com.example.new_app.common.snackbar.SnackbarManager
-import com.example.new_app.model.service.GoogleAuth
+import com.example.new_app.domain.GoogleAuth
 import com.example.new_app.screens.authentication.AuthenticationScreen
-import com.example.new_app.screens.calender.MonthlyCalendarScreen
-import com.example.new_app.screens.calender.WeeklyCalendarViewScreen
-import com.example.new_app.screens.calender_screens.CalenderScreens
 import com.example.new_app.screens.google_maps.LocationPickerScreen
 import com.example.new_app.screens.task.create_edit_tasks.createtask.CreateTaskScreen
 import com.example.new_app.screens.login.LoginScreen
@@ -37,7 +34,6 @@ import com.example.new_app.screens.signup.SignupScreen
 import com.example.new_app.screens.splashscreen.SplashScreen
 import com.example.new_app.screens.task.create_edit_tasks.TaskEditCreateViewModel
 import com.example.new_app.screens.task.create_edit_tasks.edit_task.EditTaskScreen
-import com.example.new_app.screens.task.tasklist.TaskListScreen
 import com.example.new_app.screens.task.tasklist.TaskListViewModel
 import com.example.new_app.theme.*
 import com.example.new_app.theme.New_AppTheme
@@ -50,7 +46,7 @@ import kotlinx.coroutines.CoroutineScope
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun TaskApp(
-    mainViewModel: SharedViewModel = hiltViewModel(),
+    mainViewModel: TaskViewModel = hiltViewModel(),
     taskEditCreateViewModel: TaskEditCreateViewModel = hiltViewModel(),
     taskListViewModel: TaskListViewModel = hiltViewModel(),
     googleAuthUiClient: GoogleAuth
@@ -141,7 +137,7 @@ fun resources(): Resources {
 
 fun NavGraphBuilder.taskAppGraph(
     appState: TaskAppState,
-    mainViewModel: SharedViewModel,
+    mainViewModel: TaskViewModel,
     taskEditCreateViewModel: TaskEditCreateViewModel,
     googleAuthUiClient: GoogleAuth,
     taskListViewModel: TaskListViewModel

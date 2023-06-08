@@ -1,4 +1,4 @@
-package com.example.new_app.common.composables
+package com.example.new_app.common.composables.top_app_bars
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.ExperimentalMaterial3Api

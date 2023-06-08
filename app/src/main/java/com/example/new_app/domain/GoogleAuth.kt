@@ -1,4 +1,4 @@
-package com.example.new_app.model.service
+package com.example.new_app.domain
 
 import android.content.Context
 import android.content.Intent

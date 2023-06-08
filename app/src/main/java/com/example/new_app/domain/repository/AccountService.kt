@@ -1,11 +1,8 @@
-package com.example.new_app.model.service
+package com.example.new_app.domain.repository
 
 import com.example.new_app.common.util.Resource
-import com.example.new_app.model.User
+import com.example.new_app.domain.GoogleAuth
 import com.google.firebase.auth.FirebaseAuth
-import kotlinx.coroutines.channels.awaitClose
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import javax.inject.Singleton

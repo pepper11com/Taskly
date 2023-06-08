@@ -66,7 +66,8 @@ import coil.compose.rememberAsyncImagePainter
 import coil.request.CachePolicy
 import coil.request.ImageRequest
 import com.example.new_app.R
-import com.example.new_app.model.Task
+import com.example.new_app.common.composables.custom_composables.RegularCardEditor
+import com.example.new_app.domain.model.Task
 import com.example.new_app.screens.task.create_edit_tasks.TaskEditCreateViewModel
 import com.example.new_app.theme.DarkGrey
 import com.example.new_app.theme.DarkOrange

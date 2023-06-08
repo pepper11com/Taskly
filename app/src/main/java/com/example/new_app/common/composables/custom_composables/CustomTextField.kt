@@ -1,4 +1,4 @@
-package com.example.new_app.common.composables
+package com.example.new_app.common.composables.custom_composables
 
 import androidx.annotation.StringRes
 import androidx.compose.foundation.interaction.MutableInteractionSource

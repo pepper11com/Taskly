@@ -16,7 +16,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import coil.compose.AsyncImagePainter
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
-import com.example.new_app.model.Task
+import com.example.new_app.domain.model.Task
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.MapView

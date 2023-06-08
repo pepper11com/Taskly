@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
-class SharedViewModel : ViewModel() {
+class TaskViewModel : ViewModel() {
 
     private val _lastAddedTaskId = MutableLiveData<String?>()
     val lastAddedTaskId: LiveData<String?> get() = _lastAddedTaskId

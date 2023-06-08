@@ -1,4 +1,4 @@
-package com.example.new_app.common.composables
+package com.example.new_app.common.composables.top_app_bars
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Spacer
@@ -16,8 +16,8 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.example.new_app.SharedViewModel
-import com.example.new_app.model.Task
+import com.example.new_app.TaskViewModel
+import com.example.new_app.domain.model.Task
 
 
 @Composable
@@ -26,7 +26,7 @@ fun CustomTabRow(
     tabTitles: List<String>,
     selectedTasks: MutableList<Task> = mutableListOf(),
     rowColor: Color = MaterialTheme.colorScheme.secondary,
-    mainViewModel: SharedViewModel = SharedViewModel(),
+    mainViewModel: TaskViewModel = TaskViewModel(),
 ) {
     val indicator = @Composable { tabPositions: List<TabPosition> ->
         HomeCategoryTabIndicator(

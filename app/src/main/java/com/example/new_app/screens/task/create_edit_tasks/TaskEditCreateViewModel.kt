@@ -12,16 +12,15 @@ import coil.ImageLoader
 import coil.request.ImageRequest
 import com.example.new_app.common.snackbar.SnackbarManager
 import com.example.new_app.common.util.Resource
-import com.example.new_app.model.CustomLatLng
-import com.example.new_app.model.Task
-import com.example.new_app.model.service.AccountService
-import com.example.new_app.model.service.FirebaseService
-import com.example.new_app.model.service.cancelTaskReminder
-import com.example.new_app.model.service.scheduleTaskReminder
+import com.example.new_app.domain.model.CustomLatLng
+import com.example.new_app.domain.model.Task
+import com.example.new_app.domain.repository.AccountService
+import com.example.new_app.domain.repository.FirebaseService
+import com.example.new_app.domain.cancelTaskReminder
+import com.example.new_app.domain.scheduleTaskReminder
 import com.example.new_app.screens.task.tasklist.generateStaticMapUrl
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
-import com.google.firebase.storage.StorageException
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -43,7 +42,7 @@ class TaskEditCreateViewModel @Inject constructor(
     private val firebaseService: FirebaseService,
     private val accountService: AccountService,
 
-) : ViewModel() {
+    ) : ViewModel() {
 
     // Format for the date to be displayed
     private val dateFormat = "EEE, d MMM yyyy"

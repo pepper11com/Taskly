@@ -1,4 +1,4 @@
-package com.example.new_app.model.service
+package com.example.new_app.domain
 
 import android.app.NotificationChannel
 import android.app.NotificationManager

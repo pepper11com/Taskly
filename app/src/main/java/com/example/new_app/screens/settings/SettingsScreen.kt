@@ -1,7 +1,6 @@
 package com.example.new_app.screens.settings
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -10,13 +9,11 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.new_app.SPLASH_SCREEN
-import com.example.new_app.common.composables.CustomButton
-import com.example.new_app.common.composables.CustomTopAppBarSmall
-import com.example.new_app.common.composables.EmptyTopBar
+import com.example.new_app.common.composables.custom_composables.CustomButton
+import com.example.new_app.common.composables.top_app_bars.CustomTopAppBarSmall
 import com.example.new_app.common.composables.LoadingIndicator
 import com.example.new_app.common.util.Resource
 

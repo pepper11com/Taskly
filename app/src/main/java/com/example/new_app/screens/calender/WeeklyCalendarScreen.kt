@@ -21,18 +21,15 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -71,7 +68,7 @@ import com.example.new_app.common.ext.padding4
 import com.example.new_app.common.ext.padding8
 import com.example.new_app.common.ext.standardImage
 import com.example.new_app.common.helpers.getWeekPageTitle
-import com.example.new_app.model.Task
+import com.example.new_app.domain.model.Task
 import com.example.new_app.screens.task.tasklist.ShowDialogWithTaskDetailsAndDelete
 import com.example.new_app.screens.task.tasklist.StaticMap
 import com.example.new_app.screens.task.tasklist.TaskListViewModel

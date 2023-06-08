@@ -7,8 +7,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import com.example.new_app.common.composables.MediumAppBarWithTabs
-import com.example.new_app.model.service.GoogleAuth
+import com.example.new_app.common.composables.top_app_bars.MediumAppBarWithTabs
+import com.example.new_app.domain.GoogleAuth
 import com.example.new_app.screens.login.LoginScreen
 import com.example.new_app.screens.signup.SignupScreen
 

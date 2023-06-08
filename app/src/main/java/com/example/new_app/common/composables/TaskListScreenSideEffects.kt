@@ -5,13 +5,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
-import com.example.new_app.SharedViewModel
-import com.example.new_app.model.Task
+import com.example.new_app.TaskViewModel
+import com.example.new_app.domain.model.Task
 import kotlinx.coroutines.delay
 
 @Composable
 fun TaskListScreenSideEffects(
-    mainViewModel: SharedViewModel,
+    mainViewModel: TaskViewModel,
     listState: LazyListState,
     lastAddedTaskId: String?,
     isScreenVisible: MutableState<Boolean>,

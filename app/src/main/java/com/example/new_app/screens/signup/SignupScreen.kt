@@ -9,13 +9,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.example.new_app.AUTHENTICATION_SCREEN
 import com.example.new_app.LOGIN_SCREEN
 import com.example.new_app.NAVIGATOR_SCREEN
 import com.example.new_app.SIGN_UP_SCREEN
-import com.example.new_app.common.composables.CustomButton
-import com.example.new_app.common.composables.CustomPasswordTextField
-import com.example.new_app.common.composables.CustomTextField
+import com.example.new_app.common.composables.custom_composables.CustomButton
+import com.example.new_app.common.composables.custom_composables.CustomPasswordTextField
+import com.example.new_app.common.composables.custom_composables.CustomTextField
 import com.example.new_app.common.composables.LoadingIndicator
 import com.example.new_app.common.util.Resource
 import com.example.new_app.R.string as SignupString

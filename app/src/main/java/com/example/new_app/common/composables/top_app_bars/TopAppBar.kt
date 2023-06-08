@@ -1,4 +1,4 @@
-package com.example.new_app.common.composables
+package com.example.new_app.common.composables.top_app_bars
 
 import android.content.Context
 import androidx.annotation.StringRes
@@ -44,10 +44,12 @@ import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
 import coil.transform.CircleCropTransformation
 import com.example.new_app.SETTINGS_SCREEN
-import com.example.new_app.SharedViewModel
+import com.example.new_app.TaskViewModel
+import com.example.new_app.common.composables.custom_composables.DeleteSelectedContextMenu
+import com.example.new_app.common.composables.custom_composables.DropdownContextMenu
 import com.example.new_app.common.sort.TaskSortType
 import com.example.new_app.common.sort.onSelectAllTasks
-import com.example.new_app.model.Task
+import com.example.new_app.domain.model.Task
 import com.example.new_app.screens.task.create_edit_tasks.TaskEditCreateViewModel
 import com.example.new_app.screens.task.tasklist.TaskListUiState
 import com.example.new_app.screens.task.tasklist.TaskListViewModel
@@ -62,7 +64,7 @@ fun CustomTopAppBar(
     openScreen: (String) -> Unit,
     viewModel: TaskListViewModel,
     scrollBehavior: TopAppBarScrollBehavior,
-    mainViewModel: SharedViewModel,
+    mainViewModel: TaskViewModel,
     userProfilePictureUrl: String?,
     userGoogleName: String?
 ) {
@@ -357,7 +359,7 @@ fun CustomCreateTaskAppBar(
     viewModel: TaskEditCreateViewModel,
     popUpScreen: () -> Unit,
     scrollBehavior: TopAppBarScrollBehavior,
-    mainViewModel: SharedViewModel,
+    mainViewModel: TaskViewModel,
     context: Context
 ) {
 
@@ -421,7 +423,7 @@ fun CustomEditTaskAppBar(
     viewModel: TaskEditCreateViewModel,
     popUpScreen: () -> Unit,
     scrollBehavior: TopAppBarScrollBehavior,
-    mainViewModel: SharedViewModel,
+    mainViewModel: TaskViewModel,
     context: Context,
     taskId: String
 ) {

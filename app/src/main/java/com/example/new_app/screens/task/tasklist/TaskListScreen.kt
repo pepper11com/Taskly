@@ -33,18 +33,18 @@ import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.new_app.EDIT_TASK_SCREEN
-import com.example.new_app.SharedViewModel
+import com.example.new_app.TaskViewModel
 import com.example.new_app.TASK_ID
 import com.example.new_app.TASK_ID_KEY
-import com.example.new_app.common.composables.CustomTabRow
-import com.example.new_app.common.composables.CustomTopAppBar
-import com.example.new_app.common.composables.HomeFloatingActionButton
+import com.example.new_app.common.composables.top_app_bars.CustomTabRow
+import com.example.new_app.common.composables.top_app_bars.CustomTopAppBar
+import com.example.new_app.common.composables.custom_composables.HomeFloatingActionButton
 import com.example.new_app.common.composables.LoadingIndicator
-import com.example.new_app.common.composables.isScrollingUp
+import com.example.new_app.common.composables.custom_composables.isScrollingUp
 import com.example.new_app.common.sort.getFilteredTasks
 import com.example.new_app.common.sort.sortTasks
 import com.example.new_app.common.util.Resource
-import com.example.new_app.model.Task
+import com.example.new_app.domain.model.Task
 import com.example.new_app.screens.login.UserData
 import com.example.new_app.screens.task.create_edit_tasks.TaskEditCreateViewModel
 import kotlinx.coroutines.launch
@@ -54,7 +54,7 @@ import com.example.new_app.R.string as TaskString
 @Composable
 fun TaskListScreen(
     openScreen: (String) -> Unit,
-    mainViewModel: SharedViewModel,
+    mainViewModel: TaskViewModel,
     userData: UserData?,
     taskEditCreateViewModel: TaskEditCreateViewModel,
     viewModel: TaskListViewModel = hiltViewModel(),

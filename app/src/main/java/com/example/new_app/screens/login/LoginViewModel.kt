@@ -6,7 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.new_app.common.ext.isValidEmail
 import com.example.new_app.common.snackbar.SnackbarManager
 import com.example.new_app.common.util.Resource
-import com.example.new_app.model.service.AccountService
+import com.example.new_app.domain.repository.AccountService
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

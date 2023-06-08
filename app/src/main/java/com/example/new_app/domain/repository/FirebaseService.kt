@@ -1,9 +1,9 @@
-package com.example.new_app.model.service
+package com.example.new_app.domain.repository
 
 import android.net.Uri
 import android.util.Log
 import com.example.new_app.common.util.Resource
-import com.example.new_app.model.Task
+import com.example.new_app.domain.model.Task
 import com.example.new_app.screens.task.tasklist.TaskStatus
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.CollectionReference

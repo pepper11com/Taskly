@@ -1,7 +1,8 @@
-package com.example.new_app.model.service
+package com.example.new_app.di
 
 import android.content.Context
 import com.example.new_app.common.snackbar.SnackbarManager
+import com.example.new_app.domain.GoogleAuth
 import com.google.android.gms.auth.api.identity.SignInClient
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore

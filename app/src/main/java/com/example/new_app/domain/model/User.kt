@@ -1,4 +1,4 @@
-package com.example.new_app.model
+package com.example.new_app.domain.model
 
 data class User (
     val id: String = "",

@@ -3,15 +3,10 @@ package com.example.new_app.screens.settings
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.new_app.AUTHENTICATION_SCREEN
-import com.example.new_app.LOGIN_SCREEN
-import com.example.new_app.R
-import com.example.new_app.SETTINGS_SCREEN
 import com.example.new_app.common.snackbar.SnackbarManager
-import com.example.new_app.common.snackbar.SnackbarMessage
 import com.example.new_app.common.util.Resource
-import com.example.new_app.model.service.AccountService
-import com.example.new_app.model.service.FirebaseService
-import com.example.new_app.model.service.GoogleAuth
+import com.example.new_app.domain.repository.AccountService
+import com.example.new_app.domain.repository.FirebaseService
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -55,7 +50,7 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    //TODO - Also delete the images from firebase storage
+    //TODO - Also delete account linked images from firebase storage
     /**
      * Handles the click event of the delete account button.
      * Tries to delete all tasks associated with the current user and then delete the user account.
